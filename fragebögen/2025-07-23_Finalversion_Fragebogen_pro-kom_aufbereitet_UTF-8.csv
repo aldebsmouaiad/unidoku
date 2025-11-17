@@ -1,0 +1,163 @@
+﻿Frage-ID;Cluster-Nummer;Cluster-Name;Subskala;Frage;invertiert
+1AD01;1;Analytisches und kritisches Denken;Analytisches Denken;Ich erkenne unausgesprochene Annahmen, die hinter Argumenten oder Aussagen stehen.;
+1AD02;1;Analytisches und kritisches Denken;Analytisches Denken;Wenn ich verschiedene Meinungen höre, fällt es mir schwer, Gemeinsamkeiten oder Unterschiede darin zu erkennen.;True
+1AD03;1;Analytisches und kritisches Denken;Analytisches Denken;Bevor ich mir eine Meinung bilde, vergleiche ich Informationen aus verschiedenen, unabhängigen Quellen.;
+1SM01;1;Analytisches und kritisches Denken;Systematisch-methodisches Vorgehen;Komplexe Aufgaben unterteile ich in logisch geordnete Einzelschritte.;
+1SM02;1;Analytisches und kritisches Denken;Systematisch-methodisches Vorgehen;Das Erkennen von Mustern und Strukturen in Daten oder Argumenten fällt mir leicht.;
+1SM03;1;Analytisches und kritisches Denken;Systematisch-methodisches Vorgehen;Informationen untersuche ich immer nach einem systematischen und nachvollziehbaren Schema.;
+1BV01;1;Analytisches und kritisches Denken;Beurteilungsvermögen;Ich prüfe die Relevanz von Informationen im jeweiligen Kontext.;
+1BV02;1;Analytisches und kritisches Denken;Beurteilungsvermögen;Ich analysiere verschiedene Lösungsansätze sorgfältig, bevor ich eine Entscheidung treffe.;
+1BV03;1;Analytisches und kritisches Denken;Beurteilungsvermögen;Bevor ich Informationen nutze, prüfe ich, ob die Quelle zuverlässig und sachlich fundiert ist.;
+1BV04;1;Analytisches und kritisches Denken;Beurteilungsvermögen;Ich ziehe immer mögliche Konsequenzen in Betracht, bevor ich eine Entscheidung treffe.;
+1GD01;1;Analytisches und kritisches Denken;Ganzheitliches Denken;Ich erkenne Zusammenhänge zwischen unterschiedlichen Konzepten oder Argumenten.;
+1GD02;1;Analytisches und kritisches Denken;Ganzheitliches Denken;Ich achte bewusst darauf, unterschiedliche Sichtweisen in meine Überlegungen einzubeziehen.;
+1PF01;1;Analytisches und kritisches Denken;Problemlösefähigkeit;Ich gehe Schritt für Schritt vor, um ein Problem zu lösen.;
+1PF02;1;Analytisches und kritisches Denken;Problemlösefähigkeit;Ich bewerte die Durchführbarkeit von Lösungen, bevor ich sie umsetze.;
+1KD01;1;Analytisches und kritisches Denken;Kritisches Denken;Ich prüfe widersprüchliche Informationen, bevor ich sie vorschnell verwerfe.;
+1KD02;1;Analytisches und kritisches Denken;Kritisches Denken;Ich passe meine Schlussfolgerungen an, wenn ich neue Informationen zu meinen Annahmen bekomme. ;
+2KF01;2;Kommunikative Fähigkeit;Kommunikationsfähigkeit;Ich drücke meine Gedanken immer klar und präzise aus.;
+2KF02;2;Kommunikative Fähigkeit;Kommunikationsfähigkeit;Meine Wortwahl und Erklärweise passe ich an meine Zielgruppe und die Gesprächssituation an.;
+2KF03;2;Kommunikative Fähigkeit;Kommunikationsfähigkeit;Beim Sprechen achte ich darauf, meine Ideen logisch zu sortieren.;
+2KF04;2;Kommunikative Fähigkeit;Kommunikationsfähigkeit;Selbst in schwierigen Situationen kann ich meine Aussagen effizient kommunizieren.;
+2SP01;2;Kommunikative Fähigkeit;Sprachen;Es fällt mir manchmal schwer, die richtigen Worte zu finden. ;True
+2SP02;2;Kommunikative Fähigkeit;Sprachen;Ich vermeide vage Ausdrücke wie „Du weißt, was ich meine“ oder „So ungefähr“.;
+2SP03;2;Kommunikative Fähigkeit;Sprachen;Um Texte vollständig zu verstehen, muss ich sie öfter lesen.;True
+2DF01;2;Kommunikative Fähigkeit;Dialogfähigkeit;Ich finde in Gesprächen meist die richtige Balance zwischen Zuhören und Sprechen.;
+2DF02;2;Kommunikative Fähigkeit;Dialogfähigkeit;Ich halte das Gespräch am Laufen, indem ich relevante Fragen stelle.;
+2VF01;2;Kommunikative Fähigkeit;Verständnisfähigkeit;Ich muss andere selten bitten, das Gesagte zu wiederholen.;
+2VF02;2;Kommunikative Fähigkeit;Verständnisfähigkeit;Selbst nach inhaltlich komplexen Gesprächen, kann ich den Inhalt in anderen Worten wiedergeben. ;
+2SF01;2;Kommunikative Fähigkeit;Schlagfertigkeit;In unerwarteten Gesprächen finde ich schnell passende Worte.;
+2SF02;2;Kommunikative Fähigkeit;Schlagfertigkeit;Wenn mich jemand provoziert, bin ich oft sprachlos oder überfordert.;True
+2VH01;2;Kommunikative Fähigkeit;Verhandlungsfähigkeit;Ich bleibe ruhig und artikuliert während schwieriger Diskussionen.;
+2VH02;2;Kommunikative Fähigkeit;Verhandlungsfähigkeit;Ich finde immer Kompromisse, die alle Parteien zufriedenstellen.;
+2VH03;2;Kommunikative Fähigkeit;Verhandlungsfähigkeit;Es fällt mir leicht, überzeugende Argumente zu verwenden, um meinen Standpunkt zu unterstützen.;
+3FV01;3;Fach- und Wissenskompetenz;Fachübergreifendes Verständnis;Ich kombiniere mein Wissen aus verschiedenen Bereichen, um neue Ideen oder Lösungen zu entwickeln.;
+3FV02;3;Fach- und Wissenskompetenz;Fachübergreifendes Verständnis;Wenn mehrere Fachrichtungen beteiligt sind, fällt es mir schwer, den Überblick über die unterschiedlichen Denkweisen zu behalten.;True
+3FV03;3;Fach- und Wissenskompetenz;Fachübergreifendes Verständnis;Wenn ich ein neues Thema bearbeite, recherchiere ich bewusst in mehreren Fachgebieten, um verschiedene Perspektiven zu gewinnen.;
+3WT01;3;Fach- und Wissenskompetenz;Wissenstheorie;Bevor ich Wissen übernehme, hinterfrage ich, wie verlässlich die Quelle ist. ;
+3WT02;3;Fach- und Wissenskompetenz;Wissenstheorie;Bei meinen Recherchen achte ich immer darauf, Informationen aus verschiedenen Quellen auf ihre Verlässlichkeit zu prüfen. ;
+3WT03;3;Fach- und Wissenskompetenz;Wissenstheorie;Wenn etwas in einem Zeitungsartikel oder wissenschaftlichen Text steht, glaube ich, dass es stimmt. ;True
+12KF01;3;Fach- und Wissenskompetenz;KONTROLLFRAGE;Dies ist eine Kontrollfrage, bitte kreuzen Sie hier „trifft nicht zu“ an. ;
+3EX01;3;Fach- und Wissenskompetenz;Expertise;Ich habe sehr umfassendes Wissen in meinem Fachgebiet.;
+3EX02;3;Fach- und Wissenskompetenz;Expertise;Ich halte mich regelmäßig über die neuesten Entwicklungen in meinem Bereich auf dem Laufenden.;
+3EX03;3;Fach- und Wissenskompetenz;Expertise;Durch meine Expertise schaffe ich es, praktische Probleme schnell zu lösen;
+3EX04;3;Fach- und Wissenskompetenz;Expertise;Ich kann komplexe Themen in meinem Fachgebiet für Laien verständlich erklären.;
+3FA01;3;Fach- und Wissenskompetenz;Fachliche Anerkennung;Meine Expertise wird von Kollegen und Fachleuten in meinem Bereich anerkannt.;
+3FA02;3;Fach- und Wissenskompetenz;Fachliche Anerkennung;Ich werde oft um Rat in meinem Fachgebiet gebeten.;
+3FA03;3;Fach- und Wissenskompetenz;Fachliche Anerkennung;Ich trage mit meiner Expertise zu fachlichen Diskussionen und Wissensaustausch bei.;
+3TA01;3;Fach- und Wissenskompetenz;Technikaffinität;Ich passe mich schnell an neue Technologien und digitale Tools an.;
+3TA02;3;Fach- und Wissenskompetenz;Technikaffinität;Ich habe Freude daran, zu erkunden, wie durch Technologie Probleme effizient gelöst werden können.;
+3TA03;3;Fach- und Wissenskompetenz;Technikaffinität;Ich verstehe die grundlegenden Prinzipien hinter den Technologien, die ich nutze.;
+4TF01;4;Soziale Kompetenz;Teamfähigkeit;Ich arbeite gern mit anderen zusammen, um gemeinsame Ziele zu erreichen.;
+4TF02;4;Soziale Kompetenz;Teamfähigkeit;Ich halte meine Teammitglieder regelmäßig über den Fortschritt meiner Aufgaben auf dem Laufenden.;
+4TF03;4;Soziale Kompetenz;Teamfähigkeit;Ich bearbeite Aufgaben lieber alleine als im Team. ;True
+4TF04;4;Soziale Kompetenz;Teamfähigkeit;Ich übernehme Verantwortung für meine Aufgaben im Team.;
+4KF01;4;Soziale Kompetenz;Kooperationsfähigkeit;Ich halte eine gute Zusammenarbeit im Team für entscheidend, um Projekte erfolgreich umzusetzen.;
+4KF02;4;Soziale Kompetenz;Kooperationsfähigkeit;Ich versuche, die Zusammenarbeit mit anderen zu fördern, indem ich deren Stärken in die Teamarbeit einbringe.;
+4KF03;4;Soziale Kompetenz;Kooperationsfähigkeit;Ich unterstütze andere bei der Erreichung ihrer Aufgaben, auch wenn diese nicht direkt meine eigenen betreffen.;
+4KF04;4;Soziale Kompetenz;Kooperationsfähigkeit;Ich kann flexibel auf Veränderungen in der Teamstruktur oder den Aufgaben reagieren.;
+4KF05;4;Soziale Kompetenz;Kooperationsfähigkeit;Ich kann unterschiedliche Perspektiven und Meinungen so integrieren, dass ein gemeinsames Verständnis entsteht.;
+4BM01;4;Soziale Kompetenz;Beziehungsmanagement;Ich pflege Beziehungen zu meinen Kolleg*innen, auch außerhalb des Arbeitskontexts.;
+4BM02;4;Soziale Kompetenz;Beziehungsmanagement;Ich achte darauf, dass meine Kommunikation stets respektvoll und empathisch ist.;
+4BM03;4;Soziale Kompetenz;Beziehungsmanagement;Wenn es im Team unterschiedliche Meinungen gibt, bemühe ich mich, diese zu verstehen und miteinzubeziehen. ;
+4BM04;4;Soziale Kompetenz;Beziehungsmanagement;Ich bemühe mich, ein harmonisches Teamklima zu schaffen, in dem sich alle wohlfühlen.;
+4FK01;4;Soziale Kompetenz;Fehlerkultur und Konfliktlösefähigkeit ;Ich gehe allen Konflikten offen und konstruktiv entgegen, um eine gemeinsame Lösung zu finden.;
+4FK02;4;Soziale Kompetenz;Fehlerkultur und Konfliktlösefähigkeit ;Ich gehe Konflikten lieber aus dem Weg, als sie im Team zu klären.;True
+4FK03;4;Soziale Kompetenz;Fehlerkultur und Konfliktlösefähigkeit ;Ich spreche Fehler offen an, auch wenn sie unangenehm sind, um gemeinsam eine Lösung zu finden.;
+4HU01;4;Soziale Kompetenz;Humor;Ich bringe regelmäßig Humor in den Arbeitsalltag ein, um eine lockere Atmosphäre zu schaffen.;
+4HU02;4;Soziale Kompetenz;Humor;Ich achte darauf, dass mein Humor respektvoll bleibt und niemanden verletzt.;
+4EM01;4;Soziale Kompetenz;Empathie;Die Ergebnisse der Arbeit sind mir wichtiger als die individuellen Bedürfnisse und Arbeitsweisen einzelner Mitarbeitender. ;True
+4EM02;4;Soziale Kompetenz;Empathie;Ich zeige vollstes Verständnis für die Herausforderungen, mit denen andere konfrontiert sind.;
+4EM03;4;Soziale Kompetenz;Empathie;Ich kann mich immer in die Gefühlslage meiner Gesprächspartner*innen hineinversetzen.;
+4HB01;4;Soziale Kompetenz;Hilfsbereitschaft;Ich bin immer bereit, anderen bei Bedarf zu helfen.;
+4HB02;4;Soziale Kompetenz;Hilfsbereitschaft;Ich gehe aktiv auf andere zu, um Unterstützung anzubieten.;
+5SW01;5;Selbstwirksamkeit und Selbstbewusstsein;AKSU - Selbstwirksamkeit;In schwierigen Situationen kann ich mich auf meine Fähigkeiten verlassen. ;
+5SW02;5;Selbstwirksamkeit und Selbstbewusstsein;AKSU - Selbstwirksamkeit;Die meisten Probleme kann ich aus eigener Kraft gut meistern.;
+5SW03;5;Selbstwirksamkeit und Selbstbewusstsein;AKSU - Selbstwirksamkeit;Auch anstrengende und komplizierte Aufgaben kann ich in der Regel gut lösen. ;
+5SV01;5;Selbstwirksamkeit und Selbstbewusstsein;STARC-5 - Self-esteem/Selbstvertrauen ;Ich fühle mich wertgeschätzt.;
+5SV02;5;Selbstwirksamkeit und Selbstbewusstsein;STARC-5 - Self-esteem/Selbstvertrauen ;Ich fühle mich schweren Situationen gewachsen.;
+5SV03;5;Selbstwirksamkeit und Selbstbewusstsein;STARC-5 - Self-esteem/Selbstvertrauen ;Gut über mich zu sprechen, fällt mir leicht.;
+5SV04;5;Selbstwirksamkeit und Selbstbewusstsein;STARC-5 - Self-esteem/Selbstvertrauen ;Ich glaube an mich.;
+5SV05;5;Selbstwirksamkeit und Selbstbewusstsein;STARC-5 - Self-esteem/Selbstvertrauen ;Ich habe viele positive Seiten.;
+5SV06;5;Selbstwirksamkeit und Selbstbewusstsein;STARC-5 - Self-esteem/Selbstvertrauen ;Ich bin ein wertvoller Mensch.;
+5SV07;5;Selbstwirksamkeit und Selbstbewusstsein;STARC-5 - Self-esteem/Selbstvertrauen ;Ich traue mir zu, alles zu schaffen.;
+6BF01;6;Beratungs- und Führungskompetenz;Beratungsfähigkeit;Wenn ich Gespräche leite, überlege ich mir vorher eine klare Struktur.;
+6BF02;6;Beratungs- und Führungskompetenz;Beratungsfähigkeit;Ich unterstütze mein Team ständig dabei, eigene Lösungen zu entwickeln.;
+6BF03;6;Beratungs- und Führungskompetenz;Beratungsfähigkeit;Ich achte immer darauf, dass die Teammitglieder ihre eigenen Stärken erkennen und nutzen.;
+6BF04;6;Beratungs- und Führungskompetenz;Beratungsfähigkeit;Ich mag es nicht, wenn ich nicht die Kontrolle über den Ablauf eines Projekts habe.;True
+6FK01;6;Beratungs- und Führungskompetenz;Führungskompetenz;Ich motiviere mein Team durch regelmäßige Rückmeldungen, um gemeinsam Ziele zu erreichen.;
+6FK02;6;Beratungs- und Führungskompetenz;Führungskompetenz;Ich unterstütze mein Team dabei, Herausforderungen erfolgreich zu bewältigen.;
+6FK03;6;Beratungs- und Führungskompetenz;Führungskompetenz;Ich zeige klare Richtung und Prioritäten bei der Arbeit im Team.;
+6FK04;6;Beratungs- und Führungskompetenz;Führungskompetenz;Ich finde es schwierig, anderen zu vertrauen, wenn es um die Umsetzung meiner Ideen geht.;True
+6LF01;6;Beratungs- und Führungskompetenz;Lehrfähigkeit;Ich erkläre Konzepte sehr klar und verständlich für mein Team.;
+6LF02;6;Beratungs- und Führungskompetenz;Lehrfähigkeit;Ich ermutige mein Team regelmäßig, selbstständig zu denken und Lösungen zu finden.;
+6LF03;6;Beratungs- und Führungskompetenz;Lehrfähigkeit;Ich beantworte alle Fragen geduldig und ausführlich.;
+6MF01;6;Beratungs- und Führungskompetenz;Mitarbeiterförderung;Ich habe klare Vorstellungen davon, was für meine Kolleg*innen am besten ist.;True
+6MF02;6;Beratungs- und Führungskompetenz;Mitarbeiterförderung;Ich gebe regelmäßig konstruktives Feedback. ;
+6MF03;6;Beratungs- und Führungskompetenz;Mitarbeiterförderung;Ich stelle sicher, dass in meinem Team die notwendigen Ressourcen vorhanden sind, um erfolgreich zu arbeiten.;
+6MF04;6;Beratungs- und Führungskompetenz;Mitarbeiterförderung;Ich frage meine Kolleg*innen nach Feedback, um mich als Mitarbeiter*in weiterzuentwickeln.;
+7GE01;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Ich bin sehr pflichtbewusst.;
+7GE02;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Meine Aufgaben erledige ich immer sehr genau.;
+7GE03;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Ich war schon als Kind sehr ordentlich.;
+7GE04;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Ich gehe immer planvoll vor.;
+7GE05;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Ich habe meine festen Prinzipien und halte daran auch fest.;
+7GE06;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Auch kleine Bußgelder sind mir sehr unangenehm.;
+7GE07;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Auch kleine Schlampereien stören mich.;
+7GE08;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Ich achte sehr darauf, dass Regeln eingehalten werden.;
+7GE09;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Wenn ich mich einmal entschieden habe, dann weiche ich davon auch nicht mehr ab.;
+7GE10;7;Gewissenhaftigkeit;Gewissenhaftigkeit (BFT);Ich mache eigentlich nie Flüchtigkeitsfehler.;
+8RE01;8;Resilienz;Affective resilience/Affektive Resilienz (STARC-5);Ich lasse mich nicht so schnell unterkriegen.;
+8RE02;8;Resilienz;Affective resilience/Affektive Resilienz (STARC-5);Auch in unerwarteten Situationen bleibe ich gelassen.;
+8RE03;8;Resilienz;Affective resilience/Affektive Resilienz (STARC-5);Ich kann gut abschalten.;
+8RE04;8;Resilienz;Affective resilience/Affektive Resilienz (STARC-5);Viel Stress macht mir nichts aus.;
+8RE05;8;Resilienz;Affective resilience/Affektive Resilienz (STARC-5);Ich kann gut mit Druck umgehen.;
+8RE06;8;Resilienz;Affective resilience/Affektive Resilienz (STARC-5);Ich bin emotional sehr belastbar.;
+8RE07;8;Resilienz;Affective resilience/Affektive Resilienz (STARC-5);Mich bringt nichts aus der Ruhe.;
+9ZH01;9;Management- und Organisationskompetenz;Zielorientiertes Handeln;Ich stelle sicher, dass alle Beteiligten ein gemeinsames Verständnis der Ziele haben.;
+9ZH02;9;Management- und Organisationskompetenz;Zielorientiertes Handeln;Ich achte darauf, dass Verantwortlichkeiten und Prozesse klar definiert sind.;
+9ZH03;9;Management- und Organisationskompetenz;Zielorientiertes Handeln;Ich setze messbare Kriterien zur Bewertung des Fortschritts ein.;
+9ZH04;9;Management- und Organisationskompetenz;Zielorientiertes Handeln;Wenn Hindernisse auftreten, greife ich zügig ein, um sicherzustellen, dass die Zielerreichung nicht gefährdet ist. ;
+9OF01;9;Management- und Organisationskompetenz;Organisationsfähigkeit;Ich plane und strukturiere Aufgaben so, dass sie effizient erledigt werden können.;
+9OF02;9;Management- und Organisationskompetenz;Organisationsfähigkeit;Wenn neue Aufgaben in meinen Arbeitsalltag hineinfallen, fällt es mir manchmal schwerer, den Überblick zu behalten.;True
+9OF03;9;Management- und Organisationskompetenz;Organisationsfähigkeit;Ich sorge dafür, dass Ressourcen optimal genutzt werden.;
+9OF04;9;Management- und Organisationskompetenz;Organisationsfähigkeit;Ich setze Prioritäten klar und passe sie bei Bedarf flexibel an.;
+12KF02;9;Management- und Organisationskompetenz;KONTROLLFRAGE;Dies ist eine Kontrollfrage, bitte kreuzen Sie hier „trifft eher nicht zu“ an. ;
+9AB01;9;Management- und Organisationskompetenz;Ausführungsbereitschaft ;Ich bringe Aufgaben konsequent zum Abschluss. ;
+9AB02;9;Management- und Organisationskompetenz;Ausführungsbereitschaft ;Ich habe manchmal Schwierigkeiten bei der termingerechten Umsetzung von Maßnahmen. ;True
+9AB03;9;Management- und Organisationskompetenz;Ausführungsbereitschaft ;Ich lasse mich nicht durch unerwartete Herausforderungen von meinen Zielen abbringen.;
+9AB04;9;Management- und Organisationskompetenz;Ausführungsbereitschaft ;Ich sorge dafür, dass geplante Maßnahmen nachhaltig in die Praxis überführt werden.;
+9EF01;9;Management- und Organisationskompetenz;Entscheidungsfähigkeit;Es fällt mir leicht, Entscheidungen zu treffen. ;
+9EF02;9;Management- und Organisationskompetenz;Entscheidungsfähigkeit;Wenn ich eine Entscheidung treffe, bin ich in der Regel überzeugt, dass sie die richtige ist.;
+9PM01;9;Management- und Organisationskompetenz;Projektmanagement;Ich identifiziere und minimiere potenzielle Risiken frühzeitig.;
+9PM02;9;Management- und Organisationskompetenz;Projektmanagement;Ich koordiniere unterschiedliche Stakeholder, um ein effizientes Zusammenspiel sicherzustellen.;
+9PM03;9;Management- und Organisationskompetenz;Projektmanagement;Wichtige Lektionen aus vergangenen Projekten gehen im Arbeitsalltag gelegentlich verloren.;True
+9PM04;9;Management- und Organisationskompetenz;Projektmanagement;Ich überprüfe regelmäßig den Projektfortschritt und passe Zeitpläne oder Maßnahmen bei Bedarf gezielt an.;
+9KS01;9;Management- und Organisationskompetenz;Konzeptionsstärke;Ich setze vorhandene Informationen und Erfahrungen gezielt ein, um meine Arbeitsweise zu verbessern.;
+9KS02;9;Management- und Organisationskompetenz;Konzeptionsstärke;Ich greife meist auf bekannte Lösungswege zurück, anstatt neue Ideen zu entwickeln.;True
+9GF01;9;Management- und Organisationskompetenz;Gestaltungsfähigkeit;Ich begeistere andere für neue Ideen und motiviere sie zur Umsetzung.;
+9GF02;9;Management- und Organisationskompetenz;Gestaltungsfähigkeit;Ich erkenne Potenziale für Verbesserungen und setze sie gezielt um.;
+9GF03;9;Management- und Organisationskompetenz;Gestaltungsfähigkeit;Ich stelle sicher, dass Veränderungen nachhaltig im Arbeitsalltag verankert werden.;
+9GF04;9;Management- und Organisationskompetenz;Gestaltungsfähigkeit;Ich vertrete mein Team oder meine Organisation überzeugend nach außen.;
+10IN01;10;Change-Kompetenz;Initiative;Ich ergreife eigenständig Maßnahmen, um Herausforderungen zu lösen.;
+10IN02;10;Change-Kompetenz;Initiative;Ich setze mich aktiv für Veränderungen ein, anstatt auf Anweisungen zu warten.;
+10IE01;10;Change-Kompetenz;Individuelles Engagement (EXQ);Ich investiere sehr viel Kraft in meine Arbeit.;
+10IE02;10;Change-Kompetenz;Individuelles Engagement (EXQ);Ich gebe mein Bestes, um gute Leistungen zu erbringen.;
+10IE03;10;Change-Kompetenz;Individuelles Engagement (EXQ);Ich arbeite mit voller Begeisterung.;
+10IE04;10;Change-Kompetenz;Individuelles Engagement (EXQ);Ich konzentriere mich sehr auf meine Arbeit.;
+10KR01;10;Change-Kompetenz;Kreativität;Ich entwickle gerne neue Ideen, um bestehende Prozesse zu verbessern.;
+10KR02;10;Change-Kompetenz;Kreativität;Es fällt mir leicht, kreative Lösungen für komplexe Probleme zu finden. ;
+10IG01;10;Change-Kompetenz;Impulsgeben;Ich bringe regelmäßig neue Perspektiven in Diskussionen ein.;
+10IG02;10;Change-Kompetenz;Impulsgeben;Ich motiviere mein Umfeld, innovative Lösungen zu erarbeiten.;
+10EF01;10;Change-Kompetenz;Experimentierfähigkeit;Ich probiere gerne neue Herangehensweisen aus, auch wenn sie ungewohnt sind.;
+10EF02;10;Change-Kompetenz;Experimentierfähigkeit;Ich gehe kalkulierte Risiken ein, um neue Möglichkeiten zu erkunden.;
+10IF01;10;Change-Kompetenz;Innovationsfähigkeit;Ich erkenne frühzeitig Trends und entwickle daraus neue Ideen.;
+10IF02;10;Change-Kompetenz;Innovationsfähigkeit;Ich treibe Innovationen aktiv voran, um mein Arbeitsumfeld zu verbessern.;
+11KO01;11;Marktorientierung;Kundenorientierung;Ich setze mich mit den Bedürfnissen von Kund*innen auseinander, um relevante Lösungen zu entwickeln.;
+11KO02;11;Marktorientierung;Kundenorientierung;Ich höre jedem Gespräch aktiv zu, um die Anliegen und Sichtweisen meines Gegenübers vollständig zu erfassen.;
+11KO03;11;Marktorientierung;Kundenorientierung;Auch bei abweichenden Sichtweisen gegenüber Mitarbeiter*innen oder Kund*innen kommuniziere ich sachlich und wertschätzend.;
+11WO01;11;Marktorientierung;Wettbewerbsorientierung;Ich beobachte Trends in meinem Arbeitsumfeld und passe meine Strategien entsprechend an.;
+11WO02;11;Marktorientierung;Wettbewerbsorientierung;Ich leite aus den Entwicklungen bei Wettbewerbern Maßnahmen für unser Vorgehen ab.;
+11IK01;11;Marktorientierung;Interfunktionale Koordination;Ich halte meine Teammitglieder regelmäßig über den Fortschritt meiner Aufgaben auf dem Laufenden.;
+11IK02;11;Marktorientierung;Interfunktionale Koordination;Ich kann unterschiedliche Perspektiven und Meinungen so integrieren, dass ein gemeinsames Verständnis entsteht.;
+11AF01;11;Marktorientierung;Akquisitionsfähigkeit;Ich erkenne Chancen, um neue Kund*innen oder Projekte zu gewinnen.;
+11AF02;11;Marktorientierung;Akquisitionsfähigkeit;Ich kann andere von meinen Ideen und Konzepten überzeugen.;

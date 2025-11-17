@@ -1,0 +1,7 @@
+Frage-ID;Cluster-Nummer;Cluster-Name;Subskala;Frage;invertiert
+1AD01;1;Test Cluster 1;Subskala AD;Testfrage 1.1;
+2DC01;2;Test Cluster 2;Subskala DC;Testfrage 2.1;WAHR
+2GF01;2;Test Cluster 2;Subskala GF;Testfrage 2.2;
+3SD01;3;Test Cluster 3;Subskala SD;Testfrage 3.1;
+3SD02;3;Test Cluster 3;Subskala SD;Testfrage 3.2;
+3LK01;3;Test Cluster 3;Subskala LK;Testfrage 3.3;
