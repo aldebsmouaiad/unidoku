@@ -1,0 +1,149 @@
+{
+  "name": "NIRO Reifegradmodell Technische Dokumentation (Beispiel)",
+  "description": "Vereinfachte Konfiguration. Weitere Dimensionen/Fragen können ergänzt werden.",
+  "levels_info": {
+    "1": "initial",
+    "2": "gemanagt",
+    "3": "definiert",
+    "4": "quantitativ gemanagt",
+    "5": "optimiert"
+  },
+  "dimensions": [
+    {
+      "code": "TD1.1",
+      "name": "Prozessinitiierung",
+      "category": "TD",
+      "description": "Formale Auslösung und Planung der Dokumentationsprozesse.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD1.1-L1-Q1",
+              "text": "Gibt es definierte Auslöser für den Start der technischen Dokumentation?"
+            },
+            {
+              "id": "TD1.1-L1-Q2",
+              "text": "Werden diese Auslöser von allen beteiligten Bereichen konsequent genutzt?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD1.1-L2-Q1",
+              "text": "Ist der Start der Dokumentation in Prozessen oder Arbeitsanweisungen beschrieben?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": []
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": []
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": []
+        }
+      ]
+    },
+    {
+      "code": "TD1.2",
+      "name": "Informationsbeschaffung",
+      "category": "TD",
+      "description": "Aufnahme und Pflege der für die Dokumentation benötigten Informationen.",
+      "default_target_level": 2,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD1.2-L1-Q1",
+              "text": "Gibt es definierte Ansprechpersonen für Fachinformationen?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD1.2-L2-Q1",
+              "text": "Werden Informationsquellen dokumentiert und gepflegt?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": []
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": []
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": []
+        }
+      ]
+    },
+    {
+      "code": "OG1.1",
+      "name": "Wissensspeicherung",
+      "category": "OG",
+      "description": "Strukturierte Ablage von Wissen und Dokumenten.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG1.1-L1-Q1",
+              "text": "Werden wichtige Dokumente an einem zentralen Ort gespeichert?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG1.1-L2-Q1",
+              "text": "Gibt es verbindliche Regeln für die Ablage von Dokumenten?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": []
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": []
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": []
+        }
+      ]
+    }
+  ]
+}
