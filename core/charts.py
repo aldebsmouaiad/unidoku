@@ -1,46 +1,51 @@
 # core/charts.py
-# Plotly-Radarplots für TD/OG
+from __future__ import annotations
 
 from typing import Optional
 
-import plotly.graph_objects as go
 import pandas as pd
+import plotly.graph_objects as go
 
 
-def create_radar_ist_soll(df: pd.DataFrame, title: str) -> go.Figure:
+def radar_ist_soll(df: pd.DataFrame, category: str, title: str) -> Optional[go.Figure]:
     """
-    Radarplot mit Ist- und Soll-Werten je Dimension.
-    Erwartete Spalten: Code, Name, Ist, Soll
+    Erstellt einen Radarplot (Ist vs. Soll) für eine Kategorie (TD / OG).
+
+    :param df: DataFrame aus build_overview_table.
+    :param category: "TD" oder "OG".
+    :param title: Titel für den Plot.
+    :return: Plotly-Figure oder None, wenn keine Daten.
     """
-    if df.empty:
-        fig = go.Figure()
-        fig.update_layout(title="Keine Daten")
-        return fig
+    # Nach Kategorie filtern und stabil nach Code sortieren
+    sub = df[df["category"] == category].sort_values("code")
+    if sub.empty:
+        return None
 
-    labels = [f"{c} – {n}" for c, n in zip(df["Code"], df["Name"])]
-    ist_values = df["Ist"].fillna(0.0).tolist()
-    soll_values = df["Soll"].fillna(0.0).tolist()
+    labels = sub["code"].tolist()
+    ist = pd.to_numeric(sub["ist_level"], errors="coerce").fillna(0).tolist()
+    soll = pd.to_numeric(sub["target_level"], errors="coerce").fillna(0).tolist()
 
-    labels_closed = labels + labels[:1]
-    ist_closed = ist_values + ist_values[:1]
-    soll_closed = soll_values + soll_values[:1]
+    # Kurven schließen
+    labels += labels[:1]
+    ist += ist[:1]
+    soll += soll[:1]
 
     fig = go.Figure()
+
     fig.add_trace(
         go.Scatterpolar(
-            r=ist_closed,
-            theta=labels_closed,
+            r=ist,
+            theta=labels,
             fill="toself",
             name="Ist-Reifegrad",
         )
     )
     fig.add_trace(
         go.Scatterpolar(
-            r=soll_closed,
-            theta=labels_closed,
+            r=soll,
+            theta=labels,
             fill="toself",
             name="Soll-Reifegrad",
-            opacity=0.5,
         )
     )
 
@@ -50,10 +55,9 @@ def create_radar_ist_soll(df: pd.DataFrame, title: str) -> go.Figure:
             radialaxis=dict(
                 visible=True,
                 range=[0, 5],
-                tickvals=[0, 1, 2, 3, 4, 5],
             )
         ),
         showlegend=True,
-        margin=dict(l=40, r=40, t=60, b=40),
     )
+
     return fig

@@ -1,132 +1,81 @@
 # pages/02_Dashboard.py
-# Radarplots, Tabellen & Export
-
-from datetime import datetime
-
 import streamlit as st
 
-from core.model_loader import load_model
-from core.state import ensure_session_state, render_sidebar_meta
-from core.scoring import compute_results
-from core.charts import create_radar_ist_soll
-from core.export_csv import build_export_dataframe, export_csv_bytes
-from core.export_pdf import export_pdf_bytes
+from core.model_loader import load_model_config
+from core.overview import build_overview_table
+from core.charts import radar_ist_soll
+from core.state import init_session_state
 
 
-def ensure_results():
-    model = load_model()
-    meta = st.session_state.meta
-    if st.session_state.df_dim is None:
-        df_dim, df_cat, overall = compute_results(
-            model=model,
-            answers=st.session_state.answers,
-            global_target_level=meta["target_level"],
-            dimension_targets=st.session_state.dimension_targets,
-        )
-        st.session_state.df_dim = df_dim
-        st.session_state.df_cat = df_cat
-        st.session_state.overall = overall
+def get_answers():
+    # Antworten aus der Session holen (falls noch nicht vorhanden: leeres Dict)
+    return st.session_state.get("answers", {})
 
 
 def main():
-    ensure_session_state()
-    meta = render_sidebar_meta()
-    ensure_results()
+    # Session-State initialisieren (answers, global_target_level, dimension_targets, ...)
+    init_session_state()
 
-    df_dim = st.session_state.df_dim
-    df_cat = st.session_state.df_cat
-    overall = st.session_state.overall
+    st.title("Dashboard – Gesamtübersicht")
 
-    st.title("Dashboard – Auswertung")
+    # Modell laden (aus data/models/niro_td_model.json)
+    model = load_model_config()
 
-    if df_dim is None or df_dim.empty:
-        st.info("Noch keine Ergebnisse vorhanden. Bitte zuerst die Erhebung ausfüllen.")
-        return
+    answers = get_answers()
+    global_target = st.session_state.get("global_target_level", 3.0)
+    dim_targets = st.session_state.get("dimension_targets", {})
+    priorities = st.session_state.get("priorities", {})
 
-    col1, col2, col3 = st.columns(3)
+    # Übersichtstabelle (eine Zeile pro Dimension)
+    df = build_overview_table(
+        model=model,
+        answers=answers,
+        global_target_level=global_target,
+        per_dimension_targets=dim_targets,
+        priorities=priorities,
+    )
+
+    st.subheader("Visualisierte Reifegrade")
+
+    col1, col2 = st.columns(2)
+
     with col1:
-        st.metric(
-            "Gesamt-Reifegrad (Ist)",
-            f"{overall['overall_ist']:.2f}",
-            help=f"Stufe {int(overall['overall_ist_level'])} – {overall['overall_ist_text']}",
-        )
-    with col2:
-        st.metric(
-            "Globales Sollniveau",
-            f"Stufe {meta['target_level']} ({meta['target_label']})",
-        )
-    with col3:
-        st.metric("Anzahl Dimensionen", len(df_dim))
-
-    st.markdown("### Radarplots")
-
-    col_td, col_og = st.columns(2)
-    with col_td:
-        td_df = df_dim[df_dim["Kategorie"] == "TD"]
-        st.subheader("TD-Dimensionen")
-        if td_df.empty:
-            st.info("Keine TD-Dimensionen im Modell.")
-        else:
-            fig_td = create_radar_ist_soll(td_df, "TD – Ist vs. Soll")
+        fig_td = radar_ist_soll(df, category="TD", title="TD-Dimensionen")
+        if fig_td:
             st.plotly_chart(fig_td, use_container_width=True)
-
-    with col_og:
-        og_df = df_dim[df_dim["Kategorie"] == "OG"]
-        st.subheader("OG-Dimensionen")
-        if og_df.empty:
-            st.info("Keine OG-Dimensionen im Modell.")
         else:
-            fig_og = create_radar_ist_soll(og_df, "OG – Ist vs. Soll")
+            st.info("Noch keine TD-Daten vorhanden – bitte zuerst die Erhebung ausfüllen.")
+
+    with col2:
+        fig_og = radar_ist_soll(df, category="OG", title="OG-Dimensionen")
+        if fig_og:
             st.plotly_chart(fig_og, use_container_width=True)
+        else:
+            st.info("Noch keine OG-Daten vorhanden – bitte zuerst die Erhebung ausfüllen.")
 
-    st.markdown("### Tabelle der Dimensionen")
-
-    st.dataframe(
-        df_dim[["Code", "Name", "Kategorie", "Ist", "Soll", "Gap", "Ist_Text"]]
-        .sort_values(["Kategorie", "Code"])
-        .style.format({"Ist": "{:.2f}", "Soll": "{:.0f}", "Gap": "{:+.2f}"})
-    )
-
-    st.markdown("---")
-    st.markdown("### Export")
-
-    df_export = build_export_dataframe(
-        df_dim=df_dim,
-        priorities_df=st.session_state.priorities_df,
-        org=str(meta["organisation"]),
-        assessor=str(meta["assessor"]),
-        date_str=meta["date"].strftime("%d.%m.%Y"),
-        target_label=str(meta["target_label"]),
-    )
-
-    csv_bytes = export_csv_bytes(df_export)
-    pdf_bytes = export_pdf_bytes(
-        df_export=df_export,
-        overall=overall,
-        org=str(meta["organisation"]),
-        assessor=str(meta["assessor"]),
-        date_str=meta["date"].strftime("%d.%m.%Y"),
-        target_label=str(meta["target_label"]),
-    )
-
-    col_csv, col_pdf = st.columns(2)
-    with col_csv:
-        st.download_button(
-            label="📄 CSV herunterladen",
-            data=csv_bytes,
-            file_name=f"reifegrad_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            mime="text/csv",
-        )
-    with col_pdf:
-        st.download_button(
-            label="📕 PDF herunterladen",
-            data=pdf_bytes,
-            file_name=f"reifegrad_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-            mime="application/pdf",
+    st.subheader("Ergebnis in Tabellenform")
+    if df.empty:
+        st.info("Noch keine Ergebnisse vorhanden.")
+    else:
+        st.dataframe(
+            df[
+                [
+                    "code",
+                    "name",
+                    "category",
+                    "ist_level",
+                    "target_level",
+                    "gap",
+                    "priority",
+                    "action",
+                    "timeframe",
+                ]
+            ],
+            use_container_width=True,
         )
 
-    st.caption("Hinweis: Die App speichert keine Daten dauerhaft. Bitte CSV/PDF lokal sichern.")
 
-
+# Nur wenn diese Datei direkt mit `streamlit run pages/02_Dashboard.py`
+# gestartet wird – NICHT beim Import aus app.py:
 if __name__ == "__main__":
     main()

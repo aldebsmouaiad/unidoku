@@ -1,42 +1,95 @@
 # app.py
-# Startseite der Streamlit-Multipage-App
-
-from datetime import date
-
 import streamlit as st
+from pathlib import Path
+import importlib.util
 
-from core.model_loader import load_model
-from core.state import ensure_session_state, render_sidebar_meta
+from core.state import init_session_state
 
+# -------------------------------------------------------
+# Globale Streamlit-Konfiguration
+# -------------------------------------------------------
 st.set_page_config(
     page_title="Reifegradmodell Technische Dokumentation",
     layout="wide",
 )
 
-# Session-State initialisieren und Sidebar-Metadaten anzeigen
-ensure_session_state()
-meta = render_sidebar_meta()
+BASE_DIR = Path(__file__).resolve().parent
 
-model = load_model()
 
-st.title("Reifegradmodell – Technische Dokumentation & Organisation")
+# -------------------------------------------------------
+# Hilfsfunktion: Page-Module aus pages/-Ordner laden
+# (auch wenn sie "01_Erhebung.py" usw. heißen)
+# -------------------------------------------------------
+def load_page_module(filename: str, module_name: str):
+    """
+    Lädt eine Python-Datei aus dem Unterordner 'pages' als Modul
+    und gibt das Modulobjekt zurück.
+    """
+    file_path = BASE_DIR / "pages" / filename
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
 
-st.markdown(
-    f"""
-**Modell:** {model.name}
 
-Diese Anwendung bildet ein Reifegrad-Erhebungstool nach, das ursprünglich als Excel-Tool
-entwickelt wurde.
+# Page-Module einmalig laden
+page_erhebung = load_page_module("01_Erhebung.py", "page_erhebung")
+page_dashboard = load_page_module("02_Dashboard.py", "page_dashboard")
+page_priorisierung = load_page_module("03_Priorisierung.py", "page_priorisierung")
+page_glossar = load_page_module("04_Glossar.py", "page_glossar")
 
-**So nutzt du die App:**
 
-1. Lege im linken Sidebar Organisation, Datum und globales Zielniveau fest.
-2. Gehe zur Seite **„Erhebung“** (oben links im Seiten-Menü) und beantworte die Fragen.
-3. Schaue dir unter **„Dashboard“** die Radarplots und Tabellen an und exportiere CSV / PDF.
-4. Priorisiere unter **„Priorisierung“** die größten Gaps und plane Maßnahmen.
-5. Nutze das **„Glossar“**, um Begriffe nachzuschlagen.
+# -------------------------------------------------------
+# Start-Seite
+# -------------------------------------------------------
+def render_start():
+    st.title("Reifegradmodell Technische Dokumentation")
 
-Alle Eingaben werden nur für die aktuelle Sitzung im Speicher gehalten und
-nicht dauerhaft gespeichert.
+    st.markdown(
+        """
+Willkommen im **Reifegrad-Tool**.
+
+Über die Navigation in der **linken Sidebar** kannst du zwischen:
+
+- **Start**
+- **Erhebung**
+- **Dashboard**
+- **Priorisierung**
+- **Glossar**
+
+wechseln.
+
+Die App speichert keine Daten dauerhaft. Ergebnisse können später als CSV/PDF exportiert werden.
 """
-)
+    )
+
+
+# -------------------------------------------------------
+# Hauptfunktion
+# -------------------------------------------------------
+def main():
+    # Session-State immer initialisieren (einmal pro Run)
+    init_session_state()
+
+    # Sidebar-Navigation
+    st.sidebar.title("Navigation")
+    page = st.sidebar.radio(
+        "Seite wählen",
+        ["Start", "Erhebung", "Dashboard", "Priorisierung", "Glossar"],
+    )
+
+    if page == "Start":
+        render_start()
+    elif page == "Erhebung":
+        page_erhebung.main()
+    elif page == "Dashboard":
+        page_dashboard.main()
+    elif page == "Priorisierung":
+        page_priorisierung.main()
+    elif page == "Glossar":
+        page_glossar.main()
+
+
+if __name__ == "__main__":
+    main()

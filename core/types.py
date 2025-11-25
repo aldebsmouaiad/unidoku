@@ -1,13 +1,10 @@
 # core/types.py
-# Dataklassen für das Reifegradmodell
-
-from dataclasses import dataclass, field
-from typing import List, Optional, Dict
+from dataclasses import dataclass
+from typing import List, Dict, Optional
 
 
 @dataclass
 class Question:
-    """Eine einzelne Kontrollfrage zu einer Reifegradstufe."""
     id: str
     text: str
     help_text: Optional[str] = None
@@ -15,27 +12,37 @@ class Question:
 
 @dataclass
 class Level:
-    """Eine Reifegradstufe (1–5) innerhalb einer Dimension."""
     level_number: int
     name: str
-    questions: List[Question] = field(default_factory=list)
+    questions: List[Question]
 
 
 @dataclass
 class Dimension:
-    """Eine Dimension/Subdimension des Reifegradmodells (z. B. TD1.1)."""
     code: str
     name: str
-    category: str  # z. B. "TD" oder "OG"
-    description: Optional[str] = None
-    default_target_level: int = 3
-    levels: List[Level] = field(default_factory=list)
+    category: str   # "TD" oder "OG"
+    description: str
+    default_target_level: int
+    levels: List[Level]
 
 
 @dataclass
 class MaturityModel:
-    """Das komplette Reifegradmodell (z. B. NIRO TD-Reifegradmodell)."""
     name: str
-    description: Optional[str]
-    levels_info: Dict[int, str]
-    dimensions: List[Dimension] = field(default_factory=list)
+    description: str
+    levels_info: Dict[str, str]      # z.B. {"1": "initial", ...}
+    dimensions: List[Dimension]
+
+@dataclass
+class DimensionOverviewRow:
+    code: str
+    name: str
+    category: str
+    ist_level: float
+    soll_level: float
+    gap: float
+    priority: Optional[str] = None
+    action: Optional[str] = None
+    timeframe: Optional[str] = None
+

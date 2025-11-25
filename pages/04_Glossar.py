@@ -1,38 +1,32 @@
 # pages/04_Glossar.py
-# Glossar-Ansicht
-
 import streamlit as st
 
+from core.state import init_session_state
 from core.model_loader import load_glossary
-from core.state import ensure_session_state, render_sidebar_meta
 
 
 def main():
-    ensure_session_state()
-    render_sidebar_meta()  # nur zur Konsistenz
-    glossary = load_glossary()
+    # Session-State initialisieren (falls wir später noch mehr dort ablegen)
+    init_session_state()
 
     st.title("Glossar")
 
+    glossary = load_glossary()
     if not glossary:
-        st.info("Noch kein Glossar hinterlegt.")
+        st.info("Noch kein Glossar hinterlegt (data/glossary.json).")
         return
 
-    query = st.text_input("Begriff oder Stichwort suchen", "")
+    # Suchfeld
+    query = st.text_input("Begriff suchen", "")
 
-    if query:
-        q = query.lower()
-        filtered = [
-            g
-            for g in glossary
-            if q in g.get("term", "").lower() or q in g.get("definition", "").lower()
-        ]
-    else:
-        filtered = glossary
+    # Begriffe alphabetisch durchsuchen und anzeigen
+    for term, definition in sorted(glossary.items()):
+        if query and query.lower() not in term.lower():
+            continue
 
-    for entry in filtered:
-        with st.expander(entry.get("term", "")):
-            st.write(entry.get("definition", ""))
+        st.markdown(f"**{term}**")
+        st.write(definition)
+        st.markdown("---")
 
 
 if __name__ == "__main__":

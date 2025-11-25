@@ -1,80 +1,102 @@
 # pages/03_Priorisierung.py
-# Gaps priorisieren und Maßnahmen planen
 
 import streamlit as st
 
-from core.model_loader import load_model
-from core.state import ensure_session_state, render_sidebar_meta
-from core.scoring import compute_results
+from core.model_loader import load_model_config
+from core.overview import build_overview_table
+from core.state import init_session_state
 
 
-def ensure_results():
-    model = load_model()
-    meta = st.session_state.meta
-    if st.session_state.df_dim is None:
-        df_dim, df_cat, overall = compute_results(
-            model=model,
-            answers=st.session_state.answers,
-            global_target_level=meta["target_level"],
-            dimension_targets=st.session_state.dimension_targets,
-        )
-        st.session_state.df_dim = df_dim
-        st.session_state.df_cat = df_cat
-        st.session_state.overall = overall
+def get_answers():
+    return st.session_state.get("answers", {})
 
 
 def main():
-    ensure_session_state()
-    meta = render_sidebar_meta()
-    ensure_results()
+    init_session_state()
 
-    df_dim = st.session_state.df_dim
+    st.title("Priorisierung & Maßnahmenplanung")
 
-    st.title("Priorisierung – Handlungsfelder planen")
+    # Modell aus JSON laden
+    model = load_model_config()
 
-    if df_dim is None or df_dim.empty:
-        st.info("Noch keine Ergebnisse vorhanden. Bitte zuerst die Erhebung ausfüllen.")
+    answers = get_answers()
+    global_target = st.session_state.get("global_target_level", 3.0)
+    dim_targets = st.session_state.get("dimension_targets", {})
+    priorities = st.session_state.get("priorities", {})
+
+    st.write(
+        "Legen Sie für jede Dimension fest, **wie wichtig** sie ist und "
+        "welche **konkreten Maßnahmen** Sie angehen möchten."
+    )
+
+    df = build_overview_table(
+        model=model,
+        answers=answers,
+        global_target_level=global_target,
+        per_dimension_targets=dim_targets,
+        priorities=priorities,
+    )
+
+    new_priorities = {}
+
+    if df.empty:
+        st.info("Noch keine Ergebnisse vorhanden – bitte zuerst die Erhebung durchführen.")
         return
 
-    st.markdown(
-        """
-Hier kannst du die Dimensionen mit den größten Gaps priorisieren und Maßnahmen planen.  
-Die Spalten **Priorität**, **Maßnahme** und **Zeitraum** sind editierbar.
-"""
-    )
+    for _, row in df.iterrows():
+        code = row["code"]
+        name = row["name"]
+        gap = row["gap"]
 
-    df_dim = df_dim.sort_values("Gap", ascending=False)
-    df_dim["Dimension"] = df_dim["Code"] + " – " + df_dim["Name"]
+        st.markdown(f"### {code} – {name}")
+        st.caption(f"Gap (Soll–Ist): **{gap:.2f}** Reifegradstufen")
 
-    # Bisherige Priorisierungen übernehmen
-    if st.session_state.priorities_df is not None:
-        prev = st.session_state.priorities_df[["Code", "Priorität", "Maßnahme", "Zeitraum"]]
-        df_dim = df_dim.merge(prev, on="Code", how="left")
-    else:
-        df_dim["Priorität"] = ""
-        df_dim["Maßnahme"] = ""
-        df_dim["Zeitraum"] = ""
+        col1, col2, col3 = st.columns([1, 3, 2])
 
-    edit_cols = ["Code", "Dimension", "Ist", "Soll", "Gap", "Priorität", "Maßnahme", "Zeitraum"]
+        # Bisherige Priorität vorbefüllen (falls vorhanden)
+        prev = priorities.get(code, {})
+        options = ["", "A (hoch)", "B (mittel)", "C (niedrig)"]
+        try:
+            default_index = options.index(prev.get("priority", ""))
+        except ValueError:
+            default_index = 0
 
-    edited = st.data_editor(
-        df_dim[edit_cols],
-        num_rows="fixed",
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "Ist": st.column_config.NumberColumn(format="%.2f"),
-            "Soll": st.column_config.NumberColumn(format="%.0f"),
-            "Gap": st.column_config.NumberColumn(format="+.2f"),
-        },
-        key="prio_editor",
-    )
+        with col1:
+            priority = st.selectbox(
+                "Priorität",
+                options=options,
+                index=default_index,
+                key=f"prio_{code}",
+            )
 
-    st.session_state.priorities_df = edited
+        with col2:
+            action = st.text_input(
+                "Maßnahme",
+                value=prev.get("action", ""),
+                key=f"action_{code}",
+                placeholder="z. B. Redaktionsleitfaden erstellen",
+            )
 
-    st.caption(
-        "Die hier gesetzten Prioritäten und Maßnahmen werden beim CSV/PDF-Export mit ausgegeben."
-    )
+        with col3:
+            timeframe = st.text_input(
+                "Zeitraum",
+                value=prev.get("timeframe", ""),
+                key=f"timeframe_{code}",
+                placeholder="z. B. Q1/2026",
+            )
+
+        if priority or action or timeframe:
+            new_priorities[code] = {
+                "priority": priority,
+                "action": action,
+                "timeframe": timeframe,
+            }
+
+        st.markdown("---")
+
+    if st.button("Priorisierungen übernehmen"):
+        st.session_state["priorities"] = new_priorities
+        st.success("Prioritäten und Maßnahmen wurden aktualisiert.")
 
 
 if __name__ == "__main__":

@@ -1,189 +1,120 @@
 # core/scoring.py
-# Reifegradberechnung und Ist/Soll/Gaps
+from __future__ import annotations
 
-from typing import Dict, Tuple, Optional, List
-from dataclasses import asdict
+from typing import Dict, Any, List
 
-import numpy as np
-import pandas as pd
+from core.types import Dimension as DimensionDC
 
-from .types import MaturityModel, Dimension
-
-# Globale Antwortskala wie im Excel
-ANSWER_OPTIONS = [
-    "Vollständig",
-    "In den meisten Fällen",
-    "In ein paar Fällen",
-    "Gar nicht",
-    "Nicht anwendbar",
-]
-
+# Antwort-Skala (Text -> numerischer Score)
 ANSWER_SCORES: Dict[str, float] = {
     "Vollständig": 1.0,
     "In den meisten Fällen": 0.75,
     "In ein paar Fällen": 0.5,
     "Gar nicht": 0.0,
-    # wie im Excel: NA wird nicht negativ gewertet
-    "Nicht anwendbar": 1.0,
-}
-
-LEVEL_LABELS: Dict[int, str] = {
-    1: "initial",
-    2: "gemanagt",
-    3: "definiert",
-    4: "quantitativ gemanagt",
-    5: "optimiert",
+    "Nicht anwendbar": 1.0,  # wird wie "erfüllt" gewertet
 }
 
 
-def answer_to_score(answer: Optional[str]) -> Optional[float]:
-    if answer is None:
-        return None
-    return ANSWER_SCORES.get(answer)
-
-
-def round_to_quarter(x: float) -> float:
-    """Rundet auf 0,25-Schritte."""
-    return round(x * 4) / 4.0
-
-
-def compute_dimension_score(
-    dimension: Dimension,
-    answers: Dict[str, str],
-) -> Tuple[Optional[float], Dict[int, Optional[float]]]:
+def _iter_levels(dimension: DimensionDC | Dict[str, Any]):
     """
-    Berechnet den Ist-Reifegrad einer Dimension.
-
-    Rückgabe:
-    - Gesamt-Score (0..5, auf 0.25 gerundet) oder None
-    - Dictionary level_number -> Mittelwert der Antworten
+    Liefert eine sortierte Liste von Level-Objekten (egal ob Dataclass oder Dict).
     """
-    level_means: Dict[int, Optional[float]] = {}
+    # Fall 1: Dataclass-Variante
+    if isinstance(dimension, DimensionDC):
+        levels = sorted(dimension.levels, key=lambda lvl: lvl.level_number)
+        for lvl in levels:
+            yield {
+                "level_number": lvl.level_number,
+                "questions": [{"id": q.id} for q in lvl.questions],
+            }
 
-    # Mittelwert je Stufe berechnen
-    for level in dimension.levels:
+    # Fall 2: JSON-/Dict-Variante
+    else:
+        levels_raw = sorted(
+            dimension.get("levels", []),
+            key=lambda lvl: lvl.get("level_number", 0),
+        )
+        for lvl in levels_raw:
+            yield {
+                "level_number": lvl.get("level_number", 0),
+                "questions": lvl.get("questions", []),
+            }
+
+
+def compute_dimension_maturity(
+    dimension: DimensionDC | Dict[str, Any],
+    answers: Dict[str, Any],
+) -> float:
+    """
+    Berechnet den Ist-Reifegrad einer Dimension auf Basis der Antworten.
+
+    Unterstützt:
+    - numerische Antworten 1–5 (Slider aus 01_Erhebung.py)
+    - Text-Antworten gemäß ANSWER_SCORES.
+
+    Logik:
+    - Für jedes Level werden die Fragen gesucht.
+    - Antworten werden in einen Score in [0, 1] umgerechnet.
+      * Zahl 1..5 -> 0.0..1.0 (1 = gar nicht, 5 = vollständig)
+      * Text -> gemäß ANSWER_SCORES
+    - Ein Level gilt als "erreicht", wenn der Durchschnitt >= 0.99 ist.
+    - Reifegrad = Anzahl vollständig erreichter Levels
+      + ggf. Anteil beim ersten nicht vollständig erfüllten Level.
+    - Ergebnis wird auf 0.25-Schritte gerundet.
+    """
+    levels = list(_iter_levels(dimension))
+    if not levels:
+        return 0.0
+
+    fully_reached = 0
+    partial_fraction = 0.0
+    partial_found = False
+
+    for level in levels:
+        q_ids = [q["id"] for q in level["questions"]]
         scores: List[float] = []
-        for q in level.questions:
-            s = answer_to_score(answers.get(q.id))
-            if s is not None:
-                scores.append(s)
 
-        if scores:
-            level_means[level.level_number] = float(np.mean(scores))
-        else:
-            level_means[level.level_number] = None
+        for q_id in q_ids:
+            ans = answers.get(q_id)
+            if ans is None:
+                continue
 
-    # Hierarchische Aggregation
-    full_levels = 0
-    partial = 0.0
-    first_partial = False
+            score: float | None
 
-    for lvl in sorted(level_means.keys()):
-        m = level_means[lvl]
-        if m is None:
+            # Fall A: numerische Skala 1–5 (Slider)
+            if isinstance(ans, (int, float)):
+                val = float(ans)
+                # auf 1..5 begrenzen
+                val = max(1.0, min(5.0, val))
+                # 1 -> 0.0, 5 -> 1.0
+                score = (val - 1.0) / 4.0
+
+            # Fall B: Textskala (Vollständig, Gar nicht, ...)
+            else:
+                score = ANSWER_SCORES.get(str(ans))
+
+            if score is None:
+                continue
+
+            scores.append(score)
+
+        if not scores:
+            # keine verwertbaren Antworten für dieses Level -> Abbruch
             break
 
-        if m >= 0.99:  # vollständig erfüllt
-            full_levels += 1
+        avg_score = sum(scores) / len(scores)
+
+        if avg_score >= 0.99:
+            fully_reached += 1
         else:
-            partial = m
-            first_partial = True
+            partial_fraction = avg_score  # 0..1
+            partial_found = True
             break
 
-    if full_levels == 0 and not first_partial:
-        # keine Antworten vorhanden
-        return None, level_means
+    maturity = float(fully_reached)
+    if partial_found:
+        maturity += partial_fraction
 
-    score = full_levels + partial
-    score = max(0.0, min(5.0, score))
-    score = round_to_quarter(score)
-    return score, level_means
-
-
-def level_from_score(score: float) -> int:
-    """Mappt numerischen Score auf Reifegradstufe 1–5."""
-    lvl = int(round(max(0.0, min(5.0, score))))
-    return max(1, min(5, lvl))
-
-
-def compute_results(
-    model: MaturityModel,
-    answers: Dict[str, str],
-    global_target_level: int,
-    dimension_targets: Dict[str, int],
-) -> Tuple[pd.DataFrame, pd.DataFrame, Dict[str, float]]:
-    """
-    Berechnet:
-    - df_dim: Reifegrad je Dimension (Ist, Soll, Gap)
-    - df_cat: gemittelte Werte je Kategorie (TD/OG)
-    - overall: Kennzahlen zum Gesamt-Reifegrad
-    """
-    rows = []
-    cat_scores: Dict[str, List[float]] = {}
-
-    for dim in model.dimensions:
-        ist_score, _ = compute_dimension_score(dim, answers)
-
-        ist_val = float(ist_score) if ist_score is not None else np.nan
-
-        # Dimension-spezifischer Override > globales Ziel > Default
-        target_lvl = int(
-            dimension_targets.get(
-                dim.code,
-                global_target_level if global_target_level else dim.default_target_level,
-            )
-        )
-
-        gap = target_lvl - ist_val if not np.isnan(ist_val) else np.nan
-        ist_level = level_from_score(ist_val) if not np.isnan(ist_val) else np.nan
-        ist_text = LEVEL_LABELS.get(ist_level, "") if not np.isnan(ist_level) else ""
-
-        rows.append(
-            {
-                "Code": dim.code,
-                "Name": dim.name,
-                "Kategorie": dim.category,
-                "Beschreibung": dim.description or "",
-                "Ist": ist_val,
-                "Ist_Stufe": ist_level,
-                "Ist_Text": ist_text,
-                "Soll": float(target_lvl),
-                "Gap": gap,
-            }
-        )
-
-        if not np.isnan(ist_val):
-            cat_scores.setdefault(dim.category, []).append(ist_val)
-
-    df_dim = pd.DataFrame(rows)
-
-    cat_rows = []
-    for cat, vals in cat_scores.items():
-        if not vals:
-            continue
-        m = float(np.mean(vals))
-        lvl = level_from_score(m)
-        cat_rows.append(
-            {
-                "Kategorie": cat,
-                "Ist": m,
-                "Ist_Stufe": lvl,
-                "Ist_Text": LEVEL_LABELS.get(lvl, ""),
-            }
-        )
-
-    df_cat = pd.DataFrame(cat_rows)
-
-    overall_ist = float(df_dim["Ist"].mean()) if not df_dim.empty else np.nan
-    overall = {
-        "overall_ist": overall_ist,
-        "overall_ist_level": level_from_score(overall_ist)
-        if not np.isnan(overall_ist)
-        else np.nan,
-        "overall_ist_text": LEVEL_LABELS.get(level_from_score(overall_ist), "")
-        if not np.isnan(overall_ist)
-        else "",
-        "overall_target": float(global_target_level),
-    }
-
-    return df_dim, df_cat, overall
+    # auf 0.25-Schritte runden
+    maturity = round(maturity * 4) / 4.0
+    return maturity
