@@ -5,12 +5,27 @@ import pandas as pd
 import io
 
 
+def _na_to_text(x) -> object:
+    """
+    Wandelt NaN/Inf in ein Excel-nahes Textlabel um.
+    Excel zeigt in solchen Fällen typischerweise n.a./#N/A.
+    Für CSV nutzen wir "n.a.".
+    """
+    try:
+        if pd.isna(x):
+            return "n.a."
+    except Exception:
+        pass
+    return x
+
+
 def build_export_dataframe(
     df_dim: pd.DataFrame,
     org: str,
     assessor: str,
     date_str: str,
     target_label: str,
+    area: str = "",  # neu: Bereich (optional, um Call-Sites nicht sofort zu brechen)
     priorities_df: Optional[pd.DataFrame] = None,
 ) -> pd.DataFrame:
     """
@@ -24,6 +39,10 @@ def build_export_dataframe(
     übernommen werden. Diese darf entweder Spaltennamen in Englisch
     (code, priority, action, timeframe) oder Deutsch (Code, Priorität,
     Maßnahme, Zeitraum) haben.
+
+    Neue Excel-Logik-Anpassungen:
+    - Metadaten-Spalte "Bereich" wird ergänzt.
+    - n/a (NaN aus scoring) wird als "n.a." exportiert (statt leer/nan).
     """
     base = df_dim.copy()
 
@@ -54,9 +73,10 @@ def build_export_dataframe(
 
         # Falls es Überschneidungen gibt, prio-Spalten bevorzugen
         for col in ["priority", "action", "timeframe"]:
-            if f"{col}_prio" in base.columns:
-                base[col] = base[f"{col}_prio"].fillna(base[col])
-                base.drop(columns=[f"{col}_prio"], inplace=True)
+            prio_col = f"{col}_prio"
+            if prio_col in base.columns:
+                base[col] = base[prio_col].fillna(base[col])
+                base.drop(columns=[prio_col], inplace=True)
 
     # Jetzt ins "schöne" Export-Schema umbenennen
     export_df = base.rename(
@@ -73,11 +93,18 @@ def build_export_dataframe(
         }
     )
 
-    # Metadaten vorne einfügen
+    # n.a. Handling (NaN aus scoring) -> "n.a." im CSV
+    # Wichtig: Ziel_Level bleibt i.d.R. numerisch; Ist_Level/Gap können n.a. sein.
+    for col in ["Ist_Level", "Gap"]:
+        if col in export_df.columns:
+            export_df[col] = export_df[col].apply(_na_to_text)
+
+    # Metadaten vorne einfügen (Reihenfolge Excel-nah)
     export_df.insert(0, "Organisation", org)
-    export_df.insert(1, "Bewertet_von", assessor)
-    export_df.insert(2, "Datum", date_str)
-    export_df.insert(3, "Globales_Ziel_Label", target_label)
+    export_df.insert(1, "Bereich", area)
+    export_df.insert(2, "Bewertet_von", assessor)
+    export_df.insert(3, "Datum", date_str)
+    export_df.insert(4, "Globales_Ziel_Label", target_label)
 
     return export_df
 

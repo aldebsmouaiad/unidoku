@@ -1,17 +1,20 @@
 # core/scoring.py
 from __future__ import annotations
 
-from typing import Dict, Any, List
+import math
+from typing import Dict, Any, List, Optional
 
 from core.types import Dimension as DimensionDC
 
+
 # Antwort-Skala (Text -> numerischer Score)
-ANSWER_SCORES: Dict[str, float] = {
+# Neue Excel-Logik: "Nicht anwendbar" => None (aus dem Nenner entfernen)
+ANSWER_SCORES: Dict[str, Optional[float]] = {
     "Vollständig": 1.0,
     "In den meisten Fällen": 0.75,
     "In ein paar Fällen": 0.5,
     "Gar nicht": 0.0,
-    "Nicht anwendbar": 1.0,  # wird wie "erfüllt" gewertet
+    "Nicht anwendbar": None,
 }
 
 
@@ -19,7 +22,6 @@ def _iter_levels(dimension: DimensionDC | Dict[str, Any]):
     """
     Liefert eine sortierte Liste von Level-Objekten (egal ob Dataclass oder Dict).
     """
-    # Fall 1: Dataclass-Variante
     if isinstance(dimension, DimensionDC):
         levels = sorted(dimension.levels, key=lambda lvl: lvl.level_number)
         for lvl in levels:
@@ -27,8 +29,6 @@ def _iter_levels(dimension: DimensionDC | Dict[str, Any]):
                 "level_number": lvl.level_number,
                 "questions": [{"id": q.id} for q in lvl.questions],
             }
-
-    # Fall 2: JSON-/Dict-Variante
     else:
         levels_raw = sorted(
             dimension.get("levels", []),
@@ -46,21 +46,13 @@ def compute_dimension_maturity(
     answers: Dict[str, Any],
 ) -> float:
     """
-    Berechnet den Ist-Reifegrad einer Dimension auf Basis der Antworten.
+    Berechnet den Ist-Reifegrad einer Dimension (neue Excel-Logik 20251209):
 
-    Unterstützt:
-    - numerische Antworten 1–5 (Slider aus 01_Erhebung.py)
-    - Text-Antworten gemäß ANSWER_SCORES.
-
-    Logik:
-    - Für jedes Level werden die Fragen gesucht.
-    - Antworten werden in einen Score in [0, 1] umgerechnet.
-      * Zahl 1..5 -> 0.0..1.0 (1 = gar nicht, 5 = vollständig)
-      * Text -> gemäß ANSWER_SCORES
-    - Ein Level gilt als "erreicht", wenn der Durchschnitt >= 0.99 ist.
-    - Reifegrad = Anzahl vollständig erreichter Levels
-      + ggf. Anteil beim ersten nicht vollständig erfüllten Level.
-    - Ergebnis wird auf 0.25-Schritte gerundet.
+    - "Nicht anwendbar" wird NICHT als erfüllt gezählt, sondern aus dem Nenner entfernt.
+    - Unbeantwortet (None) zählt als 0.0 (wie "Gar nicht"), damit nichts schöngerechnet wird.
+    - Wenn Level 1 ausschließlich NA ist => Ergebnis = NaN (entspricht n/a/#N/A).
+    - Gating: sobald ein Level nicht vollständig erfüllt ist, wird abgebrochen.
+    - Rundung: immer ABRUNDEN auf 0.25-Schritte.
     """
     levels = list(_iter_levels(dimension))
     if not levels:
@@ -72,42 +64,43 @@ def compute_dimension_maturity(
 
     for level in levels:
         q_ids = [q["id"] for q in level["questions"]]
-        scores: List[float] = []
+
+        # Scores dieses Levels (anwendbar)
+        applicable_scores: List[float] = []
 
         for q_id in q_ids:
             ans = answers.get(q_id)
+
+            # Unbeantwortet zählt als 0.0 (wichtig: nicht "continue")
             if ans is None:
+                applicable_scores.append(0.0)
                 continue
 
-            score: float | None
+            # Text-Antworten (Single-Choice)
+            score = ANSWER_SCORES.get(str(ans))
 
-            # Fall A: numerische Skala 1–5 (Slider)
-            if isinstance(ans, (int, float)):
-                val = float(ans)
-                # auf 1..5 begrenzen
-                val = max(1.0, min(5.0, val))
-                # 1 -> 0.0, 5 -> 1.0
-                score = (val - 1.0) / 4.0
+            # Nicht anwendbar -> None -> aus Nenner entfernen
+            if score is None and str(ans) == "Nicht anwendbar":
+                continue
 
-            # Fall B: Textskala (Vollständig, Gar nicht, ...)
-            else:
-                score = ANSWER_SCORES.get(str(ans))
-
+            # Unbekannter Text -> konservativ 0.0
             if score is None:
-                continue
+                score = 0.0
 
-            scores.append(score)
+            applicable_scores.append(score)
 
-        if not scores:
-            # keine verwertbaren Antworten für dieses Level -> Abbruch
+        # Wenn gar keine anwendbaren Fragen im Level übrig bleiben => Level ist "n.a."
+        if not applicable_scores:
+            if level["level_number"] == 1:
+                return float("nan")  # Excel: Stufe 1 n.a. => gesamte Subdimension n.a.
             break
 
-        avg_score = sum(scores) / len(scores)
+        avg_score = sum(applicable_scores) / len(applicable_scores)
 
         if avg_score >= 0.99:
             fully_reached += 1
         else:
-            partial_fraction = avg_score  # 0..1
+            partial_fraction = avg_score
             partial_found = True
             break
 
@@ -115,6 +108,6 @@ def compute_dimension_maturity(
     if partial_found:
         maturity += partial_fraction
 
-    # auf 0.25-Schritte runden
-    maturity = round(maturity * 4) / 4.0
+    # Excel neu: ROUNDDOWN auf 0.25-Schritte
+    maturity = math.floor(maturity * 4.0) / 4.0
     return maturity

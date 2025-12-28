@@ -23,9 +23,24 @@ def load_model_config() -> dict:
 
 
 @st.cache_data
+def load_tool_meta() -> dict:
+    """
+    Lädt Metadaten für Start/Intro aus data/models/niro_td_meta.json.
+    (separate Datei, unabhängig vom Modell)
+    """
+    path = BASE_DIR / "data" / "models" / "niro_td_meta.json"
+    if not path.exists():
+        return {}
 
+    with path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    return data if isinstance(data, dict) else {}
+
+
+@st.cache_data
 def load_glossary():
-    path = Path("data/glossary.json")
+    path = BASE_DIR / "data" / "glossary.json"
     if not path.exists():
         return {}
 
@@ -41,9 +56,7 @@ def load_glossary():
             if (item.get("term") or item.get("name") or item.get("Begriff"))
         }
 
-    # Falls schon Dict: einfach zurückgeben
     if isinstance(data, dict):
         return data
 
-    # Fallback
     return {}
