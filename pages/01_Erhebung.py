@@ -1338,6 +1338,10 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
             if choice in ANSWER_OPTIONS and choice != saved:
                 answers[qid] = choice
                 dirty = True
+        
+        # ✅ Trenner + Abstand NACH der letzten Frage der Stufe (vor der nächsten Stufe)
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+        st.markdown("<hr style='margin: 10px 0 18px 0; border:0; border-top:1px solid rgba(0,0,0,0.10);'>", unsafe_allow_html=True)
 
     if dirty:
         persist.save(aid)
