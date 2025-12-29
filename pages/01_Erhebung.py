@@ -42,9 +42,8 @@ ANSWER_OPTIONS = [
     "Vollständig",
 ]
 
-# Stabil über Streamlit-Versionen: Platzhalter statt index=None
-ANSWER_OPTIONS_WIDGET = [""] + ANSWER_OPTIONS  # "" wird per CSS versteckt
-
+# Keine Platzhalter-Option mehr: wir nutzen index=None (keine Vorauswahl)
+ANSWER_OPTIONS_WIDGET = ANSWER_OPTIONS
 
 # -----------------------------
 # Hilfsfunktionen (Allgemein)
@@ -297,11 +296,6 @@ def _inject_glossary_link_css() -> None:
 
   .rgm-q{ margin: 6px 0 6px 0; line-height: 1.35; }
   .rgm-qno{ font-weight: 800; margin-right: 6px; white-space: nowrap; }
-
-  /* "keine Auswahl" Option (leerer Text) ausblenden */
-  div[data-testid="stRadio"] div[role="radiogroup"] label:has(span:empty){
-    display: none !important;
-  }
 </style>
         """,
         unsafe_allow_html=True,
@@ -783,9 +777,12 @@ def _inject_erhebung_css_for_footer() -> None:
 
 def _footer_navigation(model: dict, aid: str) -> None:
     """
-    Fix:
-    - Kein Setzen von st.session_state["erhebung_dim_idx_ui"] nach Instanziierung des Selectbox-Widgets.
-    - Weiter/Zurück/Sprung -> immer Scroll-to-top (Erhebung).
+    Footer-Layout:
+    Navigation
+    Zu Dimension springen
+    [Selectbox]
+    [Zurück] [Weiter]
+    Fortschritt (Pipe)
     """
     dims = model.get("dimensions", []) or []
     if not dims:
@@ -797,8 +794,9 @@ def _footer_navigation(model: dict, aid: str) -> None:
     # aktuelle Position clampen
     idx = int(st.session_state.get("erhebung_dim_idx", 0))
     idx = max(0, min(idx, n - 1))
-    
-    # UI-Key auf aktuellen idx setzen (damit nach Weiter/Zurück richtig angezeigt wird)
+    st.session_state["erhebung_dim_idx"] = idx
+
+    # UI-Key auf aktuellen idx setzen (damit nach Weiter/Zurück korrekt angezeigt wird)
     st.session_state["erhebung_dim_idx_ui"] = idx
 
     def _on_jump():
@@ -814,18 +812,7 @@ def _footer_navigation(model: dict, aid: str) -> None:
         _request_scroll_to_top()
         persist.save(aid)
 
-
-    st.selectbox(
-        "",
-        options=list(range(n)),
-        format_func=lambda i: labels[i],
-        key="erhebung_dim_idx_ui",
-        label_visibility="collapsed",
-        on_change=_on_jump,
-    )
-
-
-
+    # Anchor + CSS: Footer bleibt fixed (wie bisher)
     st.markdown('<div id="rgm-erhebung-footer-anchor"></div>', unsafe_allow_html=True)
     _inject_erhebung_css_for_footer()
 
@@ -833,6 +820,20 @@ def _footer_navigation(model: dict, aid: str) -> None:
     with footer:
         st.markdown('<div class="rgm-footer-title">Navigation</div>', unsafe_allow_html=True)
         st.caption("Zu Dimension springen")
+
+        # HIER: Leiste zum Springen unter Caption und über Buttons
+        st.selectbox(
+            "",
+            options=list(range(n)),
+            format_func=lambda i: labels[i],
+            key="erhebung_dim_idx_ui",
+            label_visibility="collapsed",
+            on_change=_on_jump,
+        )
+
+        st.markdown("")  # kleiner Abstand
+
+        # Buttons darunter
         b1, b2 = st.columns(2, gap="medium")
 
         with b1:
@@ -853,17 +854,15 @@ def _footer_navigation(model: dict, aid: str) -> None:
                 persist.save(aid)
                 st.rerun()
 
+        # Fortschritt (wie gehabt)
         answered = _count_answered_questions(model)
         total = _count_total_questions(model)
-        pct = (answered / total) if total else 0.0
 
         segments = 20
         done = 0
         if total > 0 and answered > 0:
             done = max(1, int((answered / total) * segments))
         done = min(segments, done)
-
-
 
         pipe: list[str] = []
         pipe.append('<div class="rgm-progress-wrap">')
@@ -880,6 +879,7 @@ def _footer_navigation(model: dict, aid: str) -> None:
         pipe.append("</div></div>")
 
         st.markdown("".join(pipe), unsafe_allow_html=True)
+
 
 
 # -----------------------------
@@ -1315,28 +1315,26 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
             )
 
             k_widget = f"q_{qid}"
-            saved = answers.get(qid, "")
+            saved = answers.get(qid, None)
 
-            # Widget-State VOR dem Widget rendern stabilisieren
-            if k_widget not in st.session_state:
-                st.session_state[k_widget] = saved if saved in ANSWER_OPTIONS else ""
-            else:
-                cur = st.session_state.get(k_widget)
-                if cur not in ANSWER_OPTIONS_WIDGET:
-                    st.session_state[k_widget] = saved if saved in ANSWER_OPTIONS else ""
-                elif (cur in ("", None)) and (saved in ANSWER_OPTIONS):
-                    st.session_state[k_widget] = saved
+            # Migration: alte Platzhalter-States ("") aus früheren Versionen entfernen
+            if st.session_state.get(k_widget, None) == "":
+                st.session_state.pop(k_widget, None)
 
-            st.radio(
+            # Wenn im Widget-State etwas Ungültiges steht: entfernen (damit index=None greifen kann)
+            if k_widget in st.session_state and st.session_state.get(k_widget) not in ANSWER_OPTIONS:
+                st.session_state.pop(k_widget, None)
+
+            # Default nur über index steuern (Streamlit nutzt index nur, wenn der Key noch nicht gesetzt ist)
+            default_index = ANSWER_OPTIONS.index(saved) if saved in ANSWER_OPTIONS else None
+
+            choice = st.radio(
                 "",
-                ANSWER_OPTIONS_WIDGET,
+                ANSWER_OPTIONS,
+                index=default_index,          # None => keine Vorauswahl
                 key=k_widget,
                 label_visibility="collapsed",
             )
-
-            choice = st.session_state.get(k_widget, "")
-
-            # Speichern ("" ist nur Platzhalter, nie löschen)
             if choice in ANSWER_OPTIONS and choice != saved:
                 answers[qid] = choice
                 dirty = True
@@ -1423,7 +1421,9 @@ def main():
     init_session_state()
 
     aid = _ensure_aid_sticky()
-    persist.restore(aid)
+    if st.session_state.get("_rgm_restored_aid") != aid:
+        persist.restore(aid)
+        st.session_state["_rgm_restored_aid"] = aid
 
     # Defaults
     if "erhebung_step" not in st.session_state:

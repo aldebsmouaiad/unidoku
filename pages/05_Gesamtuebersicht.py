@@ -8,7 +8,7 @@ from core.state import init_session_state
 from core.model_loader import load_model_config
 from core.overview import build_overview_table
 from core.charts import radar_ist_soll
-from core.exporter import after_dash, df_results_for_export, make_csv_bytes, make_pdf_bytes
+from core.exporter import df_results_for_export, make_csv_bytes, make_pdf_bytes
 
 
 def get_answers():
@@ -135,6 +135,7 @@ def main():
     priorities = st.session_state.get("priorities", {})
     meta = st.session_state.get("meta", {}) or {}
 
+    # 1) Rohdaten wie im Dashboard
     df_raw = build_overview_table(
         model=model,
         answers=answers,
@@ -147,8 +148,8 @@ def main():
         st.info("Noch keine Ergebnisse vorhanden – bitte zuerst die Erhebung durchführen.")
         return
 
-    # Für KPI/Maßnahmen: unbeantwortet -> NaN
-    df = _clean_overview_df(df_raw)
+    # 2) Bereinigte Daten NUR für KPI/Maßnahmen/Export
+    df_report = _clean_overview_df(df_raw)
 
     # --------------------------------
     # 1) Angaben zur Erhebung
@@ -164,9 +165,8 @@ def main():
         st.write(f"**Soll-Niveau (global):** {float(global_target):.1f}")
 
     st.markdown("")
-    n_answered = _kpi_block(df)
+    n_answered = _kpi_block(df_report)
 
-    # Kein return mehr: Charts sollen trotzdem (wie Dashboard) alle Dimensionen zeigen
     if n_answered == 0:
         st.warning("Noch keine Dimensionen bewertet.")
         if st.button("Zur Erhebung", type="primary", use_container_width=True):
@@ -176,23 +176,12 @@ def main():
     st.markdown("---")
 
     # --------------------------------
-    # 2) Graphen (Netzdiagramme) – wie Dashboard: ALLE Dimensionen
+    # 2) Graphen (Netzdiagramme) – EXAKT WIE DASHBOARD
     # --------------------------------
     st.subheader("Visualisiertes Ergebnis der Reifegraderhebung")
 
-    # WICHTIG: NICHT filtern! Alle Dimensionen als Achsen behalten.
-    df_chart = df.copy()
-
-    # Für Plot: NaN -> 0 bei Ist (damit Achsen vollständig bleiben)
-    df_chart["ist_level"] = pd.to_numeric(df_chart.get("ist_level", 0), errors="coerce").fillna(0.0)
-
-    # Für Plot: fehlendes Soll -> global_target (robust)
-    df_chart["target_level"] = pd.to_numeric(df_chart.get("target_level", global_target), errors="coerce").fillna(float(global_target))
-
-    # Wenn du wie Dashboard die kompletten Labels willst, entferne die nächste Zeile.
-    # (after_dash kürzt "X - Y" -> "Y".)
-    if "name" in df_chart.columns:
-        df_chart["name"] = df_chart["name"].apply(after_dash)
+    # WICHTIG: Für Charts ausschließlich df_raw verwenden (keine Bereinigung/Umbenennung)
+    df_chart = df_raw
 
     plotly_cfg = {
         "displayModeBar": "hover",
@@ -205,6 +194,11 @@ def main():
             "zoom2d", "pan2d", "select2d", "lasso2d",
             "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d",
         ],
+        "toImageButtonOptions": {
+            "format": "png",
+            "filename": "reifegrad_radar",
+            "scale": 2,
+        },
     }
 
     c1, c2 = st.columns(2)
@@ -226,11 +220,11 @@ def main():
     st.markdown("---")
 
     # --------------------------------
-    # 3) Maßnahmen (Standard: nur Handlungsbedarf; Option: alle)
+    # 3) Maßnahmen
     # --------------------------------
     st.subheader("Geplante Maßnahmen")
 
-    df_export = df_results_for_export(df)
+    df_export = df_results_for_export(df_report)
     m = df_export.copy()
 
     m["Gap"] = pd.to_numeric(m.get("Gap", pd.NA), errors="coerce")
@@ -311,7 +305,9 @@ def main():
     try:
         meta_pdf = dict(meta)
         meta_pdf["global_target"] = f"{float(global_target):.1f}"
-        pdf_bytes = make_pdf_bytes(meta=meta_pdf, df_raw=df)
+
+        # Wichtig: Für konsistente Charts/Logik im PDF ebenfalls df_raw übergeben
+        pdf_bytes = make_pdf_bytes(meta=meta_pdf, df_raw=df_raw)
 
     except Exception as e:
         pdf_error = str(e)
