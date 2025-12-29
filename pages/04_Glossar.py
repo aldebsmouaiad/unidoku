@@ -137,6 +137,11 @@ def main():
     # Defaults setzen (ohne vorhandenes zu überschreiben)
     init_session_state()
 
+    st.title("Glossar")
+
+    st.caption("Hier finden Sie Definitionen zu zentralen Begriffen und Abkürzungen. Nutzen Sie die Suche oder klappen Sie Einträge auf.")
+
+
     # AID + Restore GANZ AM ANFANG (vor Widgets)
     aid = persist.get_or_create_aid()
     persist.restore(aid)
@@ -155,8 +160,6 @@ def main():
         """,
         unsafe_allow_html=True,
     )
-
-    st.title("Glossar")
 
     model = load_model_config()
     glossary = model.get("glossary", {}) or {}

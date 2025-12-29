@@ -61,6 +61,7 @@ def main() -> None:
     init_session_state()
 
     st.title("Priorisierung & Maßnahmenplanung")
+    st.caption("Legen Sie für jede Dimension fest, wie wichtig sie ist und welche konkreten Maßnahmen Sie angehen möchten.")
     st.markdown("---")
 
     model = load_model_config()
@@ -77,11 +78,6 @@ def main() -> None:
         st.session_state["priorities_draft"] = copy.deepcopy(priorities_committed)
     if "priorities_committed" not in st.session_state:
         st.session_state["priorities_committed"] = copy.deepcopy(priorities_committed)
-
-    st.write(
-        "Legen Sie für jede Dimension fest, **wie wichtig** sie ist und "
-        "welche **konkreten Maßnahmen** Sie angehen möchten."
-    )
 
     df = build_overview_table(
         model=model,

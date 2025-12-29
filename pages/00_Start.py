@@ -119,6 +119,8 @@ def main():
     init_session_state()
     _inject_start_css()
 
+    st.title("Reifegradmodell für die Technische Dokumentation")
+
     # --- Meta laden ---
     try:
         meta = load_tool_meta()
@@ -127,7 +129,7 @@ def main():
         st.exception(e)
         meta = {}
 
-    title = meta.get("title", "Reifegradmodell für die Technische Dokumentation")
+    # title = meta.get("title", "Reifegradmodell für die Technische Dokumentation")
     created_by = meta.get("created_by", "Christian Koch")
     created_by_email = meta.get("created_by_email", "christian4.koch@tu-dortmund.de")
     version = meta.get("version", "2.0")
@@ -138,12 +140,13 @@ def main():
     # Logos (aus /images) – gecached
     logo_unidoku = _img_b64(str(IMAGES_DIR / "logo_unidoku.png"))
     logo_ips = _img_b64(str(IMAGES_DIR / "IPS-Logo-RGB.png"))
+    logo_tu = _img_b64(str(IMAGES_DIR / "tu.png"))
     logo_igf = _img_b64(str(IMAGES_DIR / "IGF-RGB.png"))
     logo_bmwe = _img_b64(str(IMAGES_DIR / "bmwi.png"))
     logo_bvl = _img_b64(str(IMAGES_DIR / "BVL_Logo.png"))
 
     # Titel aus Meta-JSON
-    st.markdown(f"## {html.escape(str(title))}")
+    # st.markdown(f"## {html.escape(str(title))}")
 
     # Metadaten oben (Name/E-Mail klickbar)
     st.markdown(
@@ -173,6 +176,8 @@ def main():
         logo_tags.append(img_tag(logo_unidoku, "UniDoku"))
     if logo_ips:
         logo_tags.append(img_tag(logo_ips, "IPS"))
+    if logo_tu:
+        logo_tags.append(img_tag(logo_tu, "TU"))
     if logo_igf:
         logo_tags.append(img_tag(logo_igf, "IGF"))
     if logo_bmwe:
