@@ -149,6 +149,7 @@ def clear_query_params_keep_aid(aid: str | None = None) -> None:
         "ret_step",
         "ret_idx",
         "ret_code",
+        "ret_q",
     ]
 
     for k in drop_keys:

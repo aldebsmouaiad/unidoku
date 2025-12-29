@@ -10,6 +10,7 @@ import streamlit as st
 from core.state import init_session_state
 from core.model_loader import load_model_config
 from core import persist
+import streamlit.components.v1 as components
 
 
 # URLs: http(s)://... oder www....
@@ -173,6 +174,12 @@ def main():
                 st.session_state.erhebung_step = step
                 st.session_state.erhebung_dim_idx = idx
                 st.session_state.erhebung_dim_idx_ui = idx
+
+                qid = (payload.get("erhebung_qid") or "").strip()
+                if qid:
+                    st.session_state["_rgm_scroll_mode"] = "qid"
+                    st.session_state["_rgm_scroll_qid"] = qid
+
 
             st.session_state["nav_request"] = ret
 

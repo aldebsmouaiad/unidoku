@@ -136,6 +136,7 @@ def _apply_query_navigation(aid: str) -> None:
     ret_step = persist.qp_get("ret_step")
     ret_idx = persist.qp_get("ret_idx")
     ret_code = persist.qp_get("ret_code")
+    ret_q    = persist.qp_get("ret_q")
 
     did_apply = False
 
@@ -151,7 +152,7 @@ def _apply_query_navigation(aid: str) -> None:
         st.session_state["glossary_focus_term"] = term
         did_apply = True
 
-    if ret_step or ret_idx or ret_code:
+    if ret_step or ret_idx or ret_code or ret_q:
         payload = dict(st.session_state.get("nav_return_payload", {}) or {})
         if ret_step and ret_step.isdigit():
             payload["erhebung_step"] = int(ret_step)
@@ -159,6 +160,8 @@ def _apply_query_navigation(aid: str) -> None:
             payload["erhebung_dim_idx"] = int(ret_idx)
         if ret_code:
             payload["dim_code"] = ret_code
+        if ret_q:
+            payload["erhebung_qid"] = ret_q
         st.session_state["nav_return_payload"] = payload
         did_apply = True
 

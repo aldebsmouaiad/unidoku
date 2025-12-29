@@ -7,9 +7,11 @@ import csv
 import re
 import html
 from datetime import datetime
-from urllib.parse import quote_plus, unquote_plus, urlencode
+from urllib.parse import quote_plus
 
 import streamlit as st
+import streamlit.components.v1 as components
+
 from core.state import init_session_state
 from core.model_loader import load_model_config
 from core import persist
@@ -97,6 +99,184 @@ def _safe_filename(s: str) -> str:
     s = re.sub(r"\s+", "_", s)
     s = re.sub(r"[^A-Za-z0-9_\-\.]", "", s)
     return s or "export"
+
+
+def _safe_dom_id(s: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_\-]", "_", (s or "").strip())
+
+
+# -----------------------------
+# Scroll: Erhebung (Top) / Glossar-Rücksprung (Frage)
+# -----------------------------
+_SCROLL_QP_MODE = "scroll"     # "top" | "qid"
+_SCROLL_QP_QID  = "scroll_q"   # qid
+
+
+def _request_scroll_to_top() -> None:
+    # Session (für direkte Reruns)
+    st.session_state["_rgm_scroll_mode"] = "top"
+    st.session_state.pop("_rgm_scroll_qid", None)
+
+    # Query-Params (falls persist.restore interne Keys überschreibt)
+    try:
+        persist.qp_set(_SCROLL_QP_MODE, "top")
+        persist.qp_set(_SCROLL_QP_QID, "")
+    except Exception:
+        pass
+
+
+def _request_scroll_to_qid(qid: str) -> None:
+    q = (qid or "").strip()
+    st.session_state["_rgm_scroll_mode"] = "qid"
+    st.session_state["_rgm_scroll_qid"] = q
+
+    try:
+        persist.qp_set(_SCROLL_QP_MODE, "qid")
+        persist.qp_set(_SCROLL_QP_QID, q)
+    except Exception:
+        pass
+
+
+def _apply_scroll_request() -> None:
+    mode = st.session_state.pop("_rgm_scroll_mode", None)
+    qid = (st.session_state.pop("_rgm_scroll_qid", "") or "").strip()
+
+    # Fallback: Query Params
+    if not mode:
+        try:
+            mode = (persist.qp_get(_SCROLL_QP_MODE) or "").strip() or None
+            if not qid:
+                qid = (persist.qp_get(_SCROLL_QP_QID) or "").strip()
+        except Exception:
+            pass
+
+    if not mode:
+        return
+
+    # Für "top" immer auf einen echten Anchor gehen (robuster als scrollTop=0)
+    if mode == "top":
+        anchor = "rgm-page-top"
+    elif mode == "qid" and qid:
+        anchor = f"rgm-q-{_safe_dom_id(qid)}"
+    else:
+        anchor = ""
+
+    js = f"""
+<script>
+(function() {{
+  function getParentDoc() {{
+    try {{ return window.parent.document; }} catch (e) {{ return document; }}
+  }}
+  const rootDoc = getParentDoc();
+
+  function findScrollers() {{
+    const out = [];
+    const push = (el) => {{ if (el && !out.includes(el)) out.push(el); }};
+
+    push(rootDoc.querySelector('[data-testid="stAppViewContainer"]'));
+    push(rootDoc.querySelector('[data-testid="stMain"]'));
+    push(rootDoc.querySelector('section.main'));
+    push(rootDoc.querySelector('.main'));
+    push(rootDoc.scrollingElement);
+    push(rootDoc.documentElement);
+    push(rootDoc.body);
+    return out.filter(Boolean);
+  }}
+
+  function blurActive() {{
+    try {{
+      const ae = rootDoc.activeElement;
+      if (ae && ae.blur) ae.blur();
+    }} catch (e) {{}}
+  }}
+
+  function scrollToId(id) {{
+    const el = rootDoc.getElementById(id);
+    if (!el) return false;
+    try {{
+      el.scrollIntoView({{ block: "start", behavior: "auto" }});
+    }} catch (e) {{}}
+    return true;
+  }}
+
+  function forceTop() {{
+    const scrollers = findScrollers();
+    for (const sc of scrollers) {{
+      try {{
+        if (sc.scrollTo) sc.scrollTo({{ top: 0, left: 0, behavior: "auto" }});
+        sc.scrollTop = 0;
+      }} catch (e) {{}}
+    }}
+    try {{
+      (rootDoc.defaultView || window.parent).scrollTo(0, 0);
+    }} catch (e) {{}}
+  }}
+
+  function clearScrollParams() {{
+    try {{
+      const w = window.parent || window;
+      const u = new URL(w.location.href);
+      u.searchParams.delete("{_SCROLL_QP_MODE}");
+      u.searchParams.delete("{_SCROLL_QP_QID}");
+      w.history.replaceState({{}}, "", u.toString());
+    }} catch (e) {{}}
+  }}
+
+  const mode = {json.dumps(mode)};
+  const anchor = {json.dumps(anchor)};
+
+  // Streamlit stellt Scroll teils >1s nach dem Rendern wieder her.
+  // Deshalb: länger "gegenhalten".
+  let tries = 0;
+  const maxTries = 80;        // ~80 * 75ms = 6 Sekunden
+  const interval = 75;
+
+  let successAt = -1;
+  const holdAfterSuccess = 12; // nach Erfolg noch ~0.9s weiter forcieren
+
+  function tick() {{
+    tries += 1;
+    blurActive();
+
+    if (mode === "top") {{
+      // erst Anchor scroll, dann hart auf 0 (beides zusammen am robustesten)
+      if (anchor) scrollToId(anchor);
+      forceTop();
+
+      // Bei "top" immer lange genug laufen lassen
+      if (tries >= maxTries) {{
+        clearScrollParams();
+        return;
+      }}
+      setTimeout(tick, interval);
+      return;
+    }}
+
+    if (mode === "qid" && anchor) {{
+      const ok = scrollToId(anchor);
+      if (ok && successAt < 0) successAt = tries;
+
+      // nach Erfolg noch ein paar ticks "halten"
+      if (successAt > 0 && (tries - successAt) >= holdAfterSuccess) {{
+        clearScrollParams();
+        return;
+      }}
+    }}
+
+    if (tries < maxTries) {{
+      setTimeout(tick, interval);
+    }} else {{
+      clearScrollParams();
+    }}
+  }}
+
+  // leicht verzögern, damit Streamlit initiale Layout/Restore-Schritte macht
+  setTimeout(tick, 120);
+}})();
+</script>
+"""
+    components.html(js, height=0)
+
 
 
 # -----------------------------
@@ -225,7 +405,6 @@ def _glossary_linkify(text: str, glossary: dict, return_page: str, return_payloa
     suffix_chars = r"A-Za-zÄÖÜäöüß"
 
     parts_pat: list[str] = []
-
     for alias in aliases_sorted:
         a = (alias or "").strip()
         if not a:
@@ -262,6 +441,7 @@ def _glossary_linkify(text: str, glossary: dict, return_page: str, return_payloa
     ret_step = str(return_payload.get("erhebung_step", "")) if isinstance(return_payload, dict) else ""
     ret_idx = str(return_payload.get("erhebung_dim_idx", "")) if isinstance(return_payload, dict) else ""
     ret_code = str(return_payload.get("dim_code", "")) if isinstance(return_payload, dict) else ""
+    ret_qid = str(return_payload.get("qid", "")) if isinstance(return_payload, dict) else ""  # <- wichtig
 
     def _href(canonical_term: str) -> str:
         qs = [
@@ -269,20 +449,20 @@ def _glossary_linkify(text: str, glossary: dict, return_page: str, return_payloa
             f"g={quote_plus(canonical_term)}",
             f"from={quote_plus(return_page or '')}",
         ]
-
         if ret_step:
             qs.append(f"ret_step={quote_plus(ret_step)}")
         if ret_idx:
             qs.append(f"ret_idx={quote_plus(ret_idx)}")
         if ret_code:
             qs.append(f"ret_code={quote_plus(ret_code)}")
+        if ret_qid:
+            qs.append(f"ret_q={quote_plus(ret_qid)}")
 
         aid_now = persist.qp_get("aid") or st.session_state.get("_rgm_aid", "")
         if aid_now:
             qs.append(f"aid={quote_plus(str(aid_now))}")
 
         return "?" + "&".join(qs)
-
 
     alias_items = sorted(
         ((a.lower(), c) for a, c in alias_to_canonical.items() if isinstance(a, str) and isinstance(c, str)),
@@ -325,57 +505,18 @@ def _glossary_linkify(text: str, glossary: dict, return_page: str, return_payloa
     return "".join(out)
 
 
-def _handle_glossary_deeplink(current_page: str, aid: str) -> None:
-    term = _qp_get("g") or _qp_get("glossary") or _qp_get("term")
-
-    if not term:
-        return
-
-    term_decoded = unquote_plus(term)
-
-    st.session_state["nav_return_page"] = _qp_get("from") or _qp_get("ret") or current_page
-
-    payload = st.session_state.get("nav_return_payload", {}) or {}
-    payload = dict(payload)
-
-    ret_step = _qp_get("ret_step")
-    ret_idx = _qp_get("ret_idx")
-    ret_code = _qp_get("ret_code")
-
-    payload["erhebung_step"] = (
-        int(ret_step) if (ret_step and ret_step.isdigit()) else int(st.session_state.get("erhebung_step", 2))
-    )
-    payload["erhebung_dim_idx"] = (
-        int(ret_idx) if (ret_idx and ret_idx.isdigit()) else int(st.session_state.get("erhebung_dim_idx", 0))
-    )
-    if ret_code:
-        payload["dim_code"] = ret_code
-
-    st.session_state["nav_return_payload"] = payload
-    st.session_state["glossary_focus_term"] = term_decoded
-
-    st.session_state["nav_request"] = "Glossar"
-
-    persist.clear_query_params_keep_aid(aid)
-    persist.rerun_with_save(aid)
-
-
 # -----------------------------
 # Persist / Session Sticky Aid
 # -----------------------------
 def _ensure_aid_sticky() -> str:
-    qp_aid = _qp_get("aid")
-    aid = (qp_aid or st.session_state.get("_rgm_aid") or "").strip()
+    aid = (persist.qp_get("aid") or st.session_state.get("_rgm_aid") or "").strip()
 
     if not aid:
         aid = persist.get_or_create_aid()
 
     st.session_state["_rgm_aid"] = aid
 
-    try:
-        st.query_params["aid"] = aid
-    except Exception:
-        pass
+    persist.qp_set("aid", aid)
 
     return aid
 
@@ -647,37 +788,48 @@ def _inject_erhebung_css_for_footer() -> None:
 
 
 def _footer_navigation(model: dict, aid: str) -> None:
-    dims = model.get("dimensions", [])
+    """
+    Fix:
+    - Kein Setzen von st.session_state["erhebung_dim_idx_ui"] nach Instanziierung des Selectbox-Widgets.
+    - Weiter/Zurück/Sprung -> immer Scroll-to-top (Erhebung).
+    """
+    dims = model.get("dimensions", []) or []
     if not dims:
         return
 
     labels = [f"{d.get('code','')} – {d.get('name','')}".strip(" –") for d in dims]
     n = len(dims)
 
+    # aktuelle Position clampen
     idx = int(st.session_state.get("erhebung_dim_idx", 0))
     idx = max(0, min(idx, n - 1))
-    st.session_state.erhebung_dim_idx = idx
-
-    if int(st.session_state.get("erhebung_dim_idx_ui", idx)) != idx:
-        st.session_state.erhebung_dim_idx_ui = idx
+    
+    # UI-Key auf aktuellen idx setzen (damit nach Weiter/Zurück richtig angezeigt wird)
+    st.session_state["erhebung_dim_idx_ui"] = idx
 
     def _on_jump():
-        st.session_state.erhebung_dim_idx = int(st.session_state.erhebung_dim_idx_ui)
-        persist.rerun_with_save(aid)
+        try:
+            new_idx = int(st.session_state.get("erhebung_dim_idx_ui", idx))
+        except Exception:
+            new_idx = idx
 
-    def _go_prev():
-        i = int(st.session_state.erhebung_dim_idx)
-        if i > 0:
-            st.session_state.erhebung_dim_idx = i - 1
-        persist.rerun_with_save(aid)
+        new_idx = max(0, min(new_idx, n - 1))
+        if new_idx != int(st.session_state.get("erhebung_dim_idx", idx)):
+            st.session_state["erhebung_dim_idx"] = new_idx
+            _request_scroll_to_top()
+            persist.save(aid)
+            # kein st.rerun() nötig – on_change triggert ohnehin einen Rerun
 
-    def _go_next():
-        i = int(st.session_state.erhebung_dim_idx)
-        if i < n - 1:
-            st.session_state.erhebung_dim_idx = i + 1
-        else:
-            st.session_state["nav_request"] = "Dashboard"
-        persist.rerun_with_save(aid)
+    st.selectbox(
+        "",
+        options=list(range(n)),
+        format_func=lambda i: labels[i],
+        key="erhebung_dim_idx_ui",
+        label_visibility="collapsed",
+        on_change=_on_jump,
+    )
+
+
 
     st.markdown('<div id="rgm-erhebung-footer-anchor"></div>', unsafe_allow_html=True)
     _inject_erhebung_css_for_footer()
@@ -686,41 +838,37 @@ def _footer_navigation(model: dict, aid: str) -> None:
     with footer:
         st.markdown('<div class="rgm-footer-title">Navigation</div>', unsafe_allow_html=True)
         st.caption("Zu Dimension springen")
-
-        st.selectbox(
-            "",
-            options=list(range(n)),
-            format_func=lambda i: labels[i],
-            key="erhebung_dim_idx_ui",
-            on_change=_on_jump,
-            label_visibility="collapsed",
-        )
-
         b1, b2 = st.columns(2, gap="medium")
+
         with b1:
-            st.button(
-                "◀ Zurück",
-                use_container_width=True,
-                disabled=(idx == 0),
-                on_click=_go_prev,
-                key="erh_prev_btn",
-            )
+            if st.button("◀ Zurück", use_container_width=True, disabled=(idx == 0), key="erh_prev_btn"):
+                st.session_state["erhebung_dim_idx"] = max(0, idx - 1)
+                _request_scroll_to_top()
+                persist.save(aid)
+                st.rerun()
 
         with b2:
             is_last = (idx == n - 1)
-            st.button(
-                "Zum Dashboard ▶" if is_last else "Weiter ▶",
-                use_container_width=True,
-                on_click=_go_next,
-                key="erh_next_btn",
-            )
+            if st.button("Zum Dashboard ▶" if is_last else "Weiter ▶", use_container_width=True, key="erh_next_btn"):
+                if not is_last:
+                    st.session_state["erhebung_dim_idx"] = min(n - 1, idx + 1)
+                    _request_scroll_to_top()
+                else:
+                    st.session_state["nav_request"] = "Dashboard"
+                persist.save(aid)
+                st.rerun()
 
         answered = _count_answered_questions(model)
         total = _count_total_questions(model)
         pct = (answered / total) if total else 0.0
 
         segments = 20
-        done = int(round(pct * segments))
+        if answered <= 0 or total <= 0:
+            done = 0
+        else:
+            done = max(1, int(round(pct * segments)))
+        done = min(segments, done)
+
 
         pipe: list[str] = []
         pipe.append('<div class="rgm-progress-wrap">')
@@ -838,8 +986,8 @@ def _meta_form_step(aid: str) -> None:
             st.session_state.erhebung_step = 2
             st.session_state.erhebung_dim_idx = 0
             st.session_state.erhebung_dim_idx_ui = 0
+            _request_scroll_to_top()
             persist.rerun_with_save(aid)
-
     else:
         st.session_state["erhebung_own_target_defined"] = False
         st.session_state.global_target_level = float(TARGET_TO_LEVEL[target_label])
@@ -856,6 +1004,7 @@ def _meta_form_step(aid: str) -> None:
             st.session_state.erhebung_step = 2
             st.session_state.erhebung_dim_idx = 0
             st.session_state.erhebung_dim_idx_ui = 0
+            _request_scroll_to_top()
             persist.rerun_with_save(aid)
 
 
@@ -1078,6 +1227,7 @@ def _own_target_step(aid: str) -> None:
             st.session_state.erhebung_step = 2
             st.session_state.erhebung_dim_idx = 0
             st.session_state.erhebung_dim_idx_ui = 0
+            _request_scroll_to_top()
             persist.rerun_with_save(aid)
 
 
@@ -1085,19 +1235,24 @@ def _own_target_step(aid: str) -> None:
 # Step 2: Fragen
 # -----------------------------
 def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None:
+    """
+    Fixes:
+    - Keine Warnung "default value + Session State API" (State wird VOR dem Widget gesetzt).
+    - Antworten verschwinden nicht beim Zurückkommen.
+    - Glossar-Return kann zur exakt geklickten Frage scrollen (Anchor + ret_q).
+    """
     code = str(dim.get("code", "")).strip()
     name = str(dim.get("name", "")).strip()
 
     st.subheader(f"{code} – {name}")
     _inject_glossary_link_css()
 
-    # answers sicher als dict
     if "answers" not in st.session_state or not isinstance(st.session_state.get("answers"), dict):
         st.session_state["answers"] = {}
     answers: dict = st.session_state["answers"]
 
     return_page = "Erhebung"
-    return_payload = {
+    return_payload_base = {
         "erhebung_step": int(st.session_state.get("erhebung_step", 2)),
         "erhebung_dim_idx": int(dim_idx),
         "dim_code": code,
@@ -1110,7 +1265,7 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
     )
     if has_any_profile:
         with st.expander("Prozess-Steckbrief", expanded=False):
-            _render_process_profile(process_profile, glossary, return_page, return_payload)
+            _render_process_profile(process_profile, glossary, return_page, return_payload_base)
 
     st.markdown("---")
 
@@ -1141,7 +1296,7 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
         level_name = str(lvl.get("name", "") or "").strip()
 
         st.markdown(f"**Stufe {level_no} – {level_name}**" if level_name else f"**Stufe {level_no}**")
-        _render_level_info_expander(lvl, glossary, return_page, return_payload)
+        _render_level_info_expander(lvl, glossary, return_page, return_payload_base)
 
         questions = lvl.get("questions", []) or []
         for i, q in enumerate(questions, start=1):
@@ -1150,48 +1305,49 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
             if not qid:
                 continue
 
-            q_html = _glossary_linkify(qtext, glossary, return_page, return_payload)
+            # Anchor für Scroll-to-QID
+            anchor_id = f"rgm-q-{_safe_dom_id(str(qid))}"
+            st.markdown(f'<div id="{anchor_id}"></div>', unsafe_allow_html=True)
+
+            # return_payload mit qid -> ret_q im Link
+            return_payload_q = dict(return_payload_base)
+            return_payload_q["qid"] = str(qid)
+
+            q_html = _glossary_linkify(qtext, glossary, return_page, return_payload_q)
             st.markdown(
                 f'<div class="rgm-q"><span class="rgm-qno">{level_no}.{i}</span>{q_html}</div>',
                 unsafe_allow_html=True,
             )
 
             k_widget = f"q_{qid}"
-            prev_answer = answers.get(qid, None)
+            saved = answers.get(qid, "")
 
-            # Widget-State säubern (nur erlaubte Werte)
-            cur = st.session_state.get(k_widget, None)
-            if cur is not None and cur not in ANSWER_OPTIONS_WIDGET:
-                st.session_state.pop(k_widget, None)
-                cur = None
+            # Widget-State VOR dem Widget rendern stabilisieren
+            if k_widget not in st.session_state:
+                st.session_state[k_widget] = saved if saved in ANSWER_OPTIONS else ""
+            else:
+                cur = st.session_state.get(k_widget)
+                if cur not in ANSWER_OPTIONS_WIDGET:
+                    st.session_state[k_widget] = saved if saved in ANSWER_OPTIONS else ""
+                elif (cur in ("", None)) and (saved in ANSWER_OPTIONS):
+                    st.session_state[k_widget] = saved
 
-            # WICHTIG:
-            # Falls Widget "leer" ist (""), aber es gibt eine gespeicherte Antwort,
-            # dann Key entfernen, damit der index-Default wieder greift (ohne SessionState-Set!)
-            if (cur in ("", None)) and (prev_answer in ANSWER_OPTIONS):
-                st.session_state.pop(k_widget, None)
-                cur = None
-
-            # Default-Index: gespeicherte Antwort oder Platzhalter
-            idx = ANSWER_OPTIONS_WIDGET.index(prev_answer) if prev_answer in ANSWER_OPTIONS else 0
-
-            choice = st.radio(
+            st.radio(
                 "",
                 ANSWER_OPTIONS_WIDGET,
-                index=idx,
                 key=k_widget,
                 label_visibility="collapsed",
             )
 
+            choice = st.session_state.get(k_widget, "")
+
             # Speichern ("" ist nur Platzhalter, nie löschen)
-            if choice in ANSWER_OPTIONS and prev_answer != choice:
+            if choice in ANSWER_OPTIONS and choice != saved:
                 answers[qid] = choice
                 dirty = True
 
     if dirty:
         persist.save(aid)
-
-
 
 
 def _questions_step(aid: str) -> None:
@@ -1204,6 +1360,8 @@ def _questions_step(aid: str) -> None:
     model_sorted["dimensions"] = dims_sorted
 
     st.header("Erhebung")
+    st.markdown('<div id="rgm-page-top"></div>', unsafe_allow_html=True)
+
 
     meta = st.session_state.meta
     target_label = meta.get("target_label", "-")
@@ -1217,11 +1375,13 @@ def _questions_step(aid: str) -> None:
     with c1:
         if st.button("Angaben bearbeiten", use_container_width=True, key="edit_meta_btn"):
             st.session_state.erhebung_step = 0
+            _request_scroll_to_top()
             persist.rerun_with_save(aid)
     with c2:
         if target_label == "Eigenes Ziel":
             if st.button("Eigenes Ziel ändern", use_container_width=True, key="edit_own_target_btn"):
                 st.session_state.erhebung_step = 1
+                _request_scroll_to_top()
                 persist.rerun_with_save(aid)
         else:
             st.button("Eigenes Ziel ändern", disabled=True, use_container_width=True, key="noop_edit_own_target")
@@ -1255,8 +1415,10 @@ def _questions_step(aid: str) -> None:
     st.session_state.erhebung_dim_idx = idx
 
     _render_dimension(dims_sorted[idx], glossary, idx, aid)
-
     _footer_navigation(model_sorted, aid)
+
+    # Wichtig: Scroll am Ende anwenden (Top oder QID)
+    _apply_scroll_request()
 
 
 # -----------------------------
@@ -1265,10 +1427,7 @@ def _questions_step(aid: str) -> None:
 def main():
     init_session_state()
 
-    # AID robust machen
     aid = _ensure_aid_sticky()
-
-    # Restore auf JEDEM Run (restore merged nur fehlende Werte, überschreibt nicht "live" Eingaben)
     persist.restore(aid)
 
     # Defaults
@@ -1290,7 +1449,6 @@ def main():
         st.session_state.erhebung_own_target_defined = False
 
     step = int(st.session_state.get("erhebung_step", 0))
-
     if step == 0:
         _meta_form_step(aid)
     elif step == 1:
@@ -1298,7 +1456,6 @@ def main():
     else:
         _questions_step(aid)
 
-    # Snapshot am Ende jedes Runs
     persist.save(aid)
 
 
