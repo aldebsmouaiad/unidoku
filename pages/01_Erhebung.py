@@ -113,16 +113,9 @@ _SCROLL_QP_QID  = "scroll_q"   # qid
 
 
 def _request_scroll_to_top() -> None:
-    # Session (für direkte Reruns)
+    # Session reicht für interne Navigation völlig aus
     st.session_state["_rgm_scroll_mode"] = "top"
     st.session_state.pop("_rgm_scroll_qid", None)
-
-    # Query-Params (falls persist.restore interne Keys überschreibt)
-    try:
-        persist.qp_set(_SCROLL_QP_MODE, "top")
-        persist.qp_set(_SCROLL_QP_QID, "")
-    except Exception:
-        pass
 
 
 def _request_scroll_to_qid(qid: str) -> None:
@@ -141,7 +134,7 @@ def _apply_scroll_request() -> None:
     mode = st.session_state.pop("_rgm_scroll_mode", None)
     qid = (st.session_state.pop("_rgm_scroll_qid", "") or "").strip()
 
-    # Fallback: Query Params
+    # Fallback: Query Params (nur relevant fürs Glossar/Back)
     if not mode:
         try:
             mode = (persist.qp_get(_SCROLL_QP_MODE) or "").strip() or None
@@ -153,7 +146,6 @@ def _apply_scroll_request() -> None:
     if not mode:
         return
 
-    # Für "top" immer auf einen echten Anchor gehen (robuster als scrollTop=0)
     if mode == "top":
         anchor = "rgm-page-top"
     elif mode == "qid" and qid:
@@ -164,44 +156,35 @@ def _apply_scroll_request() -> None:
     js = f"""
 <script>
 (function() {{
-  function getParentDoc() {{
+  function getRootDoc() {{
     try {{ return window.parent.document; }} catch (e) {{ return document; }}
   }}
-  const rootDoc = getParentDoc();
+  const rootDoc = getRootDoc();
 
   function findScrollers() {{
     const out = [];
     const push = (el) => {{ if (el && !out.includes(el)) out.push(el); }};
-
     push(rootDoc.querySelector('[data-testid="stAppViewContainer"]'));
     push(rootDoc.querySelector('[data-testid="stMain"]'));
     push(rootDoc.querySelector('section.main'));
-    push(rootDoc.querySelector('.main'));
     push(rootDoc.scrollingElement);
     push(rootDoc.documentElement);
     push(rootDoc.body);
     return out.filter(Boolean);
   }}
 
-  function blurActive() {{
-    try {{
-      const ae = rootDoc.activeElement;
-      if (ae && ae.blur) ae.blur();
-    }} catch (e) {{}}
-  }}
-
-  function scrollToId(id) {{
-    const el = rootDoc.getElementById(id);
-    if (!el) return false;
-    try {{
-      el.scrollIntoView({{ block: "start", behavior: "auto" }});
-    }} catch (e) {{}}
-    return true;
+  function userHasScrolled(th=40) {{
+    const scs = findScrollers();
+    for (const sc of scs) {{
+      const t = (sc && typeof sc.scrollTop === "number") ? sc.scrollTop : 0;
+      if (t > th) return true;
+    }}
+    return false;
   }}
 
   function forceTop() {{
-    const scrollers = findScrollers();
-    for (const sc of scrollers) {{
+    const scs = findScrollers();
+    for (const sc of scs) {{
       try {{
         if (sc.scrollTo) sc.scrollTo({{ top: 0, left: 0, behavior: "auto" }});
         sc.scrollTop = 0;
@@ -212,7 +195,17 @@ def _apply_scroll_request() -> None:
     }} catch (e) {{}}
   }}
 
-  function clearScrollParams() {{
+  function scrollToId(id) {{
+    if (!id) return false;
+    const el = rootDoc.getElementById(id);
+    if (!el) return false;
+    try {{
+      el.scrollIntoView({{ block: "start", behavior: "auto" }});
+    }} catch (e) {{}}
+    return true;
+  }}
+
+  function clearScrollParamsOnce() {{
     try {{
       const w = window.parent || window;
       const u = new URL(w.location.href);
@@ -225,57 +218,58 @@ def _apply_scroll_request() -> None:
   const mode = {json.dumps(mode)};
   const anchor = {json.dumps(anchor)};
 
-  // Streamlit stellt Scroll teils >1s nach dem Rendern wieder her.
-  // Deshalb: länger "gegenhalten".
   let tries = 0;
-  const maxTries = 80;        // ~80 * 75ms = 6 Sekunden
-  const interval = 75;
 
-  let successAt = -1;
-  const holdAfterSuccess = 12; // nach Erfolg noch ~0.9s weiter forcieren
+  // TOP: nur sehr kurz "anstoßen", dann frei scrollen lassen
+  const TOP_MAX_TRIES = 6;     // ~6 * 70ms = 420ms
+  const QID_MAX_TRIES = 30;    // ~2s
 
   function tick() {{
     tries += 1;
-    blurActive();
 
-    if (mode === "top") {{
-      // erst Anchor scroll, dann hart auf 0 (beides zusammen am robustesten)
-      if (anchor) scrollToId(anchor);
-      forceTop();
-
-      // Bei "top" immer lange genug laufen lassen
-      if (tries >= maxTries) {{
-        clearScrollParams();
-        return;
-      }}
-      setTimeout(tick, interval);
+    // Wenn der User aktiv scrollt: sofort NICHT mehr eingreifen
+    if (tries > 1 && userHasScrolled()) {{
+      clearScrollParamsOnce();
       return;
     }}
 
-    if (mode === "qid" && anchor) {{
-      const ok = scrollToId(anchor);
-      if (ok && successAt < 0) successAt = tries;
+    if (mode === "top") {{
+      // sofort QP entfernen, damit Widget-Reruns nicht wieder "top" triggern
+      clearScrollParamsOnce();
 
-      // nach Erfolg noch ein paar ticks "halten"
-      if (successAt > 0 && (tries - successAt) >= holdAfterSuccess) {{
-        clearScrollParams();
+      // 1) Anchor anstoßen, 2) hart top setzen (kurz)
+      scrollToId(anchor);
+      forceTop();
+
+      if (tries >= TOP_MAX_TRIES) return;
+      setTimeout(tick, 70);
+      return;
+    }}
+
+    if (mode === "qid") {{
+      const ok = scrollToId(anchor);
+      if (ok) {{
+        clearScrollParamsOnce();
         return;
       }}
+      if (tries >= QID_MAX_TRIES) {{
+        clearScrollParamsOnce();
+        return;
+      }}
+      setTimeout(tick, 70);
+      return;
     }}
 
-    if (tries < maxTries) {{
-      setTimeout(tick, interval);
-    }} else {{
-      clearScrollParams();
-    }}
+    clearScrollParamsOnce();
   }}
 
-  // leicht verzögern, damit Streamlit initiale Layout/Restore-Schritte macht
-  setTimeout(tick, 120);
+  // kleiner Delay, damit Layout steht
+  setTimeout(tick, 80);
 }})();
 </script>
 """
     components.html(js, height=0)
+
 
 
 
@@ -811,14 +805,15 @@ def _footer_navigation(model: dict, aid: str) -> None:
         try:
             new_idx = int(st.session_state.get("erhebung_dim_idx_ui", idx))
         except Exception:
-            new_idx = idx
-
+            return
         new_idx = max(0, min(new_idx, n - 1))
-        if new_idx != int(st.session_state.get("erhebung_dim_idx", idx)):
-            st.session_state["erhebung_dim_idx"] = new_idx
-            _request_scroll_to_top()
-            persist.save(aid)
-            # kein st.rerun() nötig – on_change triggert ohnehin einen Rerun
+        old_idx = int(st.session_state.get("erhebung_dim_idx", idx))
+        if new_idx == old_idx:
+            return
+        st.session_state["erhebung_dim_idx"] = new_idx
+        _request_scroll_to_top()
+        persist.save(aid)
+
 
     st.selectbox(
         "",
@@ -863,11 +858,11 @@ def _footer_navigation(model: dict, aid: str) -> None:
         pct = (answered / total) if total else 0.0
 
         segments = 20
-        if answered <= 0 or total <= 0:
-            done = 0
-        else:
-            done = max(1, int(round(pct * segments)))
+        done = 0
+        if total > 0 and answered > 0:
+            done = max(1, int((answered / total) * segments))
         done = min(segments, done)
+
 
 
         pipe: list[str] = []
