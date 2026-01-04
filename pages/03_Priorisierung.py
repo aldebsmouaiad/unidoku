@@ -178,7 +178,7 @@ def main() -> None:
     # 2) Button-Zeile (Zurück/Weiter) bleibt unverändert
     # 3) Hinweis UNTER der Button-Zeile (verschiebt keine Buttons)
     # -----------------------------
-    st.markdown("---")
+    # st.markdown("---")
 
     if st.button(
         "Priorisierungen übernehmen",
@@ -190,6 +190,13 @@ def main() -> None:
         st.session_state["priorities_committed"] = copy.deepcopy(draft_now)
         st.success("Priorisierungen wurden übernommen.")
         st.rerun()
+
+    # Hinweis kommt danach (unter den Buttons) -> Buttons springen nicht
+    if dirty:
+        st.warning(
+            "Sie haben Priorisierungen geändert, die noch nicht übernommen wurden. "
+            "Bitte zuerst „Priorisierungen übernehmen“ klicken, damit diese Werte verwendet werden."
+        )
 
     st.markdown("---")
 
@@ -210,12 +217,7 @@ def main() -> None:
             st.session_state["nav_request"] = "Gesamtübersicht"
             st.rerun()
 
-    # Hinweis kommt danach (unter den Buttons) -> Buttons springen nicht
-    if dirty:
-        st.warning(
-            "Sie haben Priorisierungen geändert, die noch nicht übernommen wurden. "
-            "Bitte zuerst „Priorisierungen übernehmen“ klicken, damit diese Werte verwendet werden."
-        )
+    
 
 
 if __name__ == "__main__":

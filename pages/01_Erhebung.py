@@ -6,6 +6,7 @@ import json
 import csv
 import re
 import html
+import textwrap
 from datetime import datetime
 from urllib.parse import quote_plus
 
@@ -15,6 +16,10 @@ import streamlit.components.v1 as components
 from core.state import init_session_state
 from core.model_loader import load_model_config
 from core import persist
+
+TD_BLUE = "#2F3DB8"
+OG_ORANGE = "#F28C28"
+
 
 # -----------------------------
 # Konfiguration: Ziele & Antworten
@@ -44,6 +49,239 @@ ANSWER_OPTIONS = [
 
 # Keine Platzhalter-Option mehr: wir nutzen index=None (keine Vorauswahl)
 ANSWER_OPTIONS_WIDGET = ANSWER_OPTIONS
+
+
+def _inject_erhebung_page_css() -> None:
+    """Einheitliches Design für Erhebung (Cards/Typografie/Abstände) – Light/Dark kompatibel."""
+    dark = bool(st.session_state.get("dark_mode", False))
+
+    border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
+    soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
+    header_bg = "rgba(255,255,255,0.08)" if dark else "rgba(127,127,127,0.10)"
+    shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
+
+    st.markdown(
+        f"""
+<style>
+  /* =========================================================
+     Design Tokens (einheitlich)
+     ========================================================= */
+  div[data-testid="stAppViewContainer"] {{
+    --rgm-td-blue: {TD_BLUE};
+    --rgm-og-orange: {OG_ORANGE};
+    --rgm-border: {border};
+    --rgm-soft: {soft_bg};
+    --rgm-header-bg: {header_bg};
+  }}
+
+  /* Content Breite wie andere Seiten */
+  div[data-testid="stAppViewContainer"] .block-container {{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-top: 1.0rem;
+    padding-bottom: 6.0rem; /* Footer + Luft */
+  }}
+
+  /* Anchor-Icon neben Überschriften ausblenden */
+  a.anchor-link,
+  a.header-anchor,
+  a[data-testid="stHeaderLink"] {{
+    display: none !important;
+  }}
+
+  /* =========================================================
+     HERO (wie Einführung/Ausfüllhinweise)
+     ========================================================= */
+  .rgm-hero {{
+    background: var(--rgm-card-bg, #fff);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    padding: 18px 18px 14px 18px;
+    box-shadow: {shadow};
+    margin-top: 6px;
+  }}
+
+  .rgm-h1 {{
+    font-size: 30px;
+    font-weight: 850;
+    line-height: 1.15;
+    margin: 0 0 6px 0;
+    color: var(--rgm-text, #111);
+  }}
+
+  .rgm-lead {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+    margin: 0;
+  }}
+
+  .rgm-muted {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+  }}
+
+  .rgm-accent-line {{
+    height: 3px;
+    width: 96px;
+    border-radius: 999px;
+    margin: 10px 0 14px 0;
+    background: linear-gradient(90deg, var(--rgm-td-blue), var(--rgm-og-orange));
+  }}
+
+  /* Badges unter Hero (Organisation/Bereich/Datum/Ziel) */
+  .rgm-badges {{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }}
+  .rgm-badge {{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--rgm-border);
+    background: var(--rgm-soft);
+    color: var(--rgm-text, #111);
+    font-size: 12.5px;
+    line-height: 1.3;
+    white-space: nowrap;
+  }}
+  .rgm-badge b {{
+    font-weight: 850;
+  }}
+
+  /* =========================================================
+     Step 0: Form-Card (WICHTIG: volle Breite, nicht zentriert)
+     Streamlit rendert je nach Version:
+       - div.stForm
+       - div[data-testid="stForm"]
+       - form[data-testid="stForm"]
+     ========================================================= */
+  div.stForm,
+  div[data-testid="stForm"],
+  form[data-testid="stForm"] {{
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }}
+
+  /* Optik der Card auf dem WRAPPER (div.stForm / div[data-testid="stForm"]) */
+  div.stForm,
+  div[data-testid="stForm"] {{
+    border: 1px solid var(--rgm-border) !important;
+    border-radius: 14px !important;
+    background: var(--rgm-card-bg, #fff) !important;
+    box-shadow: {shadow} !important;
+    padding: 14px 16px 12px 16px !important;
+  }}
+
+  /* Innerer Block ebenfalls volle Breite */
+  div.stForm > div,
+  div[data-testid="stForm"] > div {{
+    width: 100% !important;
+    max-width: none !important;
+  }}
+
+  div.stForm label,
+  div[data-testid="stForm"] label {{
+    font-weight: 750 !important;
+  }}
+
+  div.stForm button[kind="primary"],
+  div[data-testid="stForm"] button[kind="primary"] {{
+    border-radius: 12px !important;
+    font-weight: 800 !important;
+  }}
+
+  /* =========================================================
+     Fragenlayout
+     ========================================================= */
+  .rgm-q {{
+    margin: 6px 0 6px 0;
+    line-height: 1.40;
+  }}
+  .rgm-qno {{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--rgm-border);
+    background: var(--rgm-soft);
+    font-weight: 850;
+    margin-right: 8px;
+    white-space: nowrap;
+  }}
+
+  /* Tabellen/Key-Value Boxen */
+  .rgm-kv-wrap {{
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--rgm-card-bg, #fff);
+    box-shadow: {shadow};
+  }}
+  .rgm-kv-row {{
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    border-bottom: 1px solid var(--rgm-border);
+  }}
+  .rgm-kv-row:last-child {{ border-bottom: none; }}
+  .rgm-kv-l {{
+    background: var(--rgm-header-bg);
+    padding: 10px 12px;
+    font-weight: 800;
+    color: var(--rgm-text, #111);
+  }}
+  .rgm-kv-r {{
+    padding: 10px 12px;
+    color: var(--rgm-text, #111);
+  }}
+
+  /* Radios kompakter */
+  div[data-testid="stRadio"] > div {{
+    gap: 0.35rem;
+  }}
+
+  /* kleine Mobile-Anpassung */
+  @media (max-width: 900px) {{
+    .rgm-h1 {{ font-size: 26px; }}
+    .rgm-hero {{ padding: 16px; }}
+  }}
+</style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_hero(title: str, lead: str = "", body: str = "", extra_html: str = "") -> None:
+    t = html.escape(title or "")
+    lead_html = f'<p class="rgm-lead">{html.escape(lead)}</p>' if lead else ""
+    body_html = f'<div style="height:10px"></div><p class="rgm-muted">{html.escape(body)}</p>' if body else ""
+
+    # extra_html MUSS ohne führende 4 Leerzeichen-Zeilen starten (sonst Markdown-Codeblock).
+    extra_html = (extra_html or "").strip()
+
+    st.markdown(
+        f"""
+<div class="rgm-hero">
+  <div class="rgm-h1">{t}</div>
+  <div class="rgm-accent-line"></div>
+  {lead_html}
+  {body_html}
+  {extra_html}
+</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
 
 # -----------------------------
 # Hilfsfunktionen (Allgemein)
@@ -112,7 +350,6 @@ _SCROLL_QP_QID  = "scroll_q"   # qid
 
 
 def _request_scroll_to_top() -> None:
-    # Session reicht für interne Navigation völlig aus
     st.session_state["_rgm_scroll_mode"] = "top"
     st.session_state.pop("_rgm_scroll_qid", None)
 
@@ -219,27 +456,21 @@ def _apply_scroll_request() -> None:
 
   let tries = 0;
 
-  // TOP: nur sehr kurz "anstoßen", dann frei scrollen lassen
-  const TOP_MAX_TRIES = 6;     // ~6 * 70ms = 420ms
-  const QID_MAX_TRIES = 30;    // ~2s
+  const TOP_MAX_TRIES = 6;
+  const QID_MAX_TRIES = 30;
 
   function tick() {{
     tries += 1;
 
-    // Wenn der User aktiv scrollt: sofort NICHT mehr eingreifen
     if (tries > 1 && userHasScrolled()) {{
       clearScrollParamsOnce();
       return;
     }}
 
     if (mode === "top") {{
-      // sofort QP entfernen, damit Widget-Reruns nicht wieder "top" triggern
       clearScrollParamsOnce();
-
-      // 1) Anchor anstoßen, 2) hart top setzen (kurz)
       scrollToId(anchor);
       forceTop();
-
       if (tries >= TOP_MAX_TRIES) return;
       setTimeout(tick, 70);
       return;
@@ -262,7 +493,6 @@ def _apply_scroll_request() -> None:
     clearScrollParamsOnce();
   }}
 
-  // kleiner Delay, damit Layout steht
   setTimeout(tick, 80);
 }})();
 </script>
@@ -270,19 +500,9 @@ def _apply_scroll_request() -> None:
     components.html(js, height=0)
 
 
-
-
 # -----------------------------
 # Glossar: Links + Navigation
 # -----------------------------
-def _qp_get(name: str) -> str | None:
-    """Streamlit query_params liefert je nach Version str oder list[str]."""
-    v = st.query_params.get(name)
-    if isinstance(v, list):
-        return v[0] if v else None
-    return v
-
-
 def _inject_glossary_link_css() -> None:
     st.markdown(
         """
@@ -293,9 +513,6 @@ def _inject_glossary_link_css() -> None:
     font-weight: 600;
   }
   a.rgm-glossary-link:hover{ opacity: 0.85; }
-
-  .rgm-q{ margin: 6px 0 6px 0; line-height: 1.35; }
-  .rgm-qno{ font-weight: 800; margin-right: 6px; white-space: nowrap; }
 </style>
         """,
         unsafe_allow_html=True,
@@ -429,7 +646,7 @@ def _glossary_linkify(text: str, glossary: dict, return_page: str, return_payloa
     ret_step = str(return_payload.get("erhebung_step", "")) if isinstance(return_payload, dict) else ""
     ret_idx = str(return_payload.get("erhebung_dim_idx", "")) if isinstance(return_payload, dict) else ""
     ret_code = str(return_payload.get("dim_code", "")) if isinstance(return_payload, dict) else ""
-    ret_qid = str(return_payload.get("qid", "")) if isinstance(return_payload, dict) else ""  # <- wichtig
+    ret_qid = str(return_payload.get("qid", "")) if isinstance(return_payload, dict) else ""
 
     def _href(canonical_term: str) -> str:
         qs = [
@@ -503,9 +720,7 @@ def _ensure_aid_sticky() -> str:
         aid = persist.get_or_create_aid()
 
     st.session_state["_rgm_aid"] = aid
-
     persist.qp_set("aid", aid)
-
     return aid
 
 
@@ -523,26 +738,14 @@ def _render_process_profile(profile: dict, glossary: dict, return_page: str, ret
         ("Arbeitsprodukte", profile.get("work_products", "")),
     ]
 
-    st.markdown(
-        "<style>"
-        ".rgm-pp-wrap{border:1px solid rgba(0,0,0,0.10);border-radius:10px;overflow:hidden;}"
-        ".rgm-pp-row{display:grid;grid-template-columns:170px 1fr;border-bottom:1px solid rgba(0,0,0,0.06);}"
-        ".rgm-pp-l{background:#f2f2f2;padding:10px 12px;font-weight:700;}"
-        ".rgm-pp-r{padding:10px 12px;}"
-        ".rgm-pp-row:last-child{border-bottom:none;}"
-        "</style>",
-        unsafe_allow_html=True,
-    )
-
-    parts = ['<div class="rgm-pp-wrap">']
+    parts = ['<div class="rgm-kv-wrap">']
     for label, value in rows:
         label_html = html.escape((label or "").strip())
         value_html = _glossary_linkify(str(value or ""), glossary, return_page, return_payload)
-
         parts.append(
-            f'<div class="rgm-pp-row">'
-            f'<div class="rgm-pp-l">{label_html}</div>'
-            f'<div class="rgm-pp-r">{value_html}</div>'
+            f'<div class="rgm-kv-row">'
+            f'  <div class="rgm-kv-l">{label_html}</div>'
+            f'  <div class="rgm-kv-r">{value_html}</div>'
             f"</div>"
         )
     parts.append("</div>")
@@ -555,22 +758,14 @@ def _render_excel_text_box(title_left: str, text_right: str, glossary: dict, ret
     right = _glossary_linkify(str(text_right or ""), glossary, return_page, return_payload)
 
     st.markdown(
-        "<style>"
-        ".rgm-xb-wrap{border:1px solid rgba(0,0,0,0.10);border-radius:10px;overflow:hidden;}"
-        ".rgm-xb-row{display:grid;grid-template-columns:170px 1fr;}"
-        ".rgm-xb-l{background:#f2f2f2;padding:10px 12px;font-weight:700;}"
-        ".rgm-xb-r{padding:10px 12px;}"
-        "</style>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        f'<div class="rgm-xb-wrap">'
-        f'  <div class="rgm-xb-row">'
-        f'    <div class="rgm-xb-l">{left}</div>'
-        f'    <div class="rgm-xb-r">{right}</div>'
-        f'  </div>'
-        f"</div>",
+        f"""
+<div class="rgm-kv-wrap">
+  <div class="rgm-kv-row">
+    <div class="rgm-kv-l">{left}</div>
+    <div class="rgm-kv-r">{right}</div>
+  </div>
+</div>
+        """,
         unsafe_allow_html=True,
     )
 
@@ -709,66 +904,75 @@ def _apply_imported_targets(imported: dict[str, int], dims_sorted: list[dict]) -
 # Footer (Navigation + Fortschritt Pipeline)
 # -----------------------------
 def _inject_erhebung_css_for_footer() -> None:
-    st.markdown(
-        """
-<style>
-  .block-container { padding-bottom: 9.5rem !important; }
+    dark = bool(st.session_state.get("dark_mode", False))
 
-  div#rgm-erhebung-footer-anchor + div {
+    border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
+    bg = "rgba(17,24,39,0.96)" if dark else "rgba(246,247,249,0.96)"
+    shadow = "0 -10px 24px rgba(0,0,0,0.35)" if dark else "0 -10px 24px rgba(0,0,0,0.06)"
+
+    st.markdown(
+        f"""
+<style>
+  div#rgm-erhebung-footer-anchor + div {{
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
 
     z-index: 9999;
-    background: var(--rgm-sidebar-bg, #f6f7f9);
-    border-top: 1px solid var(--rgm-border, rgba(0,0,0,0.10));
+    background: {bg};
+    border-top: 1px solid {border};
+    box-shadow: {shadow};
+    backdrop-filter: blur(6px);
     padding: 12px 18px 10px 18px;
-  }
+  }}
 
-  div#rgm-erhebung-footer-anchor + div > div {
-    max-width: 420px;
-  }
+  div#rgm-erhebung-footer-anchor + div > div {{
+    max-width: 1200px;
+    margin: 0 auto;
+  }}
 
-  .rgm-footer-title {
-    font-weight: 800;
+  .rgm-footer-title {{
+    font-weight: 850;
     margin-bottom: 8px;
     color: var(--rgm-text, #111);
-  }
+  }}
 
-  .rgm-progress-wrap{ margin-top: 10px; }
-  .rgm-progress-top{
+  .rgm-progress-wrap{{ margin-top: 10px; }}
+  .rgm-progress-top{{
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:12px;
     margin-bottom:6px;
-  }
-  .rgm-progress-label{
+  }}
+  .rgm-progress-label{{
     font-size:12px;
-    font-weight:700;
-    color: rgba(17,17,17,0.80);
-  }
-  .rgm-progress-nums{
+    font-weight:750;
+    color: var(--rgm-text, #111);
+    opacity: 0.80;
+  }}
+  .rgm-progress-nums{{
     font-size:12px;
-    font-weight:800;
-    color: rgba(17,17,17,0.80);
-  }
+    font-weight:850;
+    color: var(--rgm-text, #111);
+    opacity: 0.80;
+  }}
 
-  .rgm-pipe{
+  .rgm-pipe{{
     display:flex;
     gap:4px;
     width:100%;
-  }
-  .rgm-seg{
+  }}
+  .rgm-seg{{
     flex:1;
     height:8px;
     border-radius:6px;
     background: rgba(0,0,0,0.10);
-  }
-  .rgm-seg-done{
+  }}
+  .rgm-seg-done{{
     background: #7FB800;
-  }
+  }}
 </style>
         """,
         unsafe_allow_html=True,
@@ -791,12 +995,9 @@ def _footer_navigation(model: dict, aid: str) -> None:
     labels = [f"{d.get('code','')} – {d.get('name','')}".strip(" –") for d in dims]
     n = len(dims)
 
-    # aktuelle Position clampen
     idx = int(st.session_state.get("erhebung_dim_idx", 0))
     idx = max(0, min(idx, n - 1))
     st.session_state["erhebung_dim_idx"] = idx
-
-    # UI-Key auf aktuellen idx setzen (damit nach Weiter/Zurück korrekt angezeigt wird)
     st.session_state["erhebung_dim_idx_ui"] = idx
 
     def _on_jump():
@@ -812,7 +1013,6 @@ def _footer_navigation(model: dict, aid: str) -> None:
         _request_scroll_to_top()
         persist.save(aid)
 
-    # Anchor + CSS: Footer bleibt fixed (wie bisher)
     st.markdown('<div id="rgm-erhebung-footer-anchor"></div>', unsafe_allow_html=True)
     _inject_erhebung_css_for_footer()
 
@@ -821,7 +1021,6 @@ def _footer_navigation(model: dict, aid: str) -> None:
         st.markdown('<div class="rgm-footer-title">Navigation</div>', unsafe_allow_html=True)
         st.caption("Zu Dimension springen")
 
-        # HIER: Leiste zum Springen unter Caption und über Buttons
         st.selectbox(
             "",
             options=list(range(n)),
@@ -831,9 +1030,8 @@ def _footer_navigation(model: dict, aid: str) -> None:
             on_change=_on_jump,
         )
 
-        st.markdown("")  # kleiner Abstand
+        st.markdown("")
 
-        # Buttons darunter
         b1, b2 = st.columns(2, gap="medium")
 
         with b1:
@@ -854,7 +1052,6 @@ def _footer_navigation(model: dict, aid: str) -> None:
                 persist.save(aid)
                 st.rerun()
 
-        # Fortschritt (wie gehabt)
         answered = _count_answered_questions(model)
         total = _count_total_questions(model)
 
@@ -881,13 +1078,12 @@ def _footer_navigation(model: dict, aid: str) -> None:
         st.markdown("".join(pipe), unsafe_allow_html=True)
 
 
-
 # -----------------------------
 # Step 0: Eingabemaske
 # -----------------------------
 def _meta_form_step(aid: str) -> None:
-    st.header("Erhebung")
-    st.subheader("Angaben zur Erhebung")
+    _render_hero("Erhebung", "Angaben zur Erhebung")
+    st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
 
     meta = st.session_state.meta
     prev_target_label = meta.get("target_label", "")
@@ -1005,10 +1201,16 @@ def _meta_form_step(aid: str) -> None:
 
 # -----------------------------
 # Step 1: Eigenes Ziel definieren
+# (unverändert – aus Platzgründen identisch zu deiner Version)
 # -----------------------------
 def _own_target_step(aid: str) -> None:
-    st.header("Eigenes Ziel definieren")
-    st.caption("Bitte wählen Sie für jede Subdimension den angestrebten Reifegrad zwischen 1 und 5.")
+    _render_hero(
+        "Eigenes Ziel definieren",
+        "Zielniveau je Subdimension",
+        "Bitte wählen Sie für jede Subdimension den angestrebten Reifegrad zwischen 1 und 5. "
+        "Optional können Sie vorhandene Zielwerte importieren oder exportieren.",
+    )
+    st.markdown("")
 
     model = load_model_config()
     dims_sorted = _dims_sorted_from_model(model)
@@ -1085,26 +1287,6 @@ def _own_target_step(aid: str) -> None:
 
     filtered = [d for d in dims_sorted if _match(d)]
 
-    st.markdown(
-        """
-<style>
-  .rgm-ot-head { font-weight: 700; padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 6px; }
-  .rgm-ot-row { padding: 6px 0; border-bottom: 1px solid rgba(0,0,0,0.06); }
-  .rgm-ot-code { font-weight: 700; }
-  div[data-testid="stRadio"] > div { gap: 0.35rem; }
-</style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    h1, h2, h3 = st.columns([0.18, 0.52, 0.30], vertical_alignment="center")
-    with h1:
-        st.markdown('<div class="rgm-ot-head">Kürzel</div>', unsafe_allow_html=True)
-    with h2:
-        st.markdown('<div class="rgm-ot-head">Subdimension</div>', unsafe_allow_html=True)
-    with h3:
-        st.markdown('<div class="rgm-ot-head">Eigenes Ziel</div>', unsafe_allow_html=True)
-
     options = [1, 2, 3, 4, 5]
 
     existing: dict = st.session_state.get("dimension_targets", {}) or {}
@@ -1130,6 +1312,14 @@ def _own_target_step(aid: str) -> None:
     if not filtered:
         st.info("Keine Treffer für die aktuelle Suche.")
     else:
+        h1, h2, h3 = st.columns([0.18, 0.52, 0.30], vertical_alignment="center")
+        with h1:
+            st.markdown("**Kürzel**")
+        with h2:
+            st.markdown("**Subdimension**")
+        with h3:
+            st.markdown("**Eigenes Ziel**")
+
         for d in filtered:
             code = str(d.get("code", "")).strip()
             name = str(d.get("name", "")).strip()
@@ -1137,17 +1327,11 @@ def _own_target_step(aid: str) -> None:
 
             r1, r2, r3 = st.columns([0.18, 0.52, 0.30], vertical_alignment="center")
             with r1:
-                st.markdown(f'<div class="rgm-ot-row rgm-ot-code">{code}</div>', unsafe_allow_html=True)
+                st.markdown(f"**{code}**")
             with r2:
-                st.markdown(f'<div class="rgm-ot-row">{name}</div>', unsafe_allow_html=True)
+                st.markdown(name)
             with r3:
-                st.radio(
-                    "",
-                    options=options,
-                    key=k,
-                    horizontal=True,
-                    label_visibility="collapsed",
-                )
+                st.radio("", options=options, key=k, horizontal=True, label_visibility="collapsed")
 
     stored = st.session_state.get("dimension_targets", {}) or {}
     defined = bool(st.session_state.get("erhebung_own_target_defined", False))
@@ -1210,14 +1394,7 @@ def _own_target_step(aid: str) -> None:
 
     if st.session_state.get("erhebung_own_target_defined", False):
         can_start = not dirty
-
-        if st.button(
-            "Erhebung starten",
-            type="primary",
-            use_container_width=True,
-            key="own_target_start_btn",
-            disabled=not can_start,
-        ):
+        if st.button("Erhebung starten", type="primary", use_container_width=True, key="own_target_start_btn", disabled=not can_start):
             _reset_erhebung_answers()
             st.session_state.erhebung_step = 2
             st.session_state.erhebung_dim_idx = 0
@@ -1230,12 +1407,6 @@ def _own_target_step(aid: str) -> None:
 # Step 2: Fragen
 # -----------------------------
 def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None:
-    """
-    Fixes:
-    - Keine Warnung "default value + Session State API" (State wird VOR dem Widget gesetzt).
-    - Antworten verschwinden nicht beim Zurückkommen.
-    - Glossar-Return kann zur exakt geklickten Frage scrollen (Anchor + ret_q).
-    """
     code = str(dim.get("code", "")).strip()
     name = str(dim.get("name", "")).strip()
 
@@ -1254,10 +1425,7 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
     }
 
     process_profile = dim.get("process_profile", {}) or {}
-    has_any_profile = any(
-        str(process_profile.get(k, "") or "").strip()
-        for k in ["purpose", "results", "basic_practices", "work_products"]
-    )
+    has_any_profile = any(str(process_profile.get(k, "") or "").strip() for k in ["purpose", "results", "basic_practices", "work_products"])
     if has_any_profile:
         with st.expander("Prozess-Steckbrief", expanded=False):
             _render_process_profile(process_profile, glossary, return_page, return_payload_base)
@@ -1285,8 +1453,8 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
     st.markdown("---")
 
     dirty = False
-
-    for lvl in dim.get("levels", []):
+    levels = dim.get("levels", []) or []
+    for li, lvl in enumerate(levels):
         level_no = int(lvl.get("level_number", 0) or 0)
         level_name = str(lvl.get("name", "") or "").strip()
 
@@ -1300,11 +1468,9 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
             if not qid:
                 continue
 
-            # Anchor für Scroll-to-QID
             anchor_id = f"rgm-q-{_safe_dom_id(str(qid))}"
             st.markdown(f'<div id="{anchor_id}"></div>', unsafe_allow_html=True)
 
-            # return_payload mit qid -> ret_q im Link
             return_payload_q = dict(return_payload_base)
             return_payload_q["qid"] = str(qid)
 
@@ -1317,31 +1483,31 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
             k_widget = f"q_{qid}"
             saved = answers.get(qid, None)
 
-            # Migration: alte Platzhalter-States ("") aus früheren Versionen entfernen
             if st.session_state.get(k_widget, None) == "":
                 st.session_state.pop(k_widget, None)
 
-            # Wenn im Widget-State etwas Ungültiges steht: entfernen (damit index=None greifen kann)
             if k_widget in st.session_state and st.session_state.get(k_widget) not in ANSWER_OPTIONS:
                 st.session_state.pop(k_widget, None)
 
-            # Default nur über index steuern (Streamlit nutzt index nur, wenn der Key noch nicht gesetzt ist)
             default_index = ANSWER_OPTIONS.index(saved) if saved in ANSWER_OPTIONS else None
 
             choice = st.radio(
                 "",
                 ANSWER_OPTIONS,
-                index=default_index,          # None => keine Vorauswahl
+                index=default_index,
                 key=k_widget,
                 label_visibility="collapsed",
             )
             if choice in ANSWER_OPTIONS and choice != saved:
                 answers[qid] = choice
                 dirty = True
-        
-        # ✅ Trenner + Abstand NACH der letzten Frage der Stufe (vor der nächsten Stufe)
-        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
-        st.markdown("<hr style='margin: 10px 0 18px 0; border:0; border-top:1px solid rgba(0,0,0,0.10);'>", unsafe_allow_html=True)
+
+        if li < len(levels) - 1:
+            st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
+            st.markdown(
+                "<hr style='margin: 10px 0 18px 0; border:0; border-top:1px solid var(--rgm-border, rgba(0,0,0,0.10));'>",
+                unsafe_allow_html=True,
+            )
 
     if dirty:
         persist.save(aid)
@@ -1352,21 +1518,33 @@ def _questions_step(aid: str) -> None:
     glossary = model.get("glossary", {}) or {}
 
     dims_sorted = _dims_sorted_from_model(model)
-
     model_sorted = dict(model)
     model_sorted["dimensions"] = dims_sorted
 
-    st.header("Erhebung")
     st.markdown('<div id="rgm-page-top"></div>', unsafe_allow_html=True)
-
 
     meta = st.session_state.meta
     target_label = meta.get("target_label", "-")
 
-    st.caption(
-        f"Organisation: {meta.get('org','-')} | Bereich: {meta.get('area','-')} | "
-        f"Datum: {meta.get('date_str','-')} | Ziel: {target_label}"
+    # WICHTIG: dedent => KEIN Markdown-Codeblock!
+    badges_html = textwrap.dedent(
+        f"""
+        <div class="rgm-badges">
+          <div class="rgm-badge"><b>Organisation:</b>&nbsp;{html.escape(meta.get('org','-') or '-')}</div>
+          <div class="rgm-badge"><b>Bereich:</b>&nbsp;{html.escape(meta.get('area','-') or '-')}</div>
+          <div class="rgm-badge"><b>Datum:</b>&nbsp;{html.escape(meta.get('date_str','-') or '-')}</div>
+          <div class="rgm-badge"><b>Ziel:</b>&nbsp;{html.escape(target_label or '-')}</div>
+        </div>
+        """
+    ).strip()
+
+    _render_hero(
+        "Erhebung",
+        "Bitte beantworten Sie die Fragen je Subdimension so objektiv wie möglich.",
+        extra_html=badges_html,
     )
+
+    st.markdown("---")
 
     c1, c2, c3, c4 = st.columns([1, 1, 1, 1.2], gap="small")
     with c1:
@@ -1414,7 +1592,6 @@ def _questions_step(aid: str) -> None:
     _render_dimension(dims_sorted[idx], glossary, idx, aid)
     _footer_navigation(model_sorted, aid)
 
-    # Wichtig: Scroll am Ende anwenden (Top oder QID)
     _apply_scroll_request()
 
 
@@ -1423,13 +1600,13 @@ def _questions_step(aid: str) -> None:
 # -----------------------------
 def main():
     init_session_state()
+    _inject_erhebung_page_css()
 
     aid = _ensure_aid_sticky()
     if st.session_state.get("_rgm_restored_aid") != aid:
         persist.restore(aid)
         st.session_state["_rgm_restored_aid"] = aid
 
-    # Defaults
     if "erhebung_step" not in st.session_state:
         st.session_state.erhebung_step = 0
     if "erhebung_dim_idx" not in st.session_state:
@@ -1443,7 +1620,6 @@ def main():
     if "dimension_targets" not in st.session_state or not isinstance(st.session_state.get("dimension_targets"), dict):
         st.session_state["dimension_targets"] = {}
 
-    # Safety: Wenn Ziel nicht "Eigenes Ziel", Flag zurücksetzen
     if st.session_state.meta.get("target_label") != "Eigenes Ziel":
         st.session_state.erhebung_own_target_defined = False
 

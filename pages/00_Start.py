@@ -38,6 +38,31 @@ def _mailto_html(name: str, email: str | None) -> str:
     return safe_name
 
 
+def _mail_icon_link(email: str) -> str:
+    """
+    Kleines Mail-Icon (SVG) als mailto-Link.
+    """
+    safe_email = html.escape((email or "").strip())
+    if "@" not in safe_email:
+        return ""
+    return f"""
+<a href="mailto:{safe_email}" title="{safe_email}" aria-label="E-Mail an {safe_email}">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+       stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 4h16v16H4z"></path>
+    <path d="M22 6l-10 7L2 6"></path>
+  </svg>
+</a>
+"""
+
+def _name_with_mail(name: str, email: str | None) -> str:
+    safe_name = html.escape(name or "-")
+    if email and isinstance(email, str) and "@" in email:
+        return f'<span class="rgm-mail"><span>{safe_name}</span>{_mail_icon_link(email)}</span>'
+    return safe_name
+
+
+
 def _inject_start_css() -> None:
     """
     Nur Layout-/Komponenten-CSS für die Startseite.
@@ -89,6 +114,15 @@ def _inject_start_css() -> None:
             display: block;
           }
 
+          .rgm-meta-top {
+            background: var(--rgm-card-bg, #ffffff);
+            border: 1px solid var(--rgm-border, rgba(0,0,0,0.08));
+            border-radius: 14px;
+            padding: 14px 16px;
+            max-width: 520px;
+          }
+
+
           /* Metablock oben: größer & luftiger */
           .rgm-meta-top {
             margin-top: 10px;
@@ -109,6 +143,37 @@ def _inject_start_css() -> None:
           }
 
           .rgm-btn-wrap { margin-top: 22px; }
+
+                    .rgm-mail {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+          }
+
+          .rgm-mail a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            border: 1px solid var(--rgm-border, rgba(0,0,0,0.10));
+            text-decoration: none;
+            color: inherit;
+            opacity: 0.95;
+          }
+
+          .rgm-mail a:hover {
+            opacity: 1;
+            transform: translateY(-0.5px);
+          }
+
+          .rgm-mail svg {
+            width: 15px;
+            height: 15px;
+          }
+
+
         </style>
         """,
         unsafe_allow_html=True,
@@ -121,6 +186,8 @@ def main():
 
     st.title("Reifegradmodell für die Technische Dokumentation")
 
+    st.caption("Fragebasiertes Tool zur Bewertung und Weiterentwicklung der technischen Dokumentation.")
+
     # --- Meta laden ---
     try:
         meta = load_tool_meta()
@@ -128,6 +195,11 @@ def main():
         st.error("Metadaten konnten nicht geladen werden.")
         st.exception(e)
         meta = {}
+
+    support_name = meta.get("support_name", "Mouaiad Aldebs")
+    support_email = meta.get("support_email", "mouaiad.aldebs@tu-dortmund.de")
+
+
 
     # title = meta.get("title", "Reifegradmodell für die Technische Dokumentation")
     created_by = meta.get("created_by", "Christian Koch")
@@ -152,14 +224,16 @@ def main():
     st.markdown(
         f"""
 <div class="rgm-meta-top">
-  <div class="row"><div class="k">Erstellt durch:</div><div>{_mailto_html(created_by, created_by_email)}</div></div>
+  <div class="row"><div class="k">Erstellt durch:</div><div>{_name_with_mail(created_by, created_by_email)}</div></div>
   <div class="row"><div class="k">Version:</div><div>{html.escape(str(version))}</div></div>
   <div class="row"><div class="k">Letzte Änderung:</div><div>{html.escape(str(last_change))}</div></div>
-  <div class="row"><div class="k">Credit:</div><div>{_mailto_html(credit, credit_email)}</div></div>
+  <div class="row"><div class="k">Credit:</div><div>{_name_with_mail(credit, credit_email)}</div></div>
+  <div class="row"><div class="k">Technischer Support:</div><div>{_name_with_mail(support_name, support_email)}</div></div>
 </div>
         """,
         unsafe_allow_html=True,
     )
+
 
     # Button „Weiter zu Einführung“
     st.markdown('<div class="rgm-btn-wrap">', unsafe_allow_html=True)
