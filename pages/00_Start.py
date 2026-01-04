@@ -61,44 +61,76 @@ def _name_with_mail(name: str, email: str | None) -> str:
         return f'<span class="rgm-mail"><span>{safe_name}</span>{_mail_icon_link(email)}</span>'
     return safe_name
 
-
-
 def _inject_start_css() -> None:
-    """
-    Nur Layout-/Komponenten-CSS für die Startseite.
-    WICHTIG: Keine :root-Variablen mehr setzen (kommt global aus app.py).
-    """
     st.markdown(
         """
         <style>
-          .block-container {
+          /* =========================================
+             Layout: Platz für Footer (responsiv)
+             ========================================= */
+          .block-container{
             padding-top: 2.5rem;
-            padding-bottom: 7rem; /* Platz für fixed Footer */
+
+            /* Default Footer-Höhe (Desktop) */
+            --rgm-footer-h: 124px;
+
+            /* Platz reservieren -> Footer überdeckt nichts */
+            padding-bottom: calc(var(--rgm-footer-h) + env(safe-area-inset-bottom) + 18px);
           }
 
-          /* Footer fix unten (nur Logos) */
-          .rgm-footer {
+          /* Laptop/kleiner Desktop */
+          @media (max-width: 1200px){
+            .block-container{ --rgm-footer-h: 112px; }
+          }
+
+          /* Tablet */
+          @media (max-width: 900px){
+            .block-container{ --rgm-footer-h: 102px; }
+          }
+
+          /* Mobile */
+          @media (max-width: 600px){
+            .block-container{ --rgm-footer-h: 96px; }
+          }
+
+          /* =========================================
+             Footer fixed unten (Logos)
+             -> NICHT umbrechen, sondern horizontal scrollen
+             ========================================= */
+          .rgm-footer{
             position: fixed;
             left: 0;
             right: 0;
             bottom: 0;
 
             background: var(--rgm-footer-bg, #ffffff);
-            padding: 14px 28px 18px 28px;
+            padding: 10px 22px;
 
             border-top: 1px solid var(--rgm-border, rgba(0,0,0,0.08));
             z-index: 9999;
           }
 
-          .rgm-footer-inner {
+          .rgm-footer-inner{
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 50px;
-            flex-wrap: wrap;
+
+            gap: 28px;
+
+            /* KEY: keine zweite Zeile -> Höhe bleibt stabil */
+            flex-wrap: nowrap;
+
+            /* KEY: wenn zu viele Logos -> horizontal scroll */
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
+
+            /* optisch sauber */
+            scrollbar-width: thin;
           }
 
-          .rgm-footer-inner .logo-wrap {
+          .rgm-footer-inner .logo-wrap{
+            flex: 0 0 auto; /* verhindert Shrink/Umbruch */
             background: var(--rgm-logo-bg, transparent);
             border: 1px solid var(--rgm-logo-border, transparent);
             border-radius: 12px;
@@ -107,24 +139,43 @@ def _inject_start_css() -> None:
             align-items: center;
           }
 
-          .rgm-footer-inner img {
-            height: 80px;
+          .rgm-footer-inner img{
+            height: 64px;
             width: auto;
             object-fit: contain;
             display: block;
           }
 
+          /* Responsiv Logo-Größe + Abstände */
+          @media (max-width: 1200px){
+            .rgm-footer{ padding: 9px 18px; }
+            .rgm-footer-inner{ gap: 18px; }
+            .rgm-footer-inner img{ height: 58px; }
+          }
+
+          @media (max-width: 900px){
+            .rgm-footer{ padding: 8px 16px; }
+            .rgm-footer-inner{ gap: 14px; justify-content: flex-start; }
+            .rgm-footer-inner img{ height: 52px; }
+            .rgm-footer-inner .logo-wrap{ padding: 6px 8px; }
+          }
+
+          @media (max-width: 600px){
+            .rgm-footer{ padding: 8px 12px; }
+            .rgm-footer-inner img{ height: 48px; }
+          }
+
+          /* (Optional) Scrollbar in WebKit dezenter */
+          .rgm-footer-inner::-webkit-scrollbar{ height: 6px; }
+          .rgm-footer-inner::-webkit-scrollbar-thumb{ border-radius: 999px; }
+
+          /* ===== Rest deiner vorhandenen Styles (Meta-Block, Mail-Icon, etc.) ===== */
           .rgm-meta-top {
             background: var(--rgm-card-bg, #ffffff);
             border: 1px solid var(--rgm-border, rgba(0,0,0,0.08));
             border-radius: 14px;
             padding: 14px 16px;
             max-width: 520px;
-          }
-
-
-          /* Metablock oben: größer & luftiger */
-          .rgm-meta-top {
             margin-top: 10px;
             margin-bottom: 34px;
             font-size: 14px;
@@ -132,24 +183,12 @@ def _inject_start_css() -> None:
             color: var(--rgm-text, #111);
           }
 
-          .rgm-meta-top .row {
-            display: flex;
-            gap: 14px;
-          }
-
-          .rgm-meta-top .k {
-            width: 150px;
-            font-weight: 600;
-          }
+          .rgm-meta-top .row { display: flex; gap: 14px; }
+          .rgm-meta-top .k { width: 150px; font-weight: 600; }
 
           .rgm-btn-wrap { margin-top: 22px; }
 
-                    .rgm-mail {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-          }
-
+          .rgm-mail { display: inline-flex; align-items: center; gap: 8px; }
           .rgm-mail a {
             display: inline-flex;
             align-items: center;
@@ -162,22 +201,13 @@ def _inject_start_css() -> None:
             color: inherit;
             opacity: 0.95;
           }
-
-          .rgm-mail a:hover {
-            opacity: 1;
-            transform: translateY(-0.5px);
-          }
-
-          .rgm-mail svg {
-            width: 15px;
-            height: 15px;
-          }
-
-
+          .rgm-mail a:hover { opacity: 1; transform: translateY(-0.5px); }
+          .rgm-mail svg { width: 15px; height: 15px; }
         </style>
         """,
         unsafe_allow_html=True,
     )
+
 
 
 def main():
