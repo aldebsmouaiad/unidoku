@@ -1,0 +1,3036 @@
+{
+  "name": "NIRO Reifegradmodell Technische Dokumentation",
+  "description": "Automatisch aus der Excel-Datei 'NIRO_RGM_TD_Erhebungstool.xlsx' erzeugte Modellkonfiguration.",
+  "levels_info": {
+    "1": "initial",
+    "2": "gemanagt",
+    "3": "definiert",
+    "4": "quantitativ gemanagt",
+    "5": "optimiert"
+  },
+  "dimensions": [
+    {
+      "code": "OG1.1",
+      "name": "Wissensmanagement - Wissensspeicherung",
+      "category": "OG",
+      "description": "Die Wissensspeicherung beschreibt, in welchem Maße Wissen in der Organisation dokumentiert, strukturiert und nachhaltig gespeichert wird. Ziel ist es, den dauerhaften Zugriff auf relevantes Wissen sicherzustellen und Abhängigkeiten von Einzelpersonen zu reduzieren.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG1.1-L1-Q1",
+              "text": "Ist das Wissen in der Organisation personengebunden?"
+            },
+            {
+              "id": "OG1.1-L1-Q2",
+              "text": "Wird Wissen überwiegend implizit weitergegeben (z. B. mündlich, ad hoc)?"
+            },
+            {
+              "id": "OG1.1-L1-Q3",
+              "text": "Ist das Wissen im Unternehmen verteilt an verschiedenen Orten (z.B. lokale Dateien, E-Mails)?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG1.1-L2-Q1",
+              "text": "Existieren erste Ablagestrukturen (z.B. Dateiordner, SharePoint) mit individueller Struktur?"
+            },
+            {
+              "id": "OG1.1-L2-Q2",
+              "text": "Wird implizites Wissen gelegentlich dokumentiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG1.1-L3-Q1",
+              "text": "Wird Wissen systematisch dokumentiert und in festen Formaten abgelegt?"
+            },
+            {
+              "id": "OG1.1-L3-Q2",
+              "text": "Existieren organisatorisch geregelte Ablagen (z. B. zentrale Dateiablage, Wiki)?"
+            },
+            {
+              "id": "OG1.1-L3-Q3",
+              "text": "Ist Wissen für beteiligte Rollen auffindbar und nachvollziehbar (Zugriffsrechte, Versionierung)?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG1.1-L4-Q1",
+              "text": "Werden zentrale Systeme (z. B. DMS, Wissensdatenbanken) für die Wissensspeicherung genutzt?"
+            },
+            {
+              "id": "OG1.1-L4-Q2",
+              "text": "Gibt es definierte Prozesse, um Wissen regelmäßig zu aktualisieren?"
+            },
+            {
+              "id": "OG1.1-L4-Q3",
+              "text": "Ist der Zugriff auf gespeichertes Wissen für alle relevanten Beteiligten gewährleistet?"
+            },
+            {
+              "id": "OG1.1-L4-Q4",
+              "text": "Ist die Speicherung taxonomiebasiert und zielt sie auf den nachhaltigen Wissensaufbau ab?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG1.1-L5-Q1",
+              "text": "Befindet sich das Wissen der Organisation in semantischen Netzwerken (z.B. Ontologie)? Ist es mit den Organisationssystemen vernetzt (z.B. ERP)?"
+            },
+            {
+              "id": "OG1.1-L5-Q2",
+              "text": "Werden Wissenssysteme kontinuierlich gepflegt und proaktiv erweitert?"
+            },
+            {
+              "id": "OG1.1-L5-Q3",
+              "text": "Unterstützen innovative Technologien das Wissensmanagement (z.B. KI-gestützte Wissensverknüpfung)?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG1.2",
+      "name": "Wissensmanagement - Services",
+      "category": "OG",
+      "description": "Die Subdimension „Services“ beschreibt, inwieweit die im Unternehmen vorhandenen Informationen und das zugehörige Wissen als Dienstleistung genutzt werden, um zusätzliche Mehrwerte für interne Abteilungen oder externe Kundinnen zu schaffen. Ziel ist es, Wissen aus dem Unternehmen und insbesondere aus der Redaktion bzw. Dokumentation strategisch einzusetzen und den Wertbeitrag der Dokumentation für die Organisation zu steigern.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG1.2-L1-Q1",
+              "text": "Wird die Dokumentation ausschließlich für gesetzlich oder normativ geforderte Zwecke (z.B. Unterweisung) eingesetzt und bieten ansonsten keinen Mehrwert?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG1.2-L2-Q1",
+              "text": "Werden erste informelle Hilfeleistungen (z.B. FAQs) angeboten?"
+            },
+            {
+              "id": "OG1.2-L2-Q2",
+              "text": "Wird Dokumentation gelegentlich für interne Services genutzt (z. B. als Grundlage für Schulungen)?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG1.2-L3-Q1",
+              "text": "Wird die Dokumentation regelmäßig für Serviceangebote eingesetzt (z. B. Helpdesk, Support-Portale)?"
+            },
+            {
+              "id": "OG1.2-L3-Q2",
+              "text": "Gibt es definierte Schnittstellen zwischen Dokumentation und Servicebereichen?"
+            },
+            {
+              "id": "OG1.2-L3-Q3",
+              "text": "Erfolgt eine strukturierte Abstimmung zwischen Redaktion und Serviceverantwortlichen?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG1.2-L4-Q1",
+              "text": "Wird Wissen wird als Serviceleistung verstanden (z. B. Guided Troubleshooting, interaktive Assistenten, redaktionell gepflegte Wissensdatenbanken)?"
+            },
+            {
+              "id": "OG1.2-L4-Q2",
+              "text": "Werden Inhalte gezielt aufbereitet, um Services optimal zu unterstützen (z. B. modulare FAQs, Tutorials)?"
+            },
+            {
+              "id": "OG1.2-L4-Q3",
+              "text": "Werden Services regelmäßig durch dokumentationsbasierte Inhalte aktualisiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG1.2-L5-Q1",
+              "text": "Werden proaktive Wissensservices mit intelligenter Suche, Chatbots, kontextbezogenen Hilfen und Integration in Smart Services (z. B. AR, IoT, digitale Zwillinge) angeboten?"
+            },
+            {
+              "id": "OG1.2-L5-Q2",
+              "text": "Erfolgt eine kontinuierliche Weiterentwicklung dokumentationsgestützter Services auf Basis von Feedback und Nutzungsanalysen?"
+            },
+            {
+              "id": "OG1.2-L5-Q3",
+              "text": "Werden dokumentationsbasierte Services aktiv als strategischer Mehrwert für Kundinnen oder interne Abteilungen verstanden?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG2.1",
+      "name": "Organisationale Verankerung der technischen Dokumentation - Technische Redaktion",
+      "category": "OG",
+      "description": "Die Subdimension „Technische Redaktion“ beschreibt, inwieweit die Erstellung, Pflege und Weiterentwicklung der Technischen Dokumentation professionell organisiert und personell in der Organisation verankert ist. Ziel ist es, klare Verantwortlichkeiten zu schaffen, Fachkompetenz sicherzustellen und die Qualität der Dokumentation unabhängig von Einzelpersonen zu gewährleisten.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG2.1-L1-Q1",
+              "text": "Wird die Dokumentation nebenbei von Fachabteilungen oder einzelnen Personen ohne redaktionelle Zuständigkeit erstellt?"
+            },
+            {
+              "id": "OG2.1-L1-Q2",
+              "text": "Werden die erforderlichen Kompetenzen eigenständig aus der Notwendigkeit heraus erworben?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG2.1-L2-Q1",
+              "text": "Sind einzelne Personen benannt, die (neben anderen Aufgaben) für die Dokumentation zuständig sind?"
+            },
+            {
+              "id": "OG2.1-L2-Q2",
+              "text": "Erfolgt die Dokumentation in gelegentlich wiederholbaren Prozessen ohne definierte redaktionelle Strukturen?"
+            },
+            {
+              "id": "OG2.1-L2-Q3",
+              "text": "Werden Mitarbeiter, die zuvor bereits Redaktionsaufgaben übernommen haben, benannt und nachträglich in den erforderlichen Bereichen geschult?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG2.1-L3-Q1",
+              "text": "Gibt es eine klar definierte redaktionelle Rolle oder kleine Redaktionseinheit? Existiert ein definiertes Kompetenzprofil?"
+            },
+            {
+              "id": "OG2.1-L3-Q2",
+              "text": "Werden Verantwortlichkeiten und Prozesse zur Dokumentation verbindlich geregelt?"
+            },
+            {
+              "id": "OG2.1-L3-Q3",
+              "text": "Verfügen die beteiligten Personen über grundlegende Qualifikationen in der Technischen Redaktion?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG2.1-L4-Q1",
+              "text": "Ist die Redaktion organisatorisch als feste Funktion oder Abteilung etabliert?"
+            },
+            {
+              "id": "OG2.1-L4-Q2",
+              "text": "Ist die Technische Redaktion in zentrale Unternehmensprozesse (z. B. Entwicklung, Qualitätssicherung, Service) integriert?"
+            },
+            {
+              "id": "OG2.1-L4-Q3",
+              "text": "Besitzt die Technische Redaktion ein unternehmensweites Denken bei der Verwaltung von Inhalten (Content-Strategen)?"
+            },
+            {
+              "id": "OG2.1-L4-Q4",
+              "text": "Erfolgt eine gezielte Weiterbildung und Professionalisierung der Redakteurinnen?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG2.1-L5-Q1",
+              "text": "Ist die Technische Redaktion als strategische Funktion verankert und trägt aktiv zum Unternehmenserfolg bei?"
+            },
+            {
+              "id": "OG2.1-L5-Q2",
+              "text": "Ist die Redaktion ein zentraler Partner in interdisziplinären Projekten (z. B. Digitalisierung, Industrie 4.0, Wissensmanagement)?"
+            },
+            {
+              "id": "OG2.1-L5-Q3",
+              "text": "Erweitern die technischen Redakteure ihre Rolle kontinuierlich hin zu Semantik-Modellierern?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG2.2",
+      "name": "Organisationale Verankerung der technischen Dokumentation - Stellenwert der technischen Dokumentation",
+      "category": "OG",
+      "description": "Der Stellenwert der technischen Dokumentation beschreibt, in welchem Maß die technische Dokumentation im Unternehmen als bedeutungsvoller Bestandteil von Produkten und Dienstleistungen verstanden und gefördert wird. Ziel ist es, die Dokumentation von einer bloßen Pflichtaufgabe zu einem anerkannten, strategisch relevanten Erfolgsfaktor weiterzuentwickeln.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG2.2-L1-Q1",
+              "text": "Wird die Dokumentation ausschließlich zur Erfüllung rechtlicher oder normativer Anforderungen erstellt?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG2.2-L2-Q1",
+              "text": "Wird die Dokumentation gelegentlich als hilfreich für interne Abläufe oder Kundinnen wahrgenommen?"
+            },
+            {
+              "id": "OG2.2-L2-Q2",
+              "text": "Gibt es erste Ansätze, die Dokumentation über die Pflicht hinaus zu nutzen (z. B. interne Wissensquelle)?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG2.2-L3-Q1",
+              "text": "Wird die Dokumentation regelmäßig in Service-, Support- oder Schulungsprozessen genutzt?"
+            },
+            {
+              "id": "OG2.2-L3-Q2",
+              "text": "Ist der Nutzen der Dokumentation für Effizienz und Kundenzufriedenheit in der Organisation anerkannt? Wird die Dokumentation als Teil der Produktqualität angesehen?"
+            },
+            {
+              "id": "OG2.2-L3-Q3",
+              "text": "Gibt es erste Versuche, die Qualität oder den Beitrag der Dokumentation messbar zu machen?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG2.2-L4-Q1",
+              "text": "Existiert eine definierte, ganzheitliche Content-Strategie in der Organisation?"
+            },
+            {
+              "id": "OG2.2-L4-Q2",
+              "text": "Ist die Dokumentation organisatorisch und budgetär so verankert, dass ihr Beitrag zum Unternehmenserfolg gesichert ist?"
+            },
+            {
+              "id": "OG2.2-L4-Q3",
+              "text": "Ist die Dokumentation Bestandteil von Qualitäts-, Compliance- und Produktstrategien?"
+            },
+            {
+              "id": "OG2.2-L4-Q4",
+              "text": "Wird der Wert der Dokumentation regelmäßig kommuniziert und durch Kennzahlen unterstützt?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG2.2-L5-Q1",
+              "text": "Ist die Technische Dokumentation als strategischer Faktor in der Unternehmensstrategie verankert?"
+            },
+            {
+              "id": "OG2.2-L5-Q2",
+              "text": "Gibt es ein kontinuierliches Monitoring, das den Stellenwert der Dokumentation anhand von KPIs sichtbar macht?"
+            },
+            {
+              "id": "OG2.2-L5-Q3",
+              "text": "Wird sie gezielt als Differenzierungsmerkmal im Wettbewerb (z.B. schnellere Time-to-Market) und als Enabler neuer Geschäftsmodelle eingesetzt?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG2.3",
+      "name": "Organisationale Verankerung der technischen Dokumentation - Kulturelle Verankerung",
+      "category": "OG",
+      "description": "Die \"Kulturelle Verankerung“ beschreibt, inwieweit die Technische Dokumentation in der Unternehmenskultur verankert ist und von Mitarbeitenden sowie Führungskräften als selbstverständlicher Bestandteil von Produkten, Prozessen und Kundenerlebnissen wahrgenommen wird. Ziel ist es, die Dokumentation nicht nur als Pflicht, sondern als integralen Bestandteil des Qualitätsverständnisses und der Innovationskultur zu etablieren.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG2.3-L1-Q1",
+              "text": "Herrscht lediglich bei den Mitarbeitern, die mit der Dokumentation arbeiten, ein Bewusstsein für die Bedeutung der Dokumentation?"
+            },
+            {
+              "id": "OG2.3-L1-Q2",
+              "text": "Wird vereinzelt die Meinung vertreten, dass die langfristige Prozessverbesserung wichtiger ist als die  kurzfristige Projektbudgeteinhaltung?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG2.3-L2-Q1",
+              "text": "Gibt es erste Ansätze, die Bedeutung der Dokumentation intern zu kommunizieren?"
+            },
+            {
+              "id": "OG2.3-L2-Q2",
+              "text": "Gibt es punktuelle Unterstützung durch Führungskräfte oder Abteilungen für die technische Dokumentation?"
+            },
+            {
+              "id": "OG2.3-L2-Q3",
+              "text": "Wird Dokumentation von einzelnen Führungskräften oder Abteilungen als wichtig hervorgehoben?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG2.3-L3-Q1",
+              "text": "Stößt die Dokumentation auf breite Akzeptanz im Unternehmen?"
+            },
+            {
+              "id": "OG2.3-L3-Q2",
+              "text": "Gibt es wiederkehrende Kommunikationsmaßnahmen, die den Stellenwert der Dokumentation betonen? Ist dieser in der Organisation anerkannt?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG2.3-L4-Q1",
+              "text": "Ist die Dokumentation integraler Bestandteil der Organisationskultur? Ist sie in den Werten der Organisation, Leitbildern oder Qualitätsrichtlinien verankert?"
+            },
+            {
+              "id": "OG2.3-L4-Q2",
+              "text": "Steht der Gesamtprozess im Fokus, auch nach Fertigstellung eines einzelnen Projektes (Prozessmanagementsicht)?"
+            },
+            {
+              "id": "OG2.3-L4-Q3",
+              "text": "Fördert die Organisationskultur den aktiven Wissensaustausch und die Unterstützung der Dokumentation?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG2.3-L5-Q1",
+              "text": "Ist die Dokumentationskultur vorbildlich, wird intern gelebt und extern kommuniziert (z. B. in CSR, Recruiting)?"
+            },
+            {
+              "id": "OG2.3-L5-Q2",
+              "text": "Ist die Technische Dokumentation ein selbstverständlicher Bestandteil des organisationsweiten Qualitäts- und Innovationsverständnisses?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG3.1",
+      "name": "Schnittstellen - Interne Schnittstellen",
+      "category": "OG",
+      "description": "„Interne Schnittstellen“ beschreibt die Gestaltung, Nutzung und Weiterentwicklung von Übergaben zwischen Abteilungen, Rollen und IT-Systemen innerhalb einer Organisation. Ziel ist es, den Informationsfluss konsistent, effizient und fehlerfrei zu gestalten, um Doppelarbeit, Informationsverluste und Medienbrüche zu vermeiden und eine integrierte Arbeitsweise sicherzustellen.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG3.1-L1-Q1",
+              "text": "Erfolgt der Informationsaustausch zwischen Abteilungen überwiegend informell (z. B. per E-Mail, Telefon, Excel)?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG3.1-L2-Q1",
+              "text": "Sind erste Übergaben zwischen bestimmten Abteilungen oder Systemen klar benannt (z. B. ERP → Redaktion)?"
+            },
+            {
+              "id": "OG3.1-L2-Q2",
+              "text": "Existieren erste Standards oder Formate für interne Übergaben, auch wenn sie nicht konsequent angewendet werden?"
+            },
+            {
+              "id": "OG3.1-L2-Q3",
+              "text": "Sind für einige Schnittstellen bereits Verantwortlichkeiten festgelegt?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG3.1-L3-Q1",
+              "text": "Sind interne Schnittstellenprozesse dokumentiert und für alle Beteiligten nachvollziehbar?"
+            },
+            {
+              "id": "OG3.1-L3-Q2",
+              "text": "Werden definierte Standards und Formate (z. B. Dateiformate, Datenstrukturen) konsistent angewendet?"
+            },
+            {
+              "id": "OG3.1-L3-Q3",
+              "text": "Sind Rollen und Verantwortlichkeiten für Schnittstellen eindeutig geregelt?"
+            },
+            {
+              "id": "OG3.1-L3-Q4",
+              "text": "Unterstützen Schulungen, Leitfäden oder Tools die Nutzung der Schnittstellen?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG3.1-L4-Q1",
+              "text": "Sind zentrale Systeme (z. B. ERP, CMS, PDM) technisch integriert, sodass Übergaben automatisiert erfolgen?"
+            },
+            {
+              "id": "OG3.1-L4-Q2",
+              "text": "Stehen Informationen konsistent und (nahezu) in Echtzeit mehreren Abteilungen zur Verfügung?"
+            },
+            {
+              "id": "OG3.1-L4-Q3",
+              "text": "Wird die Qualität der Schnittstellen regelmäßig überwacht (z. B. durch Monitoring oder Fehlermeldungen)?"
+            },
+            {
+              "id": "OG3.1-L4-Q4",
+              "text": "Werden auftretende Fehler dokumentiert und systematisch behoben?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG3.1-L5-Q1",
+              "text": "Sind alle relevanten Systeme vollständig integriert über eine durchgängige Architektur (z. B. APIs, Middleware)?"
+            },
+            {
+              "id": "OG3.1-L5-Q2",
+              "text": "Erfolgen Anpassungen und Optimierungen proaktiv, um zukünftige organisatorische oder technologische Anforderungen frühzeitig abzudecken?"
+            },
+            {
+              "id": "OG3.1-L5-Q3",
+              "text": "Erfolgen Datenflüsse vollständig automatisiert, in Echtzeit und ohne Redundanzen?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG3.2",
+      "name": "Schnittstellen - Externe Schnittstellen",
+      "category": "OG",
+      "description": "„Externe Schnittstellen“ beschreibt die Definition, Nutzung und Weiterentwicklung von Übergaben und Datenaustauschen zwischen der eigenen Organisation und externen Partnern, Kunden oder Zulieferern. Ziel ist es, den Informationsfluss über Organisationsgrenzen hinweg sicher, standardisiert und interoperabel zu gestalten.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG3.2-L1-Q1",
+              "text": "Erfolgt der Austausch mit externen Partnern überwiegend manuell (z. B. per E-Mail, PDF, Excel)?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG3.2-L2-Q1",
+              "text": "Existieren erste festgelegte externe Schnittstellen zu bestimmten Partnern oder Kunden (z. B. regelmäßiger Export aus ERP)?"
+            },
+            {
+              "id": "OG3.2-L2-Q2",
+              "text": "Werden für Übergaben gelegentlich bereits bestimmte Formate genutzt, auch wenn diese nicht einheitlich sind?"
+            },
+            {
+              "id": "OG3.2-L2-Q3",
+              "text": "Sind erste Verantwortlichkeiten für externe Schnittstellen definiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG3.2-L3-Q1",
+              "text": "Sind externe Schnittstellen dokumentiert und durchgängig standardisiert (z. B. klar definierte Formate, Prozesse, Verantwortlichkeiten)?"
+            },
+            {
+              "id": "OG3.2-L3-Q2",
+              "text": "Werden standardisierte Austauschformate wie XML, JSON oder CSV für den Datenaustausch mit Partnern genutzt?"
+            },
+            {
+              "id": "OG3.2-L3-Q3",
+              "text": "Sind externe Schnittstellenprozesse in die internen Abläufe integriert und regelmäßig nutzbar?"
+            },
+            {
+              "id": "OG3.2-L3-Q4",
+              "text": "Erfolgt eine systematische Überprüfung und Abnahme der extern übermittelten Daten?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG3.2-L4-Q1",
+              "text": "Sind externe Schnittstellen technisch integriert, sodass Daten automatisiert ausgetauscht werden?"
+            },
+            {
+              "id": "OG3.2-L4-Q2",
+              "text": "Erfolgt der externe Austausch über interoperable Standards (z. B. iiRDS, ECLASS, OPC UA)?"
+            },
+            {
+              "id": "OG3.2-L4-Q3",
+              "text": "Wird die Qualität der Schnittstellen regelmäßig überwacht und dokumentiert?"
+            },
+            {
+              "id": "OG3.2-L4-Q4",
+              "text": "Werden Sicherheits- und Freigabemechanismen (z. B. Verschlüsselung, Zugriffsrechte) konsequent angewendet?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG3.2-L5-Q1",
+              "text": "Sind alle relevanten externen Partner und Kunden über standardisierte, interoperable Schnittstellen angebunden?"
+            },
+            {
+              "id": "OG3.2-L5-Q2",
+              "text": "Erfolgt der Datenaustausch in Echtzeit, automatisiert und ohne redundante Zwischenschritte?"
+            },
+            {
+              "id": "OG3.2-L5-Q3",
+              "text": "Werden externe Schnittstellen kontinuierlich überwacht, analysiert und anhand von Kennzahlen (KPIs) bewertet?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG4.1",
+      "name": "Technologische Infrastruktur - Redaktionelle IT-Infrastruktur",
+      "category": "OG",
+      "description": "Die „Redaktionelle IT-Infrastruktur“ beschreibt, inwieweit die für die Technische Dokumentation erforderlichen IT-Systeme und Werkzeuge vorhanden, integriert und nutzbar sind. Ziel ist es, die Dokumentation effizient, konsistent, kollaborativ und medienbruchfrei zu unterstützen.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG4.1-L1-Q1",
+              "text": "Werden Tools genutzt, die Ad-Hoc am nützlichsten und zugänglichsten sind (z.B. Word)?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG4.1-L2-Q1",
+              "text": "Werden Tools mit dedizierter Layoutunterstützung (z.B. Word Add-Ins) genutzt?"
+            },
+            {
+              "id": "OG4.1-L2-Q2",
+              "text": "Gibt es erste spezialisierte Tools (z. B. Terminologiedatenbank, Übersetzungssoftware), die ergänzend eingesetzt werden?"
+            },
+            {
+              "id": "OG4.1-L2-Q3",
+              "text": "Erfolgt die Nutzung dieser Werkzeuge punktuell und ohne systematische Integration?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG4.1-L3-Q1",
+              "text": "Wird ein Redaktionssystem oder CCMS eingesetzt, das die Modularisierung, Wiederverwendung und Qualitätssicherung unterstützt?"
+            },
+            {
+              "id": "OG4.1-L3-Q2",
+              "text": "Sind erste Schnittstellen zu angrenzenden Systemen (z. B. PLM, ERP) eingerichtet?"
+            },
+            {
+              "id": "OG4.1-L3-Q3",
+              "text": "Unterstützt die Infrastruktur die Zusammenarbeit mehrerer Redakteurinnen?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG4.1-L4-Q1",
+              "text": "Sind die redaktionellen Systeme durchgängig mit anderen Unternehmenssystemen integriert (z. B. PLM, ERP, PIM)?"
+            },
+            {
+              "id": "OG4.1-L4-Q2",
+              "text": "Werden weitere Systeme bzw. Funktionen des CMS (z.B. Tools für das Übersetzungsmanagement) eingesetzt?"
+            },
+            {
+              "id": "OG4.1-L4-Q3",
+              "text": "Unterstützt die Infrastruktur automatisierte Prozesse (z. B. Terminologieprüfung, Publikationsprozesse)?"
+            },
+            {
+              "id": "OG4.1-L4-Q4",
+              "text": "Gibt es IT-Support und klare Verantwortlichkeiten für den Betrieb der Systeme?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG4.1-L5-Q1",
+              "text": "Ist die IT-Infrastruktur hochintegriert, skalierbar und flexibel für neue Anforderungen (z. B. AR/VR, IoT, Digital Twin)? Wird sie kontinuierlich an neue Technologien angepasst und strategisch weiterentwickelt?"
+            },
+            {
+              "id": "OG4.1-L5-Q2",
+              "text": "Greifen die redaktionellen Systeme und die Unternehmenssysteme auf dieselben Daten zu (Single Source of Truth)?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG4.2",
+      "name": "Technologische Infrastruktur - Organisationale IT-Infrastruktur",
+      "category": "OG",
+      "description": "Die „Organisationale IT-Infrastruktur“ beschreibt den Reifegrad der allgemeinen IT-Landschaft eines Unternehmens. Ziel ist es, eine stabile, sichere und leistungsfähige Infrastruktur bereitzustellen, die Zusammenarbeit, Datenmanagement und Geschäftsprozesse effizient unterstützt und zukünftige Anforderungen flexibel abdecken kann.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG4.2-L1-Q1",
+              "text": "Sind (Stamm-) Daten in diversen Systemen vorhanden?"
+            },
+            {
+              "id": "OG4.2-L1-Q2",
+              "text": "Stehen lediglich grundlegende IT-Mittel (PCs, E-Mail, Office) ohne zentrale Koordination zur Verfügung?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG4.2-L2-Q1",
+              "text": "Werden Unternehmenssysteme für einzelne Anwendungsfälle (z.B. für die Materialverwaltung) verwendet?"
+            },
+            {
+              "id": "OG4.2-L2-Q2",
+              "text": "Gibt es erste zentrale IT-Systeme wie Fileserver, Intranet oder Standardtools für Zusammenarbeit?"
+            },
+            {
+              "id": "OG4.2-L2-Q3",
+              "text": "Werden grundlegende IT-Sicherheitsmaßnahmen umgesetzt?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG4.2-L3-Q1",
+              "text": "Sind Systeme wie ERP- oder P?LM-Systeme institutionell verankert?"
+            },
+            {
+              "id": "OG4.2-L3-Q2",
+              "text": "Ist die IT-Infrastruktur stabil und zuverlässig für die wesentlichen Geschäftsprozesse verfügbar?"
+            },
+            {
+              "id": "OG4.2-L3-Q3",
+              "text": "Unterstützt sie systematisch den Datenaustausch und die Zusammenarbeit innerhalb der Organisation?"
+            },
+            {
+              "id": "OG4.2-L3-Q4",
+              "text": "Sind Rollen, Zugriffsrechte und Verantwortlichkeiten klar definiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG4.2-L4-Q1",
+              "text": "Existiert eine integrierte Systemlandschaft mit Datenabgleich und -austausch über Systemgrenzen hinweg?"
+            },
+            {
+              "id": "OG4.2-L4-Q2",
+              "text": "Gibt es einheitliche Plattformen, standardisierte Workflows und strukturierte Support-Prozesse?"
+            },
+            {
+              "id": "OG4.2-L4-Q3",
+              "text": "Wird die Infrastruktur aktiv gepflegt und optimier"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG4.2-L5-Q1",
+              "text": "Erfolgt der Datenzugriff über einen Knowledge Hub als Single source of Truth?"
+            },
+            {
+              "id": "OG4.2-L5-Q2",
+              "text": "Ist die Infrastruktur hochgradig skalierbar, sicher und auf künftige Anforderungen (z. B. Cloud, Remote Work, digitale Transformation) ausgerichtet?"
+            },
+            {
+              "id": "OG4.2-L5-Q3",
+              "text": "Partizipiert die Organisation an Datenökosystemen für den interorganisationalen Datenaustausch?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG4.3",
+      "name": "Technologische Infrastruktur - Digitalisierung der Produkte",
+      "category": "OG",
+      "description": "Die „Digitalisierung der Produkte“ beschreibt, in welchem Maß Produkte digitale Funktionen, Datenanbindung und Vernetzung unterstützen. Ziel ist es, den Wert der Produkte durch digitale Erweiterungen, Services und Integrationen zu steigern und sie in moderne digitale Ökosysteme einzubetten.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG4.3-L1-Q1",
+              "text": "Bestehen Produkte überwiegend aus mechanischen oder analogen Komponenten ohne digitale Funktionen?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG4.3-L2-Q1",
+              "text": "Verfügen Produkte über einzelne digitale Komponenten (z. B. Displays, einfache Sensoren)?"
+            },
+            {
+              "id": "OG4.3-L2-Q2",
+              "text": "Sind diese Funktionen weitgehend isoliert und nicht vernetzt?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG4.3-L3-Q1",
+              "text": "Enthalten Produkte standardisierte Schnittstellen (z. B. Ethernet, Feldbus, API), die eine Anbindung an andere Systeme erlauben?"
+            },
+            {
+              "id": "OG4.3-L3-Q2",
+              "text": "Können Produktdaten strukturiert erfasst und weitergegeben werden?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG4.3-L4-Q1",
+              "text": "Sind Produkte in der Lage, Daten kontextsensitiv zu erfassen und zu verarbeiten (z. B. Zustandsüberwachung, Remote Monitoring)?"
+            },
+            {
+              "id": "OG4.3-L4-Q2",
+              "text": "Werden digitale Services oder Funktionen durch Metadaten oder Software gesteuert?"
+            },
+            {
+              "id": "OG4.3-L4-Q3",
+              "text": "Ist die Integration in digitale Plattformen (z. B. IoT-Clouds) umgesetzt?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG4.3-L5-Q1",
+              "text": "Sind Produkte vollständig in digitale Ökosysteme eingebunden (z. B. Digital Twin, Predictive Maintenance, Plattformökonomie)?"
+            },
+            {
+              "id": "OG4.3-L5-Q2",
+              "text": "Unterstützen Produkte datengetriebene Geschäftsmodelle und ermöglichen neue Services?"
+            },
+            {
+              "id": "OG4.3-L5-Q3",
+              "text": "Erfolgt ein kontinuierlicher Datenaustausch mit anderen Produkten oder Herstellern?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "OG4.4",
+      "name": "Technologische Infrastruktur - Produktions-IT-Infrastruktur",
+      "category": "OG",
+      "description": "Die „Produktions-IT-Infrastruktur“ beschreibt den Reifegrad der eingesetzten IT-Systeme in der Produktion. Ziel ist es, die Produktionsprozesse durch digitale Lösungen effizient, transparent, flexibel und integrierbar zu gestalten und damit eine Grundlage für Industrie 4.0 und datengetriebene Wertschöpfung zu schaffen.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "OG4.4-L1-Q1",
+              "text": "Wird die Produktion weitgehend manuell gesteuert, mit nur vereinzeltem IT-Einsatz (z. B. einfache Excel-Tabellen zur manuellen Betriebsdatenerfassung)?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "OG4.4-L2-Q1",
+              "text": "Gibt es grundlegende IT-Lösungen (z. B. Maschinensteuerungen)?"
+            },
+            {
+              "id": "OG4.4-L2-Q2",
+              "text": "Werden Daten punktuell, aber noch nicht systematisch erfasst und genutzt?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "OG4.4-L3-Q1",
+              "text": "Wird ein Manufacturing Execution System (MES) oder vergleichbare Systeme genutzt?"
+            },
+            {
+              "id": "OG4.4-L3-Q2",
+              "text": "Erfolgt eine systematische Datenerfassung und -speicherung über mehrere Produktionsbereiche hinweg?"
+            },
+            {
+              "id": "OG4.4-L3-Q3",
+              "text": "Bestehen erste Schnittstellen zu ERP- oder PLM-Systemen?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "OG4.4-L4-Q1",
+              "text": "Sind Produktionssysteme durchgängig mit ERP, PLM oder Qualitätsmanagementsystemen integriert?"
+            },
+            {
+              "id": "OG4.4-L4-Q2",
+              "text": "Unterstützt die IT automatisierte Workflows und optimierte Produktionsplanung?"
+            },
+            {
+              "id": "OG4.4-L4-Q3",
+              "text": "Erfolgt ein durchgängiges Monitoring der Produktion in Echtzeit?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "OG4.4-L5-Q1",
+              "text": "Ist die Produktions-IT vollständig vernetzt und ermöglicht durchgängige Datenintegration (vom Shopfloor bis zur Cloud)?"
+            },
+            {
+              "id": "OG4.4-L5-Q2",
+              "text": "Werden Daten für Predictive Maintenance, autonome Entscheidungen oder KI-gestützte Optimierung genutzt?"
+            },
+            {
+              "id": "OG4.4-L5-Q3",
+              "text": "Unterstützt die Infrastruktur flexible, hochgradig automatisierte und selbstoptimierende Produktionssysteme?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD1.1",
+      "name": "Redaktionsprozess - Prozessinitiierung",
+      "category": "TD",
+      "description": "Startpunkt der redaktionellen Tätigkeiten eindeutig definieren, die erforderlichen Aktivitäten anzustoßen und die notwendigen Rahmenbedingungen (z. B. Zuständigkeiten, Ressourcen, Zeitplan) festzulegen, um einen reibungslosen Ablauf der Dokumentationserstellung sicherzustellen.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD1.1-L1-Q1",
+              "text": "Wissen die Mitarbeiter, die mit der Technischen Dokumentation vertraut sind, aus der Erfahrung ungefähr, wann sie im Entwicklungsprozess mit dem Redaktionsprozess beginnen müssen?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD1.1-L2-Q1",
+              "text": "Sind in Entwicklungsprozessen allgemeine erforderliche Ressourcen für den Redaktionsprozess vorab bekannt? Sind ausreichend Ressourcen vorhanden?"
+            },
+            {
+              "id": "TD1.1-L2-Q2",
+              "text": "Sind in Entwicklungsprozessen Deadlines für die Fertigstellung der Dokumentation definiert? Lässt sich ein Einstiegspunkt für den redaktionellen Prozess bestimmen?"
+            },
+            {
+              "id": "TD1.1-L2-Q3",
+              "text": "Ist die Vorgehensweise zur Etablierung eines auf den Entwicklungsprozess angeglichenen Redaktionsprozess geplant (Beispielsweise in einer Roadmap)?"
+            },
+            {
+              "id": "TD1.1-L2-Q4",
+              "text": "Existiert eine Leitlinie für durchzuführende Aufgaben im Redaktionsprozess und wird diese gelegentlich aktualisiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD1.1-L3-Q1",
+              "text": "Wurde der Redaktionsprozess in Arbeitspakete zerlegt? Sind diese an einzelne Entwicklungsaufgaben gekoppelt?"
+            },
+            {
+              "id": "TD1.1-L3-Q2",
+              "text": "Finden regelmäßige Abstimmungen mit allen relevanten Stakeholdern statt?"
+            },
+            {
+              "id": "TD1.1-L3-Q3",
+              "text": "Wurde eine Ressourcenplanung für einzelne Aufgaben im Redaktionsprozess durchgeführt?"
+            },
+            {
+              "id": "TD1.1-L3-Q4",
+              "text": "Wird der reale Ressourcenbedarf dokumentiert und regelmäßig mit den Planungsdaten verglichen?"
+            },
+            {
+              "id": "TD1.1-L3-Q5",
+              "text": "Sind zeitkritische Redaktionsaufgaben bekannt und werden mit entsprechendem Puffer berücksichtigt?"
+            },
+            {
+              "id": "TD1.1-L3-Q6",
+              "text": "Werden Verbesserungspotentiale zur Vorgehensweise im Redaktionsprozess identifiziert?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD1.1-L4-Q1",
+              "text": "Ist die Ressourcenplanung systemgestützt an den Entwicklungsprozess gekoppelt?"
+            },
+            {
+              "id": "TD1.1-L4-Q2",
+              "text": "Werden die Performance-Daten aus dem Redaktionsprozess weiter verwendet (z.B. zur verbesserten Prognose des Ressourcenbedarfs)?"
+            },
+            {
+              "id": "TD1.1-L4-Q3",
+              "text": "Wurden Workflows definiert? Werden die Aufgaben mit Deadlines an die Verantwortlichen gesendet (z.B. Ticketsystem)?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD1.1-L5-Q1",
+              "text": "Wird bei Änderungen im Entwicklungsprozess (z.B. Produktänderungen) der Redaktionsprozess angestoßen? Werden die Ressourcen dynamisch angepasst?"
+            },
+            {
+              "id": "TD1.1-L5-Q2",
+              "text": "Werden benötigte Ressourcen für den Redaktionsprozess automatisiert geplant und priorisiert (z.B. auf Grundlage des Projektfortschritts)?"
+            },
+            {
+              "id": "TD1.1-L5-Q3",
+              "text": "Werden basierend auf aktuellen Entwicklungen Verbesserungspotentiale für den Redaktionsprozess identifiziert, bewertet und umgesetzt?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD1.2",
+      "name": "Redaktionsprozess - Informationsbeschaffung",
+      "category": "TD",
+      "description": "Prozess zur Beschaffung der Informationen, die für den Redaktionsprozess erforderlich sind",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD1.2-L1-Q1",
+              "text": "Wissen die Mitarbeiter, die mit der Technischen Dokumentation vertraut sind, aus der Erfahrung ungefähr, woher sie die erforderlichen Informationen bekommen bzw. sind die Informationsquellen zumindest grob definiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD1.2-L2-Q1",
+              "text": "Ist identifiziert worden, welche Informationen im Redaktionsprozess für die technische Dokumentation erforderlich sind?"
+            },
+            {
+              "id": "TD1.2-L2-Q2",
+              "text": "Sind die Ansprechpartner für die erforderlichen Informationen bzw. Informationsquellen bekannt und werden diese frühzeitig eingebunden?"
+            },
+            {
+              "id": "TD1.2-L2-Q3",
+              "text": "Existiert eine Leitlinie für erforderliche Information und die zugehörigen Informationsquellen und wird diese gelegentlich aktualisiert?"
+            },
+            {
+              "id": "TD1.2-L2-Q4",
+              "text": "Sind Ziele und Vorgehensweisen für die Durchführung der Informationsbeschaffung festgelegt und dokumentiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD1.2-L3-Q1",
+              "text": "Erfolgt die Informationsbeschaffung regelmäßig im Push-Prinzip von den Abteilungen zur Redaktion (z.B. von einzelnen Abteilungen / für einzelne Informationen)?"
+            },
+            {
+              "id": "TD1.2-L3-Q2",
+              "text": "Ist ein systematischer Informationsbeschaffungsprozess mit Rollen und Verantwortlichkeiten definiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD1.2-L4-Q1",
+              "text": "Gelangen erforderliche Informationen im Push-Prinzip zur Redaktion?"
+            },
+            {
+              "id": "TD1.2-L4-Q2",
+              "text": "Ist ein ganzheitlicher Informationsfluss modelliert und definiert? Wird dieser regelmäßig überprüft?"
+            },
+            {
+              "id": "TD1.2-L4-Q3",
+              "text": "Werden Redundanzen vermieden und kann sich die Redaktion auf eine Single Source of Truth verlassen?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD1.2-L5-Q1",
+              "text": "Gelangen die Informationen automatisiert und normalisiert zur Redaktion?"
+            },
+            {
+              "id": "TD1.2-L5-Q2",
+              "text": "Wird der Prozess der Informationsbeschaffung kontinuierlich verbessert?"
+            },
+            {
+              "id": "TD1.2-L5-Q3",
+              "text": "Werden basierend auf aktuellen Entwicklungen Verbesserungspotentiale für die Informationsbeschaffung identifiziert, bewertet und umgesetzt?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD1.3",
+      "name": "Redaktionsprozess - Interne Zusammenarbeit",
+      "category": "TD",
+      "description": "Zusammenarbeit zwischen den Mitarbeitern, die an der technischen Dokumentation arbeiten bzw. dafür verantwortlich sind untereinander sowie mit anderen, tangierten Abteilungen",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD1.3-L1-Q1",
+              "text": "Wird bei Bedarf projektbezogenen mit anderen Redakteuren bzw. für die Dokumentation verantwortlichen Personen zusammengearbeitet?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD1.3-L2-Q1",
+              "text": "Wird gelegentlich mit anderen Redakteuren zum Zweck des Informations- und Erfahrungsaustausch zusammengearbeitet?"
+            },
+            {
+              "id": "TD1.3-L2-Q2",
+              "text": "Wird durch eine Zusammenarbeit doppelte Arbeit durch mehrere Personen innerhalb der Redaktion vermieden?"
+            },
+            {
+              "id": "TD1.3-L2-Q3",
+              "text": "Sind Verantwortlichkeiten in der Redaktion projektbezogen definiert und dokumentiert?"
+            },
+            {
+              "id": "TD1.3-L2-Q4",
+              "text": "Werden Informationen bzw. Inhalte gelegentlich mit anderen Mitarbeitern innerhalb der Redaktion geteilt?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD1.3-L3-Q1",
+              "text": "Existiert ein definierter Prozess zur projektbegleitenden, abteilungsübergreifenden Zusammenarbeit?"
+            },
+            {
+              "id": "TD1.3-L3-Q2",
+              "text": "Werden regelmäßig abteilungsübergreifend Teams zur Zusammenarbeit gebildet?"
+            },
+            {
+              "id": "TD1.3-L3-Q3",
+              "text": "Sind die Mitarbeiter sensibilisiert für die Informationsergebnisse anderer Abteilungen, wodurch doppelte Arbeit abteilungsübergreifend vermieden werden kann?"
+            },
+            {
+              "id": "TD1.3-L3-Q4",
+              "text": "Werden innerhalb der Teams Entscheidungen für den Entwicklungs- und den Redaktionsprozess getroffen?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD1.3-L4-Q1",
+              "text": "Sind innerhalb der Teams Rollen definiert und werden diese regelmäßig überprüft?"
+            },
+            {
+              "id": "TD1.3-L4-Q2",
+              "text": "Wird die crossfunktionale Teamarbeit mit Hilfe von Kennzahlen gesteuert?"
+            },
+            {
+              "id": "TD1.3-L4-Q3",
+              "text": "Herrscht innerhalb der Teams die Überzeugung, dass gemeinsam bessere Ergebnisse erreicht werden als allein?"
+            },
+            {
+              "id": "TD1.3-L4-Q4",
+              "text": "Wird die Teamarbeit mithilfe von Tools unterstützt?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD1.3-L5-Q1",
+              "text": "Wird die Zusammenarbeit und Kommunikation im Team kontinuierlich verbessert?"
+            },
+            {
+              "id": "TD1.3-L5-Q2",
+              "text": "Werden kontinuierlich neue Möglichkeiten der Zusammenarbeit identifiziert, bewertet und umgesetzt?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD1.4",
+      "name": "Redaktionsprozess - Externe Zusammenarbeit",
+      "category": "TD",
+      "description": "Die Zusammenarbeit der Redaktion mit externen Partnern außerhalb der Organisation. Dies können etwa Dienstleister für die technische Dokumentation sein (z.B. Übersetzungsdienstleister) oder Partner innerhalb des Entwicklungsprozesses (z.B. Lieferanten)",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD1.4-L1-Q1",
+              "text": "Erfolgt die externe Kommunikation über Dritte (z.B. Projektleiter)?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD1.4-L2-Q1",
+              "text": "Gibt es definierte Ansprechpartner bei externen Partnern für die Redaktion und sind diese dokumentiert?"
+            },
+            {
+              "id": "TD1.4-L2-Q2",
+              "text": "Erfolgt die externe Zusammenarbeit projektbezogen gelegentlich zwischen externen Partnern und der Redaktion?"
+            },
+            {
+              "id": "TD1.4-L2-Q3",
+              "text": "Werden Absprachen mit externen Partnern gelegentlich dokumentiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD1.4-L3-Q1",
+              "text": "Ist die Zusammenarbeit mit externen Partnern vertraglich geregelt?"
+            },
+            {
+              "id": "TD1.4-L3-Q2",
+              "text": "Gibt es standardisierte Schnittstellen und Übergabeformate zu den Partnern für den Informationsaustausch und für die Integration externer Inhalte in die technische Dokumentation?"
+            },
+            {
+              "id": "TD1.4-L3-Q3",
+              "text": "Sind Rollen, Verantwortlichkeiten und Kommunikationswege mit externen Partnern definiert und dokumentiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD1.4-L4-Q1",
+              "text": "Werden in der externen Zusammenarbeit gemeinsame Tools verwendet?"
+            },
+            {
+              "id": "TD1.4-L4-Q2",
+              "text": "Werden in der externen Zusammenarbeit gemeinsame (Qualitäts-) Ziele verfolgt?"
+            },
+            {
+              "id": "TD1.4-L4-Q3",
+              "text": "Werden die Leistungen anhand gemeinsam definierter KPIs regelmäßig überprüft und gesteuert?"
+            },
+            {
+              "id": "TD1.4-L4-Q4",
+              "text": "Wird die externe Zusammenarbeit auf der Grundlage gemeinsamer Workflows durchgeführt?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD1.4-L5-Q1",
+              "text": "Wird die externe Zusammenarbeit gemeinsam mit den Partnern kontinuierlich verbessert? Werden neue Möglichkeiten zur Zusammenarbeit identifiziert, bewertet und umgesetzt?"
+            },
+            {
+              "id": "TD1.4-L5-Q2",
+              "text": "Wird gemeinsam an der kontinuierlichen Verbesserung der Dokumentation gearbeitet (z.B. in Form von Innovationspartnerschaften)?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD1.5",
+      "name": "Redaktionsprozess - Rechtskonformität",
+      "category": "TD",
+      "description": "Sicherstellung, dass die technische Dokumentation alle relevanten gesetzlichen, normativen und regulatorischen Anforderungen erfüllt. Ziel ist es, rechtliche Risiken zu vermeiden, Produkthaftung zu reduzieren und die Markt- und Zulassungsfähigkeit von Produkten sicherzustellen.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD1.5-L1-Q1",
+              "text": "Ist die Recherche zu den rechtlichen Anforderungen projekt- bzw. anlassbezogen?"
+            },
+            {
+              "id": "TD1.5-L1-Q2",
+              "text": "Besitzen die Mitarbeitenden individuell Kenntnisse über die relevanten Normen? Besitzen sie individuelle Normenbibliotheken?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD1.5-L2-Q1",
+              "text": "Werden den Mitarbeitenden relevante Richtlinien und Normen allgemein zugänglich gemacht?"
+            },
+            {
+              "id": "TD1.5-L2-Q2",
+              "text": "Wird die Recherche nach einem definierten Prozess durchgeführt?"
+            },
+            {
+              "id": "TD1.5-L2-Q3",
+              "text": "Wird die Durchführung der Recherche dokumentiert?"
+            },
+            {
+              "id": "TD1.5-L2-Q4",
+              "text": "Wird gelegentlich die Aktualität der Richtlinien und Normen überprüft?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD1.5-L3-Q1",
+              "text": "Liegen dokumentierte Prozesse oder Leitlinien zur Sicherstellung der Rechtskonformität in der Dokumentation vor? Sind die Prozesse fester Bestandteil des Redaktionsprozesses?"
+            },
+            {
+              "id": "TD1.5-L3-Q2",
+              "text": "Werden Verantwortlichkeiten für die Identifikation und Umsetzung rechtlicher Anforderungen zugewiesen?"
+            },
+            {
+              "id": "TD1.5-L3-Q3",
+              "text": "Existieren systematische Prüfverfahren zur Einhaltung der Rechtsvorgaben?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD1.5-L4-Q1",
+              "text": "Werden rechtliche Anforderungen regelmäßig überprüft und deren Einhaltung aktiv überwacht?"
+            },
+            {
+              "id": "TD1.5-L4-Q2",
+              "text": "Sind aussagekräftige Kennzahlen für die Steuerung von Prozessen im Kontext der Rechtskonformität definiert worden und werden diese regelmäßig kontrolliert?"
+            },
+            {
+              "id": "TD1.5-L4-Q3",
+              "text": "Werden Änderungen in Gesetzen, Normen oder Richtlinien systematisch verfolgt und in die Redaktionsprozesse integriert?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD1.5-L5-Q1",
+              "text": "Wird die Aktualität relevanter Rechtsdokumente automatisiert sichergestellt?"
+            },
+            {
+              "id": "TD1.5-L5-Q2",
+              "text": "Wird die Rechts- und Normenrecherche KI-gestützt durchgeführt? Unterstützt KI beim Ableiten von anwendungsspezifischen Maßnahmen zur Sicherstellung der Rechtskonformität?"
+            },
+            {
+              "id": "TD1.5-L5-Q3",
+              "text": "Werden Verbesserungspotenziale für die Rechtskonformität der Dokumentation kontinuierlich identifiziert, bewertet und umgesetzt?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD1.6",
+      "name": "Redaktionsprozess - Qualitätssicherung",
+      "category": "TD",
+      "description": "Die Qualitätssicherung im Redaktionsprozess dient dazu, die Richtigkeit, Vollständigkeit, Verständlichkeit und Konsistenz der technischen Dokumentation sicherzustellen. Ziel ist es, Fehler zu vermeiden, Nutzerfreundlichkeit zu gewährleisten und die Einhaltung interner sowie externer Standards abzusichern.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD1.6-L1-Q1",
+              "text": "Werden im Fall eines Defizits / Schadensfall qualitätssichernde Maßnahmen durchgeführt?"
+            },
+            {
+              "id": "TD1.6-L1-Q2",
+              "text": "Existieren erste Qualitätsmerkmale (z.B. die Einhaltung von Fristen) zur Beurteilung des Redaktionsprozesses?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD1.6-L2-Q1",
+              "text": "Werden einfache Methoden zur Qualitätssicherung (z.B. Vier-Augen-Prinzip, Checklisten) durchgeführt?"
+            },
+            {
+              "id": "TD1.6-L2-Q2",
+              "text": "Werden durchgeführte qualitätssichernde Maßnahmen gelegentlich dokumentiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD1.6-L3-Q1",
+              "text": "Gibt es dokumentierte Prozesse und Verantwortlichkeiten für die Qualitätssicherung der Dokumentation? Sind diese Prozesse in der Redaktion verankert?"
+            },
+            {
+              "id": "TD1.6-L3-Q2",
+              "text": "Werden standardisierte Prüfverfahren eingesetzt, um die Dokumentationsqualität sicherzustellen?"
+            },
+            {
+              "id": "TD1.6-L3-Q3",
+              "text": "Ist die Freigabe der Dokumentation an definierte Qualitätskriterien gebunden?"
+            },
+            {
+              "id": "TD1.6-L3-Q4",
+              "text": "Existieren prozessbezogene Leitfäden für den redaktionellen Prozess (Redaktionsleitfaden)? Sind diese verbindlich anzuwenden?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD1.6-L4-Q1",
+              "text": "Wird die Qualitätssicherung regelmäßig überwacht und anhand von Kennzahlen bewertet (z. B. Fehlerquote, Nacharbeitsaufwand)?"
+            },
+            {
+              "id": "TD1.6-L4-Q2",
+              "text": "Wird die Qualitätssicherung als Teil der Unternehmenskultur gesehen?"
+            },
+            {
+              "id": "TD1.6-L4-Q3",
+              "text": "Ist der Redaktionsleitfaden verknüpft mit der Corporate Identity/ dem Corporate Design?"
+            },
+            {
+              "id": "TD1.6-L4-Q4",
+              "text": "Werden systematische Fehleranalysen bei Qualitätsmängeln durchgeführt?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD1.6-L5-Q1",
+              "text": "Werden Verfahren und Tools der Qualitätssicherung regelmäßig überprüft und weiterentwickelt?"
+            },
+            {
+              "id": "TD1.6-L5-Q2",
+              "text": "Werden Erfahrungen (z. B. Lessons Learned) systematisch genutzt, um Prüfverfahren zu optimieren?"
+            },
+            {
+              "id": "TD1.6-L5-Q3",
+              "text": "Erfolgt ein proaktiver Einsatz innovativer Methoden (z. B. KI-gestützte Qualitätssicherung, automatisierte Prüfungen)?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD2.1",
+      "name": "Content Management - Dokumentationsstrukturierung",
+      "category": "TD",
+      "description": "Die Dokumentationsstrukturierung hat den Zweck, Inhalte der technischen Dokumentation systematisch in logische, konsistente und wiederverwendbare Einheiten zu gliedern. Es wird darauf abgezielt, die Verständlichkeit für die Zielgruppen zu erhöhen, die Pflege zu vereinfachen und die Grundlage für Mehrfachnutzung, Modularisierung und effiziente Publikation zu schaffen",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD2.1-L1-Q1",
+              "text": "Strukturieren die Mitarbeitenden die Dokumentation individuell, aber konsistent? Ist die Strukturierung auf Seiten-/ Kapitelebene?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD2.1-L2-Q1",
+              "text": "Existieren Vorlagen oder Musterdokumente zur Strukturierung der Dokumentation?"
+            },
+            {
+              "id": "TD2.1-L2-Q2",
+              "text": "Werden die Vorlagen von den Mitarbeitenden verwendet?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD2.1-L3-Q1",
+              "text": "Sind verbindliche Strukturkonventionen bzw. Informationsarchitekturen zur Strukturierung der Dokumentation vorhanden (z.B. DITA)?"
+            },
+            {
+              "id": "TD2.1-L3-Q2",
+              "text": "Werden Inhalte systematisch in Module oder Topics gegliedert?"
+            },
+            {
+              "id": "TD2.1-L3-Q3",
+              "text": "Wird die Strukturierung konsistent über alle Projekte und durch alle Mitarbeitende umgesetzt?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD2.1-L4-Q1",
+              "text": "Wird die Einhaltung der Strukturierungsvorgaben regelmäßig überprüft (z. B. durch Reviews, automatisierte Checks)?"
+            },
+            {
+              "id": "TD2.1-L4-Q2",
+              "text": "Werden Metadaten oder Klassifikationen systematisch eingesetzt, um die Strukturierung zu unterstützen? Folgt die Struktur einem semantischen Modell (z.B. iiRDS)?"
+            },
+            {
+              "id": "TD2.1-L4-Q3",
+              "text": "Wird die Dokumentationsstruktur regelmäßig bewertet und weiterentwickelt?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD2.1-L5-Q1",
+              "text": "Erfolgt eine kontinuierliche Optimierung der Dokumentationsstruktur anhand von Nutzerfeedback und Best Practices?"
+            },
+            {
+              "id": "TD2.1-L5-Q2",
+              "text": "Wird die Dokumentationsstruktur flexibel an neue Publikationskanäle, Zielgruppen und Technologien angepasst?"
+            },
+            {
+              "id": "TD2.1-L5-Q3",
+              "text": "Werden innovative Ansätze (z. B. semantische Modelle, KI-gestützte Strukturierung) aktiv evaluiert und eingesetzt?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD2.2",
+      "name": "Content Management - Variantenmanagement",
+      "category": "TD",
+      "description": "Produkt- und Dokumentationsvarianten effizient verwalten, sodass unterschiedliche Ausprägungen (z. B. Produktlinien, Konfigurationen, Märkte, Sprachen) konsistent und ressourcenschonend abgebildet werden können. Ziel ist die Vermeidung redundanter Inhalte, die Sicherstellung von Konsistenz und die effiziente Wiederverwendung von Dokumentationsbausteinen bezogen auf unterschiedliche Varianten",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD2.2-L1-Q1",
+              "text": "Werden Varianten manuell Ad-Hoc gepflegt, etwa durch das Kopieren und Anpassen kompletter Dokumente?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD2.2-L2-Q1",
+              "text": "Werden Varianten manuell in Listen verwaltet (z.B. Excel)?"
+            },
+            {
+              "id": "TD2.2-L2-Q2",
+              "text": "Wird das Anlegen neuer Varianten und Arbeiten mit Varianten dokumentiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD2.2-L3-Q1",
+              "text": "Sind Varianten systematisch identifiziert und dokumentiert?"
+            },
+            {
+              "id": "TD2.2-L3-Q2",
+              "text": "Werden Varianten konsistent über modulare Bausteine oder definierte Mechanismen (z. B. Variablen, Attributsteuerung) abgebildet?"
+            },
+            {
+              "id": "TD2.2-L3-Q3",
+              "text": "Gibt es dokumentierte Vorgaben oder Regeln für das Variantenmanagement in der Dokumentation?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD2.2-L4-Q1",
+              "text": "Wird die Abbildung von Varianten aktiv überwacht und hinsichtlich Konsistenz und Effizienz bewertet?"
+            },
+            {
+              "id": "TD2.2-L4-Q2",
+              "text": "Werden Metadaten oder Regelwerke systematisch eingesetzt, um Varianten zu steuern?"
+            },
+            {
+              "id": "TD2.2-L4-Q3",
+              "text": "Erfolgt die Ausleitung verschiedener Variantendimensionen (z. B. Sprache, Marktversion, Produktkonfiguration) automatisiert?"
+            },
+            {
+              "id": "TD2.2-L4-Q4",
+              "text": "Erfolgt eine Abstimmung zwischen Fachbereichen (z. B. Produktmanagement, Redaktion, Service), um Variantenanforderungen konsistent umzusetzen?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD2.2-L5-Q1",
+              "text": "Wird das Variantenmanagement kontinuierlich anhand von Feedback und Best Practices optimiert?"
+            },
+            {
+              "id": "TD2.2-L5-Q2",
+              "text": "Werden innovative Ansätze (z. B. regelbasierte Publikation, KI-gestützte Variantensteuerung) evaluiert und eingesetzt?"
+            },
+            {
+              "id": "TD2.2-L5-Q3",
+              "text": "Werden Varianten automatisch bzw. KI-gestützt auf Grundlage der digitalen Zwillinge angelegt und verwaltet?"
+            },
+            {
+              "id": "TD2.2-L5-Q4",
+              "text": "Erfolgt eine proaktive Anpassung des Variantenmanagements an neue Produkte, Märkte und Zielgruppenanforderungen?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD2.3",
+      "name": "Content Management - Metadatenmanagement",
+      "category": "TD",
+      "description": "Inhalte der technischen Dokumentation durch einheitliche und systematisch gepflegte Metadaten auffindbar, wiederverwendbar und für unterschiedliche Kontexte (Publikation, Varianten, Zielgruppen, Prozesse) steuerbar machen. Ziel ist die Strukturierung, Automatisierung und Effizienzsteigerung im Umgang mit Inhalten über den gesamten Dokumentationsprozess hinweg.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD2.3-L1-Q1",
+              "text": "Können die Mitarbeiter die Dokumentation individuell identifizieren?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD2.3-L2-Q1",
+              "text": "Können Dokumente über die Ordnerstruktur und Dateibenennung identifiziert werden?"
+            },
+            {
+              "id": "TD2.3-L2-Q2",
+              "text": "Werden manuell gelegentlich Metadaten auf Dokumenteneben vergeben?"
+            },
+            {
+              "id": "TD2.3-L2-Q3",
+              "text": "Werden die Metadaten für das Versions- und Variantenmanagement verwendet?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD2.3-L3-Q1",
+              "text": "Existieren dokumentierte Regeln und Vorgaben zur einheitlichen Vergabe von Metadaten?"
+            },
+            {
+              "id": "TD2.3-L3-Q2",
+              "text": "Werden Metadaten systematisch zur Klassifikation, Wiederverwendung oder Steuerung von Inhalten genutzt?"
+            },
+            {
+              "id": "TD2.3-L3-Q3",
+              "text": "Sind Metadatenfelder konsistent in allen Projekten und Abteilungen implementiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD2.3-L4-Q1",
+              "text": "Wird die Vergabe und Nutzung von Metadaten regelmäßig überwacht und bewertet?"
+            },
+            {
+              "id": "TD2.3-L4-Q2",
+              "text": "Unterstützen Werkzeuge oder Systeme die konsistente Anwendung von Metadaten (z. B. Pflichtfelder, automatische Checks)?"
+            },
+            {
+              "id": "TD2.3-L4-Q3",
+              "text": "Wird die Einhaltung des Metadatenkonzepts systematisch überprüft (z. B. durch Reviews, Audits)?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD2.3-L5-Q1",
+              "text": "Wird das Metadatenmodell regelmäßig weiterentwickelt (z. B. neue Kategorien, semantische Modelle, Ontologien)?"
+            },
+            {
+              "id": "TD2.3-L5-Q2",
+              "text": "Erfolgt die Metadatengenerierung bzw. -vergabe automatisch oder KI-basiert?"
+            },
+            {
+              "id": "TD2.3-L5-Q3",
+              "text": "Werden innovative Ansätze wie KI-gestützte Metadatenerkennung oder semantische Anreicherung eingesetzt?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD2.4",
+      "name": "Content Management - Terminologiemanagement",
+      "category": "TD",
+      "description": "Fachbegriffe, Benennungen und Sprachregelungen konsistent und zielgruppenorientiert in der technischen Dokumentation verwenden. Ziel ist die Eindeutigkeit, Verständlichkeit, Übersetzbarkeit und Rechtskonformität von Inhalten.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD2.4-L1-Q1",
+              "text": "Nutzen Mitarbeitende ihre individuelle Terminologie projektbezogen konsistent?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD2.4-L2-Q1",
+              "text": "Werden gelegentlich Begriffe in einer Terminologieliste dokumentiert?"
+            },
+            {
+              "id": "TD2.4-L2-Q2",
+              "text": "Ist die Terminologieliste zugänglich für alle Mitarbeitenden der Redaktion?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD2.4-L3-Q1",
+              "text": "Gibt es eine zentrale, dokumentierte Terminologieliste oder Datenbank?"
+            },
+            {
+              "id": "TD2.4-L3-Q2",
+              "text": "Existieren definierte Terminologierichtlinien?"
+            },
+            {
+              "id": "TD2.4-L3-Q3",
+              "text": "Sind Prozesse für die Freigabe und Pflege von Terminologie definiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD2.4-L4-Q1",
+              "text": "Wird die Einhaltung der Terminologie durch Prüfungen oder Tools systematisch überwacht?"
+            },
+            {
+              "id": "TD2.4-L4-Q2",
+              "text": "Erfolgt eine Abstimmung zwischen Abteilungen (z. B. Entwicklung, Service, Marketing), um terminologische Konsistenz sicherzustellen?"
+            },
+            {
+              "id": "TD2.4-L4-Q3",
+              "text": "Wird ein Terminologiemapping zu Zulieferdokumentation durchgeführt?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD2.4-L5-Q1",
+              "text": "Werden innovative Ansätze wie KI-gestützte Terminologieprüfung oder semantische Netze eingesetzt?"
+            },
+            {
+              "id": "TD2.4-L5-Q2",
+              "text": "Erfolgt eine aktive Mitgestaltung oder Orientierung an branchenweiten Terminologiestandards?"
+            },
+            {
+              "id": "TD2.4-L5-Q3",
+              "text": "Existiert ein mehrsprachiges, wertstrom- bzw. unternehmensübergreifendes Terminologiemanagement?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD2.5",
+      "name": "Content Management - Übersetzungsmanagement",
+      "category": "TD",
+      "description": "Das Übersetzungsmanagement stellt sicher, dass technische Dokumentationen zielgruppengerecht, konsistent, rechtssicher und effizient in andere Sprachen übertragen werden. Ziel ist die qualitativ hochwertige und kosteneffiziente Übersetzung, die die internationale Vermarktung von Produkten unterstützt.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD2.5-L1-Q1",
+              "text": "Wird bei Bedarf Ad-Hoc nach individuellen Maßstäben übersetzt?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD2.5-L2-Q1",
+              "text": "Werden Übersetzungsarbeiten an einen externen Dienstleister ausgelagert?"
+            },
+            {
+              "id": "TD2.5-L2-Q2",
+              "text": "Werden gelegentlich informelle Hilfsmittel wie Glossare oder Übersetzungslisten verwendet?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD2.5-L3-Q1",
+              "text": "Sind Prozesse für Übersetzungen dokumentiert und definiert (z. B. Briefing, Beauftragung, Freigabe)?"
+            },
+            {
+              "id": "TD2.5-L3-Q2",
+              "text": "Erfolgt die Übersetzung konsistent nach festgelegten Styleguides und Qualitätsstandards?"
+            },
+            {
+              "id": "TD2.5-L3-Q3",
+              "text": "Werden Übersetzungen durch Übersetzungsressourcen (z.B. Translation Memory) unterstützt?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD2.5-L4-Q1",
+              "text": "Wird die Qualität der Übersetzungen regelmäßig evaluiert?"
+            },
+            {
+              "id": "TD2.5-L4-Q2",
+              "text": "Erfolgt eine Rückkopplung aus den Märkten oder Zielgruppen zur Verbesserung der Übersetzungen?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD2.5-L5-Q1",
+              "text": "Kommen innovative Ansätze wie maschinelle Übersetzung mit Post-Editing oder KI-gestützte Terminologieprüfung zum Einsatz?"
+            },
+            {
+              "id": "TD2.5-L5-Q2",
+              "text": "Wird das Übersetzungsmanagement proaktiv an neue Märkte, Zielgruppen, Kulturen und regulatorische Anforderungen angepasst?"
+            },
+            {
+              "id": "TD2.5-L5-Q3",
+              "text": "Werden Übersetzungsprozesse kontinuierlich anhand von Best Practices und neuen Technologien optimiert?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD2.6",
+      "name": "Content Management - Aktualität",
+      "category": "TD",
+      "description": "Die technische Dokumentation soll stets dem aktuellen Stand des Produkts, der Prozesse und der gesetzlichen Anforderungen entsprechen. Ziel ist es, veraltete, fehlerhafte oder widersprüchliche Informationen zu vermeiden und die Zuverlässigkeit, Sicherheit und Rechtskonformität der Dokumentation zu gewährleisten.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD2.6-L1-Q1",
+              "text": "Erfolgen Aktualisierungen nur reaktiv und unsystematisch nach individuellem Ermessen, z. B. nach Kundenrückmeldungen oder Problemen?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD2.6-L2-Q1",
+              "text": "Gibt es erste Routinen oder informelle Absprachen zur Pflege der Dokumentation?"
+            },
+            {
+              "id": "TD2.6-L2-Q2",
+              "text": "Werden Dokumente gelegentlich aktualisiert (z.B. anlassbezogen)?"
+            },
+            {
+              "id": "TD2.6-L2-Q3",
+              "text": "Sind Verantwortliche für die Dokumente identifiziert worden, die Aktualisierungen vornehmen?"
+            },
+            {
+              "id": "TD2.6-L2-Q4",
+              "text": "Gibt es einen ersten definierten Dokumenten-Lebenszyklus?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD2.6-L3-Q1",
+              "text": "Ist ein definierter Prozess zur Aktualisierung der Dokumentation vorhanden (z. B. Änderungsmanagement, definierte Freigabeschritte)?"
+            },
+            {
+              "id": "TD2.6-L3-Q2",
+              "text": "Werden Änderungen am Produkt oder Prozess systematisch in die Dokumentation übernommen (z.B. bei Wartungseinsätzen)?"
+            },
+            {
+              "id": "TD2.6-L3-Q3",
+              "text": "Ist die Nachverfolgbarkeit von Änderungen sichergestellt (z. B. durch Versionierung)?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD2.6-L4-Q1",
+              "text": "Wird die Aktualität der Dokumentation regelmäßig überprüft und überwacht (z. B. Audits, Reviews, KPIs)?"
+            },
+            {
+              "id": "TD2.6-L4-Q2",
+              "text": "Gibt es Verantwortlichkeiten und klare Fristen für die Pflege und Aktualisierung?"
+            },
+            {
+              "id": "TD2.6-L4-Q3",
+              "text": "Werden bei Änderungen am realen System Änderungsbedarfe in der Dokumentation gekennzeichnet?"
+            },
+            {
+              "id": "TD2.6-L4-Q4",
+              "text": "Wird die Konsistenz zwischen Dokumentationsversionen und Produktständen systematisch sichergestellt?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD2.6-L5-Q1",
+              "text": "Werden die relevanten Dokumentationsinhalte auf Grundlage der durchgeführten Änderungen am realen System über den gesamten Lebenszyklus automatisch aktualisiert?"
+            },
+            {
+              "id": "TD2.6-L5-Q2",
+              "text": "Werden dabei innovative Ansätze (v.a. digitale Zwillinge) genutzt?"
+            },
+            {
+              "id": "TD2.6-L5-Q3",
+              "text": "Wird der Aktualisierungsprozess kontinuierlich verbessert und an neue Anforderungen angepasst?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD2.7",
+      "name": "Content Management - Versionierung",
+      "category": "TD",
+      "description": "Die Versionierung stellt sicher, dass Dokumentationsinhalte eindeutig identifizierbar, nachvollziehbar und in konsistenter Reihenfolge gepflegt werden. Ziel ist es, jederzeit zu wissen, welche Version eines Inhalts gültig ist, welche Änderungen durchgeführt wurden und wie diese in Bezug auf das Produkt oder System einzuordnen sind.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD2.7-L1-Q1",
+              "text": "Haben die Mitarbeiter, die mit der Technischen Dokumentation vertraut sind, einen individuellen Überblick über die aktuelle Version der Dokumentation, mit der sie arbeiten?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD2.7-L2-Q1",
+              "text": "Ist die Unterscheidung der Versionen der Dokumentation auch für andere Mitarbeiter interpretierbar (z.B. über die Dateibenennung)?"
+            },
+            {
+              "id": "TD2.7-L2-Q2",
+              "text": "Werden gelegentlich Absprachen über die Kennzeichnung der Version getroffen?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD2.7-L3-Q1",
+              "text": "Ist ein definierter Prozess zur Versionierung von Dokumentationen vorhanden (z. B. eindeutige Versionsnummerierung, definierte Freigabeschritte)?"
+            },
+            {
+              "id": "TD2.7-L3-Q2",
+              "text": "Werden Versionsstände konsistent geführt und Änderungen systematisch dokumentiert?"
+            },
+            {
+              "id": "TD2.7-L3-Q3",
+              "text": "Wird regelmäßig systemseitige Unterstützung bei der Versionierung in Anspruch genommen?"
+            },
+            {
+              "id": "TD2.7-L3-Q4",
+              "text": "Gibt es Vorgaben oder Richtlinien zur Versionierung, die verbindlich angewendet werden?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD2.7-L4-Q1",
+              "text": "Wird die Einhaltung der Versionierungsregeln regelmäßig überprüft?"
+            },
+            {
+              "id": "TD2.7-L4-Q2",
+              "text": "Unterstützen Tools oder Systeme aktiv die Versionierung (z. B. automatisierte Versionsverwaltung, Check-in/Check-out)?"
+            },
+            {
+              "id": "TD2.7-L4-Q3",
+              "text": "Besteht Transparenz darüber, welche Version zu welchem Zeitpunkt gültig ist und wer sie freigegeben hat?"
+            },
+            {
+              "id": "TD2.7-L4-Q4",
+              "text": "Ist eine durchgängige Rückverfolgbarkeit von Versionen gewährleistet?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD2.7-L5-Q1",
+              "text": "Wird die Versionierung und die Nachverfolgbarkeit von Änderungen kontinuierlich verbessert?"
+            },
+            {
+              "id": "TD2.7-L5-Q2",
+              "text": "Erfolgt eine proaktive Sicherstellung der Konsistenz und Nachvollziehbarkeit aller Versionen über Systeme hinweg?"
+            },
+            {
+              "id": "TD2.7-L5-Q3",
+              "text": "Werden innovative Ansätze wie automatisierte Änderungsverfolgung oder Integration mit Produktlebenszyklus-Systemen genutzt?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD2.8",
+      "name": "Content Management - Ablage und Archivierung",
+      "category": "TD",
+      "description": "Die Ablage und Archivierung stellt sicher, dass Dokumentationsinhalte strukturiert, zugänglich und revisionssicher gespeichert werden. Ziel ist die Nachvollziehbarkeit, Rechtskonformität und effiziente Wiederverwendbarkeit von Dokumentationsständen während und nach dem Produktlebenszyklus.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD2.8-L1-Q1",
+              "text": "Legen erfahrene Mitarbeiter Dokumente zu Archivierungszwecken lokal ab?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD2.8-L2-Q1",
+              "text": "Ist eine zentrale Ablage vorhanden und wird diese gelegentlich von den Mitarbeitenden verwendet?"
+            },
+            {
+              "id": "TD2.8-L2-Q2",
+              "text": "Werden erste Regeln zur Ablage und Archivierung dokumentiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD2.8-L3-Q1",
+              "text": "Ist ein definierter Prozess für Ablage und Archivierung von Dokumentationen vorhanden?"
+            },
+            {
+              "id": "TD2.8-L3-Q2",
+              "text": "Werden Inhalte konsistent in einer zentralen Struktur oder einem System gespeichert?"
+            },
+            {
+              "id": "TD2.8-L3-Q3",
+              "text": "Bestehen verbindliche Vorgaben für Aufbewahrungsfristen und Zugriffsrechte?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD2.8-L4-Q1",
+              "text": "Wird die Einhaltung der Ablage- und Archivierungsregeln regelmäßig überprüft (z. B. durch Audits oder interne Kontrollen)?"
+            },
+            {
+              "id": "TD2.8-L4-Q2",
+              "text": "Unterstützen Systeme die Verwaltung von Zugriffsrechten, Versionen und Fristen?"
+            },
+            {
+              "id": "TD2.8-L4-Q3",
+              "text": "Sind archivierte Inhalte jederzeit nachvollziehbar und revisionssicher verfügbar?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD2.8-L5-Q1",
+              "text": "Werden rechtliche und organisatorische Anforderungen proaktiv in die Archivierung integriert und regelmäßig aktualisiert?"
+            },
+            {
+              "id": "TD2.8-L5-Q2",
+              "text": "Erfolgt eine automatisierte Archivierung auf Basis von Metadaten, Ereignissen oder Fristen?"
+            },
+            {
+              "id": "TD2.8-L5-Q3",
+              "text": "Erfolgt eine unternehmensweite Harmonisierung mit anderen Systemen (z. B. PLM, ERP, DMS) zur ganzheitlichen Archivverwaltung?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD3.1",
+      "name": "Content Delivery - Publikation und Verwaltung",
+      "category": "TD",
+      "description": "Dokumentationsinhalte werden gezielt, konsistent und effizient veröffentlicht, verteilt und verwaltet. Ziel ist es, dass die richtigen Informationen zur richtigen Zeit, in geeigneter Form und für die passende Zielgruppe bereitgestellt werden.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD3.1-L1-Q1",
+              "text": "Wird die Dokumentation einmalig manuell nach dessen Fertigstellung publiziert?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD3.1-L2-Q1",
+              "text": "Werden Publikationen regelmäßig nach individuellen Abläufen oder Projektstandards erstellt?"
+            },
+            {
+              "id": "TD3.1-L2-Q2",
+              "text": "Gibt es bereits erste dokumentierte Zeit- und Projektpläne für den Publikationsprozess?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD3.1-L3-Q1",
+              "text": "Sind Publikationsprozesse definiert und dokumentiert (z. B. mit Freigabe, Ausgabeformaten, Kanälen)?"
+            },
+            {
+              "id": "TD3.1-L3-Q2",
+              "text": "Sind Verantwortlichkeiten und Zuständigkeiten für den Publikationsprozess definiert und zugewiesen?"
+            },
+            {
+              "id": "TD3.1-L3-Q3",
+              "text": "Werden Veröffentlichungen konsistent gesteuert und verwaltet?"
+            },
+            {
+              "id": "TD3.1-L3-Q4",
+              "text": "Bestehen zentrale Vorgaben für die Verwaltung und Auslieferung der Dokumentation?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD3.1-L4-Q1",
+              "text": "Wird die Einhaltung der Publikations- und Verwaltungsprozesse regelmäßig überprüft?"
+            },
+            {
+              "id": "TD3.1-L4-Q2",
+              "text": "Wird der Publikationsprozess mithilfe von Kennzahlen gesteuert?"
+            },
+            {
+              "id": "TD3.1-L4-Q3",
+              "text": "Unterstützen Systeme (z. B. CMS, Portale) aktiv die Verwaltung und Auslieferung der Inhalte?"
+            },
+            {
+              "id": "TD3.1-L4-Q4",
+              "text": "Besteht Transparenz über Veröffentlichungszeitpunkte, Zuständigkeiten und Zielgruppen?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD3.1-L5-Q1",
+              "text": "Werden Publikations- und Verwaltungsprozesse kontinuierlich verbessert und an neue Anforderungen (z. B. Omnichannel, Headless Delivery) angepasst?"
+            },
+            {
+              "id": "TD3.1-L5-Q2",
+              "text": "Werden innovative Technologien eingesetzt (z. B. vollautomatisierte Publikation)?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD3.2",
+      "name": "Content Delivery - Zugriffsmanagement",
+      "category": "TD",
+      "description": "Das Zugriffsmanagement stellt sicher, dass Nutzerinnen nur auf die für sie relevanten und freigegebenen Dokumentationsinhalte zugreifen können. Ziel ist der Schutz vertraulicher Informationen, die Einhaltung rechtlicher Vorgaben und die nutzerorientierte Bereitstellung von Dokumentation.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD3.2-L1-Q1",
+              "text": "Können alle Personen auf alle Inhalte zugreifen (z.B. offen Dateiablagen, Versand per Mail)?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD3.2-L2-Q1",
+              "text": "Sind erste Nutzergruppen oder Dateiberechtigungen definiert? Wird darüber das Zugriffsmanagement darüber gelegentlich gesteuert?"
+            },
+            {
+              "id": "TD3.2-L2-Q2",
+              "text": "Werden Zugriffe fallweise geregelt, z. B. durch individuelle Freigaben oder einfache Passwortschutzmechanismen?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD3.2-L3-Q1",
+              "text": "Existiert ein definiertes und dokumentiertes Rollen- und Berechtigungskonzept?"
+            },
+            {
+              "id": "TD3.2-L3-Q2",
+              "text": "Sind Zugriffsrechte konsistent im System umgesetzt und werden systematisch vergeben?"
+            },
+            {
+              "id": "TD3.2-L3-Q3",
+              "text": "Erfolgt eine klare Unterscheidung zwischen internen, externen und öffentlichen Inhalten?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD3.2-L4-Q1",
+              "text": "Ist jederzeit nachvollziehbar, wer auf welche Inhalte zugegriffen hat (Logging)?"
+            },
+            {
+              "id": "TD3.2-L4-Q2",
+              "text": "Wird die Einhaltung des Zugriffsmanagements regelmäßig überprüft (z. B. durch Audits oder Protokollauswertungen)?"
+            },
+            {
+              "id": "TD3.2-L4-Q3",
+              "text": "Werden Systeme zur Verwaltung von Berechtigungen aktiv genutzt"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD3.2-L5-Q1",
+              "text": "Werden innovative Technologien wie Single-Sign-On, adaptive Zugriffssteuerung oder KI-gestützte Anomalieerkennung genutzt?"
+            },
+            {
+              "id": "TD3.2-L5-Q2",
+              "text": "Erfolgt eine unternehmensweite Integration des Zugriffsmanagements mit anderen Systemen?"
+            },
+            {
+              "id": "TD3.2-L5-Q3",
+              "text": "Erfolgt das Zugriffsmanagement dynamisch mit Personalisierung?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD3.3",
+      "name": "Content Delivery - Zugänglichkeit der Dokumentation",
+      "category": "TD",
+      "description": "Dokumentationsinhalte sind in der für den Anwendungsfall passenden Granularität zugänglich sind. Ziel ist es, dass Nutzerinnen genau die Informationseinheit erhalten, die sie benötigen – sei es als vollständiges Dokument, als Modul, Topic oder einzelnes Datenelement.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD3.3-L1-Q1",
+              "text": "Erfolgt die Bereitstellung technischer Dokumente in einem elektronischen Format, das elektronisch zugänglich ist oder einfach und zuverlässig in ein solches Format umgewandelt werden kann (z.B. PDF)?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD3.3-L2-Q1",
+              "text": "Ist die technische Dokumentation in einem strukturierten und nicht-proprietären Format (z.B. XML) zugänglich?"
+            },
+            {
+              "id": "TD3.3-L2-Q2",
+              "text": "Bestehen vereinzelte Möglichkeiten, Inhalte unabhängig vom Gesamtdokument zu verwenden?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD3.3-L3-Q1",
+              "text": "Ist die Dokumentation in Modulen verfügbar, die einzeln zugänglich sind?"
+            },
+            {
+              "id": "TD3.3-L3-Q2",
+              "text": "Unterstützt die Informationsarchitektur die Wiederverwendung einzelner Module?"
+            },
+            {
+              "id": "TD3.3-L3-Q3",
+              "text": "Gibt es definierte Standards für die Modularisierung?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD3.3-L4-Q1",
+              "text": "Sind die Module über Identifikatoren (z.B. URIs) eindeutig zugänglich?"
+            },
+            {
+              "id": "TD3.3-L4-Q2",
+              "text": "Besteht eine klare Metadatenstruktur, die den gezielten Zugriff auf einzelne Topics erlaubt?"
+            },
+            {
+              "id": "TD3.3-L4-Q3",
+              "text": "Unterstützen Systeme (z. B. CCMS) die Verwaltung und Auslieferung dieser granularen Inhalte?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD3.3-L5-Q1",
+              "text": "Können Inhalte auf feinster Ebene (z. B. Datenobjekte, Informationselemente) zielgerichtet abgerufen werden?"
+            },
+            {
+              "id": "TD3.3-L5-Q2",
+              "text": "Verfügen die Elemente über Semantik und beziehen sie sich auf Konzepte einer Ontologie?"
+            },
+            {
+              "id": "TD3.3-L5-Q3",
+              "text": "Wird die Granularität kontinuierlich an neue Anforderungen (z. B. IoT, Digital Twin, AR/VR) angepasst?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD3.4",
+      "name": "Content Delivery - Kanäle und Plattformen",
+      "category": "TD",
+      "description": "Medien, Systeme und Ausgabekanäle über die die Dokumentationsinhalte bereitgestellt werden. Ziel ist es, dass die Inhalte zielgruppen- und kontextspezifisch auf den jeweils passenden Plattformen verfügbar sind.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD3.4-L1-Q1",
+              "text": "Werden individuelle Kanäle für die Veröffentlichung verwendet?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD3.4-L2-Q1",
+              "text": "Bestehen erste Absprachen über zu verwendende Kanäle zur Publikation?"
+            },
+            {
+              "id": "TD3.4-L2-Q2",
+              "text": "Werden Inhalte in mehreren Kanälen bereitgestellt (z. B. Print, PDF, Website), wobei die Pflege in den unterschiedlichen Kanälen unabhängig voneinander erfolgt?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD3.4-L3-Q1",
+              "text": "Ist die Pflege der Inhalte zentralisiert, sodass Konsistenz über alle Kanäle hinweg gewährleistet ist?"
+            },
+            {
+              "id": "TD3.4-L3-Q2",
+              "text": "Wird die Nutzung der Kanäle regelmäßig erfasst und dokumentiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD3.4-L4-Q1",
+              "text": "Erfolgt die Ausspielung der Inhalte kontextspezifisch über Plattformen (z. B. Portal, App)?"
+            },
+            {
+              "id": "TD3.4-L4-Q2",
+              "text": "Werden die Nutzungsdaten systematisch ausgewertet, um Kanäle und Plattformen gezielt weiterzuentwickeln?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD3.4-L5-Q1",
+              "text": "Gibt es eine Omnichannel-Strategie, die Inhalte konsistent und dynamisch über alle relevanten Kanäle hinweg ausliefert?"
+            },
+            {
+              "id": "TD3.4-L5-Q2",
+              "text": "Werden Nutzungsdaten automatisiert in den Redaktionsprozess zurückgeführt und für kontinuierliche Optimierung (z. B. KI-gestützt) genutzt?"
+            },
+            {
+              "id": "TD3.4-L5-Q3",
+              "text": "Werden Inhalte über APIs oder Schnittstellen in externe Systeme integriert und flexibel auf neuen Plattformen nutzbar gemacht?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD4.1",
+      "name": "Zielgruppenorientierung - Zielgruppenkenntnis",
+      "category": "TD",
+      "description": "Die Zielgruppenkenntnis beschreibt, in welchem Maß Unternehmen ihre Nutzerinnen, deren Anforderungen und Nutzungssituationen kennen und berücksichtigen. Ziel ist es, die Dokumentation systematisch an den Informationsbedürfnissen und Nutzungskontexten der Zielgruppen auszurichten.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD4.1-L1-Q1",
+              "text": "Basieren die Inhalte auf Annahmen und individuellem Erfahrungswissen der einzelnen Mitarbeiter bezüglich der Zielgruppe der Dokumentation?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD4.1-L2-Q1",
+              "text": "Sind die Zielgruppen grundsätzlich bekannt?"
+            },
+            {
+              "id": "TD4.1-L2-Q2",
+              "text": "Wird eine grobe Zielgruppeneinteilung (z.B. \"Wartungspersonal\") und eine erste Einschätzung zu deren Informationsbedürfnissen vorgenommen?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD4.1-L3-Q1",
+              "text": "Werden Zielgruppen systematisch analysiert (z. B. durch Interviews, Workshops)?"
+            },
+            {
+              "id": "TD4.1-L3-Q2",
+              "text": "Liegen dokumentierte Zielgruppenprofile oder Personas vor?"
+            },
+            {
+              "id": "TD4.1-L3-Q3",
+              "text": "Sind die typischen Nutzungsszenarien der Zielgruppen bekannt und beschrieben?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD4.1-L4-Q1",
+              "text": "Werden die Erkenntnisse über Zielgruppen aktiv genutzt, um Inhalte und Medienauswahl zu steuern?"
+            },
+            {
+              "id": "TD4.1-L4-Q2",
+              "text": "Gibt es verbindliche Richtlinien oder Leitfäden, die die zielgruppengerechte Aufbereitung der Dokumentation sicherstellen?"
+            },
+            {
+              "id": "TD4.1-L4-Q3",
+              "text": "Sind kulturelle Nuancen auf internationalen Märkten bekannt und fließen in die Dokumentation ein?"
+            },
+            {
+              "id": "TD4.1-L4-Q4",
+              "text": "Wird Zielgruppenwissen regelmäßig aktualisiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD4.1-L5-Q1",
+              "text": "Werden Daten aus Nutzungstracking und Feedback systematisch ausgewertet, um die Zielgruppenkenntnis zu vertiefen? Ist diese Zielgruppenanalyse Teil des Content Lifecycles?"
+            },
+            {
+              "id": "TD4.1-L5-Q2",
+              "text": "Gibt es einen etablierten Prozess zur Rückkopplung von Zielgruppenwissen in den Redaktionsprozess?"
+            },
+            {
+              "id": "TD4.1-L5-Q3",
+              "text": "Werden Dokumentationsinhalte kontinuierlich an veränderte Zielgruppenbedürfnisse angepasst?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD4.2",
+      "name": "Zielgruppenorientierung - Nutzerzentrierung",
+      "category": "TD",
+      "description": "Die Nutzerzentrierung beschreibt, inwieweit die Erstellung und Gestaltung der technischen Dokumentation konsequent an den Bedürfnissen, Erwartungen und Nutzungskontexten der Anwender:innen ausgerichtet ist. Ziel ist es, Inhalte so bereitzustellen, dass sie für die Zielgruppen verständlich, effizient nutzbar und hilfreich sind.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD4.2-L1-Q1",
+              "text": "Werden Inhalte aus Hersteller- oder Entwicklerperspektive verfasst?"
+            },
+            {
+              "id": "TD4.2-L1-Q2",
+              "text": "Liegt der Fokus auf dem zu dokumentierenden Produkt?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD4.2-L2-Q1",
+              "text": "Werden auf Grundlage des bestimmungsgemäßen Gebrauchs Versuche vorgenommen, die Nutzersicht zu berücksichtigen (=Nutzerorientierung)?"
+            },
+            {
+              "id": "TD4.2-L2-Q2",
+              "text": "Fließen einzelne Hinweise oder Erfahrungen der Nutzer:innen in die Dokumentation ein?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD4.2-L3-Q1",
+              "text": "Orientieren sich die Inhalte am Nutzungskontext (z.B. Aufgaben, Vorwissen)?"
+            },
+            {
+              "id": "TD4.2-L3-Q2",
+              "text": "Sind Vorgaben zur Nutzerzentrierung dokumentiert (z. B. im Redaktionsleitfaden)?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD4.2-L4-Q1",
+              "text": "Wird der Informationsbedarf systematisch ermittelt und in die Planung integriert?"
+            },
+            {
+              "id": "TD4.2-L4-Q2",
+              "text": "Wird der Fokus auf die Nutzer:innen im Moment des Informationsbedarfs (=Nutzerzentrierung) gesetzt?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD4.2-L5-Q1",
+              "text": "Erfolgt eine erweiterte Nutzerzentrierung durch ontologische Beschreibung des Produkts und aktive Erweiterung der Ontologie durch neues Wissen (z.B. bei der Behebung bisher unbekannter Fehler)?"
+            },
+            {
+              "id": "TD4.2-L5-Q2",
+              "text": "Umfasst der Nutzerkreis nicht mehr nur Menschen, sondern auch Maschinen? Ist die Dokumentation darauf ausgerichtet?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD4.3",
+      "name": "Zielgruppenorientierung - Nutzerfreundlichkeit",
+      "category": "TD",
+      "description": "Die Nutzerfreundlichkeit beschreibt, wie verständlich, zugänglich und effizient die Dokumentation von den Zielgruppen genutzt werden kann. Ziel ist es, dass Inhalte schnell auffindbar, leicht verständlich und ohne unnötigen Aufwand nutzbar sind.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD4.3-L1-Q1",
+              "text": "Ist die Verständlichkeit und Nutzbarkeit der Dokumentation abhängig von der Person, die sie erstellt?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD4.3-L2-Q1",
+              "text": "Werden grundlegende Aspekte der Verständlichkeit berücksichtigt (z. B. einfache Sprache, kurze Sätze)?"
+            },
+            {
+              "id": "TD4.3-L2-Q2",
+              "text": "Werden erste Gestaltungsrichtlinien gesammelt und dokumentiert, die die Nutzung vereinfachen?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD4.3-L3-Q1",
+              "text": "Liegen definierte Standards für Struktur, Sprache und Gestaltung der Dokumentation vor?"
+            },
+            {
+              "id": "TD4.3-L3-Q2",
+              "text": "Werden unterstützende Medien eingesetzt, um die Verständlichkeit zu verbessern?"
+            },
+            {
+              "id": "TD4.3-L3-Q3",
+              "text": "Wird die Nutzerfreundlichkeit regelmäßig geprüft (z. B. durch interne Reviews)?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD4.3-L4-Q1",
+              "text": "Ist die Nutzerfreundlichkeit ein fester Bestandteil des Redaktionsprozesses?"
+            },
+            {
+              "id": "TD4.3-L4-Q2",
+              "text": "Erfolgt die Überprüfung der Nutzerfreundlichkeit systematisch mit Nutzenden (z. B. Usability-Tests)?"
+            },
+            {
+              "id": "TD4.3-L4-Q3",
+              "text": "Wird Feedback aus der Nutzung gezielt genutzt, um Struktur, Layout und Sprache zu verbessern?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD4.3-L5-Q1",
+              "text": "Werden Nutzungsdaten (z. B. Suchverhalten, Klickpfade, Fehlermeldungen) kontinuierlich ausgewertet, um die Nutzerfreundlichkeit zu verbessern?"
+            },
+            {
+              "id": "TD4.3-L5-Q2",
+              "text": "Erfolgt eine proaktive Weiterentwicklung der Dokumentation auf Basis neuer Erkenntnisse zur Usability?"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TD4.4",
+      "name": "Zielgruppenorientierung - Feedbackintegration",
+      "category": "TD",
+      "description": "Die Feedbackintegration beschreibt, in welchem Maß Rückmeldungen von Nutzer:innen und Stakeholdern systematisch erfasst, ausgewertet und in die Weiterentwicklung der Dokumentation integriert werden. Ziel ist es, die Qualität und Relevanz der Inhalte kontinuierlich durch Rückkopplung zu verbessern.",
+      "default_target_level": 3,
+      "levels": [
+        {
+          "level_number": 1,
+          "name": "initial",
+          "questions": [
+            {
+              "id": "TD4.4-L1-Q1",
+              "text": "Erreicht das Feedback die Redaktion vereinzelt über Dritte (z.B. Projektleiter der Entwicklung)?"
+            },
+            {
+              "id": "TD4.4-L1-Q2",
+              "text": "Wird Feedback nach individuellen Ermessen adressiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 2,
+          "name": "gemanagt",
+          "questions": [
+            {
+              "id": "TD4.4-L2-Q1",
+              "text": "Gibt es gelegentliche Rückmeldungen über Support- oder Vertriebskanäle?"
+            },
+            {
+              "id": "TD4.4-L2-Q2",
+              "text": "Wird das Feedback gesammelt?"
+            },
+            {
+              "id": "TD4.4-L2-Q3",
+              "text": "Werden hauptsächlich lediglich Beschwerden adressiert?"
+            }
+          ]
+        },
+        {
+          "level_number": 3,
+          "name": "definiert",
+          "questions": [
+            {
+              "id": "TD4.4-L3-Q1",
+              "text": "Wird Feedback aktiv erfragt (z.B. Umfragen)?"
+            },
+            {
+              "id": "TD4.4-L3-Q2",
+              "text": "Erfolgt eine systematische Auswertung und Priorisierung der Rückmeldungen? Wird auf dieser Grundlage Feedback selektiv adressiert (z.B. bei Problemen)?"
+            },
+            {
+              "id": "TD4.4-L3-Q3",
+              "text": "Fließt Feedback regelmäßig in die Überarbeitung der Dokumentation ein?"
+            }
+          ]
+        },
+        {
+          "level_number": 4,
+          "name": "quantitativ gemanagt",
+          "questions": [
+            {
+              "id": "TD4.4-L4-Q1",
+              "text": "Gibt es klar definierte Prozesse, wie Feedback in die Dokumentation einfließt?"
+            },
+            {
+              "id": "TD4.4-L4-Q2",
+              "text": "Werden die Ergebnisse der Feedbackauswertung regelmäßig überprüft?"
+            },
+            {
+              "id": "TD4.4-L4-Q3",
+              "text": "Werden alle Aspekte der Rückmeldungen adressiert?"
+            },
+            {
+              "id": "TD4.4-L4-Q4",
+              "text": "Erfolgt eine Rückmeldung an die Feedbackgebenden über umgesetzte Maßnahmen?"
+            }
+          ]
+        },
+        {
+          "level_number": 5,
+          "name": "optimiert",
+          "questions": [
+            {
+              "id": "TD4.4-L5-Q1",
+              "text": "Werden Feedbackdaten mit Nutzungsdaten (z. B. Tracking, Analysen) kombiniert, um Verbesserungen gezielt abzuleiten?"
+            },
+            {
+              "id": "TD4.4-L5-Q2",
+              "text": "Sind kontinuierliche, KI-gestützte oder automatisierte Feedbackschleifen etabliert?"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
