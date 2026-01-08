@@ -7,6 +7,8 @@ import streamlit as st
 from core.state import init_session_state
 from core.model_loader import load_tool_meta
 
+TU_GREEN = "#639A00"
+TU_ORANGE = "#CA7406"
 TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
 
@@ -17,13 +19,17 @@ def main() -> None:
     meta = load_tool_meta()
     title = meta.get("title", "Reifegradmodell für die Technische Dokumentation")
 
-    # Darkmode aus deiner Session (falls vorhanden)
-    dark = bool(st.session_state.get("dark_mode", False))
+    # Darkmode robust (falls App "ui_dark_mode" nutzt)
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
-    # Farbtokens abhängig vom Darkmode (robust, unabhängig von prefers-color-scheme)
+    # Farbtokens abhängig vom Darkmode
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
     shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
+
+    # Secondary-Button Grundzustand (Zurück)
+    btn2_bg = "rgba(255,255,255,0.06)" if dark else "#ffffff"
+    btn2_text = "rgba(250,250,250,0.92)" if dark else "#111111"
 
     st.markdown(
         f"""
@@ -80,7 +86,7 @@ def main() -> None:
   .rgm-row {{
     display: flex;
     gap: 38px;
-    align-items: center; /* => optisch sehr „clean“ */
+    align-items: center;
     margin-top: 18px;
   }}
 
@@ -197,6 +203,49 @@ def main() -> None:
     height: 1px;
     background: {border};
     margin: 18px 0 8px 0;
+  }}
+
+  /* =========================================
+     NAV-BUTTONS: "Zurück" (secondary) + Hover immer ORANGE,
+     Text in Dark/Light immer lesbar
+     ========================================= */
+
+  /* Secondary Grundzustand */
+  .stApp button[data-testid="baseButton-secondary"],
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) {{
+    background: {btn2_bg} !important;
+    color: {btn2_text} !important;
+    border: 1px solid {border} !important;
+    border-radius: 10px !important;
+    font-weight: 650 !important;
+    opacity: 1 !important;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  }}
+
+  /* Streamlit setzt Text teils in inneren Spans/ps -> erben lassen */
+  .stApp button[data-testid="baseButton-secondary"] *,
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) * {{
+    color: inherit !important;
+  }}
+
+  /* Hover: ORANGE + Weiß (nicht disabled) */
+  .stApp button[data-testid="baseButton-secondary"]:not(:disabled):hover,
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover {{
+    background: {TU_ORANGE} !important;
+    border-color: {TU_ORANGE} !important;
+    color: #ffffff !important;
+  }}
+
+  .stApp button[data-testid="baseButton-secondary"]:not(:disabled):hover *,
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover * {{
+    color: #ffffff !important;
+  }}
+
+  /* Focus-Ring (optional, sauber) */
+  .stApp button[data-testid="baseButton-secondary"]:focus,
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):focus {{
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(99,154,0,0.25) !important;
   }}
 </style>
         """,

@@ -52,7 +52,7 @@ ANSWER_OPTIONS_WIDGET = ANSWER_OPTIONS
 
 
 def _inject_erhebung_page_css() -> None:
-    """Einheitliches Design für Erhebung (Cards/Typografie/Abstände) – Light/Dark kompatibel."""
+    """Einheitliches Design für Erhebung (Cards/Typografie/Abstände) – kompatibel mit globalem Theme."""
     dark = bool(st.session_state.get("dark_mode", False))
 
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
@@ -60,11 +60,15 @@ def _inject_erhebung_page_css() -> None:
     header_bg = "rgba(255,255,255,0.08)" if dark else "rgba(127,127,127,0.10)"
     shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
 
+    # Für Dropdown/Popover Hover/Selected
+    pop_hover = "rgba(202,116,6,0.22)" if dark else "rgba(202,116,6,0.14)"  # TU-Orange (leicht)
+    pop_sel = "rgba(255,255,255,0.08)" if dark else "rgba(0,0,0,0.04)"
+
     st.markdown(
         f"""
 <style>
   /* =========================================================
-     Design Tokens (einheitlich)
+     Design Tokens (Seite)
      ========================================================= */
   div[data-testid="stAppViewContainer"] {{
     --rgm-td-blue: {TD_BLUE};
@@ -157,11 +161,7 @@ def _inject_erhebung_page_css() -> None:
   }}
 
   /* =========================================================
-     Step 0: Form-Card (WICHTIG: volle Breite, nicht zentriert)
-     Streamlit rendert je nach Version:
-       - div.stForm
-       - div[data-testid="stForm"]
-       - form[data-testid="stForm"]
+     Step 0: Form-Card (volle Breite)
      ========================================================= */
   div.stForm,
   div[data-testid="stForm"],
@@ -171,7 +171,7 @@ def _inject_erhebung_page_css() -> None:
     margin: 0 !important;
   }}
 
-  /* Optik der Card auf dem WRAPPER (div.stForm / div[data-testid="stForm"]) */
+  /* Optik der Card auf dem WRAPPER */
   div.stForm,
   div[data-testid="stForm"] {{
     border: 1px solid var(--rgm-border) !important;
@@ -193,10 +193,59 @@ def _inject_erhebung_page_css() -> None:
     font-weight: 750 !important;
   }}
 
-  div.stForm button[kind="primary"],
-  div[data-testid="stForm"] button[kind="primary"] {{
+  /* =========================================================
+     WICHTIG:
+     KEIN Override für Primary Buttons hier!
+     -> globales apply_global_theme_css steuert:
+        Primary = Grün, Hover = Orange
+     ========================================================= */
+
+  /* =========================================================
+     Fokus: Inputs/Select (Orange, wie global)
+     ========================================================= */
+  div[data-testid="stTextInput"] input:focus {{
+    border-color: var(--tu-orange, #CA7406) !important;
+    box-shadow: 0 0 0 2px rgba(202,116,6,0.28) !important;
+  }}
+
+  /* BaseWeb Selectbox */
+  div[data-baseweb="select"]:focus-within > div {{
+    border-color: var(--tu-orange, #CA7406) !important;
+    box-shadow: 0 0 0 2px rgba(202,116,6,0.28) !important;
+  }}
+
+  /* =========================================================
+     Selectbox Dropdown (Popover) – Darkmode lesbar machen
+     ========================================================= */
+  div[data-baseweb="popover"] > div {{
+    background: var(--rgm-card-bg, #111827) !important;
+    color: var(--rgm-text, rgba(250,250,250,0.92)) !important;
+    border: 1px solid var(--rgm-border) !important;
     border-radius: 12px !important;
-    font-weight: 800 !important;
+    overflow: hidden !important;
+  }}
+
+  div[data-baseweb="popover"] ul[role="listbox"],
+  div[data-baseweb="popover"] div[role="listbox"],
+  div[data-baseweb="menu"] {{
+    background: var(--rgm-card-bg, #111827) !important;
+    color: var(--rgm-text, rgba(250,250,250,0.92)) !important;
+  }}
+
+  div[data-baseweb="popover"] li[role="option"],
+  div[data-baseweb="menu"] li {{
+    background: transparent !important;
+    color: var(--rgm-text, rgba(250,250,250,0.92)) !important;
+  }}
+
+  div[data-baseweb="popover"] li[role="option"]:hover,
+  div[data-baseweb="menu"] li:hover {{
+    background: {pop_hover} !important;
+  }}
+
+  div[data-baseweb="popover"] li[aria-selected="true"],
+  div[data-baseweb="menu"] li[aria-selected="true"] {{
+    background: {pop_sel} !important;
   }}
 
   /* =========================================================
@@ -250,7 +299,7 @@ def _inject_erhebung_page_css() -> None:
     gap: 0.35rem;
   }}
 
-  /* kleine Mobile-Anpassung */
+  /* Mobile */
   @media (max-width: 900px) {{
     .rgm-h1 {{ font-size: 26px; }}
     .rgm-hero {{ padding: 16px; }}
@@ -259,6 +308,7 @@ def _inject_erhebung_page_css() -> None:
         """,
         unsafe_allow_html=True,
     )
+
 
 
 def _render_hero(title: str, lead: str = "", body: str = "", extra_html: str = "") -> None:
@@ -286,26 +336,21 @@ def _render_hero(title: str, lead: str = "", body: str = "", extra_html: str = "
 # -----------------------------
 # Hilfsfunktionen (Allgemein)
 # -----------------------------
-def _count_total_questions(model: dict) -> int:
-    total = 0
-    for dim in model.get("dimensions", []):
-        for lvl in dim.get("levels", []):
-            total += len(lvl.get("questions", []))
-    return total
+def _qid_key(qid) -> str:
+    """Normiert Question-IDs konsistent auf String."""
+    return str(qid).strip()
 
-
-def _count_answered_questions(model: dict) -> int:
-    answered = 0
-    answers = st.session_state.get("answers", {})
-    for dim in model.get("dimensions", []):
-        for lvl in dim.get("levels", []):
-            for q in lvl.get("questions", []):
-                qid = q.get("id")
-                if not qid:
-                    continue
-                if qid in answers and answers[qid] in ANSWER_OPTIONS:
-                    answered += 1
-    return answered
+def _get_answer(answers: dict, qid) -> str | None:
+    """Liest Antwort robust aus answers (String-Key) oder Widget-State."""
+    qk = _qid_key(qid)
+    # 1) Source of truth: answers dict
+    v = answers.get(qk)
+    if v in ANSWER_OPTIONS:
+        return v
+    # 2) Fallback: Widget-State (falls answers nicht synchron ist)
+    wk = f"q_{qk}"
+    v2 = st.session_state.get(wk)
+    return v2 if v2 in ANSWER_OPTIONS else None
 
 
 def _code_sort_key(code: str):
@@ -910,6 +955,9 @@ def _inject_erhebung_css_for_footer() -> None:
     bg = "rgba(17,24,39,0.96)" if dark else "rgba(246,247,249,0.96)"
     shadow = "0 -10px 24px rgba(0,0,0,0.35)" if dark else "0 -10px 24px rgba(0,0,0,0.06)"
 
+    # Sichtbarer „leer“-Zustand (Dark etwas heller)
+    seg_bg = "rgba(255,255,255,0.18)" if dark else "rgba(0,0,0,0.12)"
+
     st.markdown(
         f"""
 <style>
@@ -952,31 +1000,31 @@ def _inject_erhebung_css_for_footer() -> None:
     color: var(--rgm-text, #111);
     opacity: 0.80;
   }}
-  .rgm-progress-nums{{
-    font-size:12px;
-    font-weight:850;
-    color: var(--rgm-text, #111);
-    opacity: 0.80;
-  }}
 
   .rgm-pipe{{
     display:flex;
-    gap:4px;
+    gap:6px;
     width:100%;
   }}
-  .rgm-seg{{
-    flex:1;
-    height:8px;
-    border-radius:6px;
-    background: rgba(0,0,0,0.10);
+
+  /* ROBUST: unabhängig von Streamlit-Wrappers */
+  .rgm-pipe .rgm-seg {{
+    flex: 1 1 0;
+    min-width: 0;
+    height: 10px;
+    border-radius: 999px;
+    background-color: {seg_bg} !important;
   }}
-  .rgm-seg-done{{
-    background: #7FB800;
+
+  /* Done immer grün */
+  .rgm-pipe .rgm-seg.rgm-seg-done {{
+    background-color: #7FB800 !important;
   }}
 </style>
         """,
         unsafe_allow_html=True,
     )
+
 
 
 def _footer_navigation(model: dict, aid: str) -> None:
@@ -1031,7 +1079,6 @@ def _footer_navigation(model: dict, aid: str) -> None:
         )
 
         st.markdown("")
-
         b1, b2 = st.columns(2, gap="medium")
 
         with b1:
@@ -1043,7 +1090,12 @@ def _footer_navigation(model: dict, aid: str) -> None:
 
         with b2:
             is_last = (idx == n - 1)
-            if st.button("Zum Dashboard ▶" if is_last else "Weiter ▶", use_container_width=True, key="erh_next_btn"):
+            if st.button(
+                "Zum Dashboard ▶" if is_last else "Weiter ▶",
+                use_container_width=True,
+                key="erh_next_btn",
+                type="primary",
+            ):
                 if not is_last:
                     st.session_state["erhebung_dim_idx"] = min(n - 1, idx + 1)
                     _request_scroll_to_top()
@@ -1052,31 +1104,45 @@ def _footer_navigation(model: dict, aid: str) -> None:
                 persist.save(aid)
                 st.rerun()
 
-        answered = _count_answered_questions(model)
-        total = _count_total_questions(model)
+        # ------------------------------------------------------------
+        # PIPELINE IMMER RENDERN (NICHT in Button-Block, NICHT nach rerun)
+        # ------------------------------------------------------------
+        answers = st.session_state.get("answers", {})
+        if not isinstance(answers, dict):
+            answers = {}
 
-        segments = 20
-        done = 0
-        if total > 0 and answered > 0:
-            done = max(1, int((answered / total) * segments))
-        done = min(segments, done)
+        dim_done_flags: list[bool] = []
+        for d in dims:
+            any_answered = False
+            for lvl in (d.get("levels", []) or []):
+                for q in (lvl.get("questions", []) or []):
+                    qid = q.get("id")
+                    if not qid:
+                        continue
+                    if _get_answer(answers, qid) is not None:
+                        any_answered = True
+                        break
+                if any_answered:
+                    break
+            dim_done_flags.append(any_answered)
+
+        done_dims = sum(1 for x in dim_done_flags if x)
+        total_dims = len(dim_done_flags)
 
         pipe: list[str] = []
         pipe.append('<div class="rgm-progress-wrap">')
         pipe.append(
             f'<div class="rgm-progress-top">'
             f'  <div class="rgm-progress-label">Fortschritt</div>'
-            f'  <div class="rgm-progress-nums">{answered}/{total}</div>'
             f"</div>"
         )
         pipe.append('<div class="rgm-pipe">')
-        for i in range(segments):
-            cls = "rgm-seg rgm-seg-done" if i < done else "rgm-seg"
+        for done_flag in dim_done_flags:
+            cls = "rgm-seg rgm-seg-done" if done_flag else "rgm-seg"
             pipe.append(f'<div class="{cls}"></div>')
         pipe.append("</div></div>")
 
         st.markdown("".join(pipe), unsafe_allow_html=True)
-
 
 # -----------------------------
 # Step 0: Eingabemaske
@@ -1086,6 +1152,13 @@ def _meta_form_step(aid: str) -> None:
     st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
 
     meta = st.session_state.meta
+
+    # Datum beim ersten Aufruf automatisch vorbelegen (aber später frei änderbar lassen)
+    if not st.session_state.get("_rgm_meta_date_initialized", False):
+        if not str(meta.get("date_str", "")).strip():
+            meta["date_str"] = datetime.now().strftime("%d.%m.%Y")
+        st.session_state["_rgm_meta_date_initialized"] = True
+
     prev_target_label = meta.get("target_label", "")
 
     current_target = meta.get("target_label") or "Quantitativ gemanagt"
@@ -1454,22 +1527,53 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
 
     dirty = False
     levels = dim.get("levels", []) or []
+
+    def _prev_level_missing(prev_lvl: dict) -> list[str]:
+        prev_no = int(prev_lvl.get("level_number", 0) or 0)
+        missing_nums: list[str] = []
+        prev_questions = prev_lvl.get("questions", []) or []
+        for i, q in enumerate(prev_questions, start=1):
+            qid = q.get("id")
+            if not qid:
+                continue
+            if _get_answer(answers, qid) != "Vollständig":
+                missing_nums.append(f"{prev_no}.{i}")
+        return missing_nums
+
     for li, lvl in enumerate(levels):
         level_no = int(lvl.get("level_number", 0) or 0)
         level_name = str(lvl.get("name", "") or "").strip()
 
+        # ---------------------------------------------------------
+        # Freischaltlogik:
+        # Stufe > 1 nur anzeigen, wenn alle Fragen der Vorstufe "Vollständig" sind
+        # ---------------------------------------------------------
+        if li > 0:
+            prev_lvl = levels[li - 1]
+            missing = _prev_level_missing(prev_lvl)
+
+            if missing:
+                prev_no = int(prev_lvl.get("level_number", li) or li)
+                st.info(
+                    f"Stufe {level_no} ist noch gesperrt, weil Stufe {prev_no} nicht erreicht wurde."
+                )
+                break  # weitere Stufen nicht rendern
+
+        # --- ab hier dein bestehender Code für die Stufe ---
         st.markdown(f"**Stufe {level_no} – {level_name}**" if level_name else f"**Stufe {level_no}**")
         _render_level_info_expander(lvl, glossary, return_page, return_payload_base)
 
         questions = lvl.get("questions", []) or []
         for i, q in enumerate(questions, start=1):
-            qid = q.get("id")
-            qtext = str(q.get("text", "") or "").strip()
-            if not qid:
+            qid_raw = q.get("id")
+            if not qid_raw:
                 continue
+            qid = _qid_key(qid_raw)
 
             anchor_id = f"rgm-q-{_safe_dom_id(str(qid))}"
             st.markdown(f'<div id="{anchor_id}"></div>', unsafe_allow_html=True)
+
+            qtext = str(q.get("text", "") or "").strip()
 
             return_payload_q = dict(return_payload_base)
             return_payload_q["qid"] = str(qid)
@@ -1481,7 +1585,7 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
             )
 
             k_widget = f"q_{qid}"
-            saved = answers.get(qid, None)
+            saved = answers.get(qid)
 
             if st.session_state.get(k_widget, None) == "":
                 st.session_state.pop(k_widget, None)
@@ -1498,9 +1602,16 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
                 key=k_widget,
                 label_visibility="collapsed",
             )
-            if choice in ANSWER_OPTIONS and choice != saved:
-                answers[qid] = choice
-                dirty = True
+
+            # --- Synchronisation: nutze direkt das Rückgabe-Ergebnis (robust) ---
+            if choice in ANSWER_OPTIONS:
+                if answers.get(qid) != choice:
+                    answers[qid] = choice
+                    dirty = True
+            else:
+                if qid in answers:
+                    answers.pop(qid, None)
+                    dirty = True
 
         if li < len(levels) - 1:
             st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
@@ -1511,7 +1622,6 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
 
     if dirty:
         persist.save(aid)
-
 
 def _questions_step(aid: str) -> None:
     model = load_model_config()
