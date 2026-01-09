@@ -1711,17 +1711,62 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
     dirty = False
     levels = dim.get("levels", []) or []
 
-    def _prev_level_missing(prev_lvl: dict) -> list[str]:
+    def _prev_level_gate(prev_lvl: dict) -> tuple[bool, list[str], bool]:
+        """
+        Freischaltlogik für die nächste Stufe (auf Basis der Vorstufe):
+
+        OK (True), wenn:
+        - alle Fragen der Vorstufe entweder "Vollständig" oder "Nicht anwendbar" sind
+        - und mindestens eine Frage "Vollständig" ist
+
+        NICHT OK (False), wenn:
+        - mindestens eine Frage anders beantwortet wurde (oder unbeantwortet ist)
+        - oder wenn alle Fragen "Nicht anwendbar" sind
+
+        Returns:
+          ok: bool
+          blocking_nums: list[str]  -> Fragenummern, die das Freischalten verhindern
+          all_na: bool              -> True, wenn ALLE Fragen "Nicht anwendbar" sind
+        """
         prev_no = int(prev_lvl.get("level_number", 0) or 0)
-        missing_nums: list[str] = []
         prev_questions = prev_lvl.get("questions", []) or []
+
+        total = 0
+        cnt_full = 0
+        cnt_na = 0
+        blocking: list[str] = []
+
         for i, q in enumerate(prev_questions, start=1):
             qid = q.get("id")
             if not qid:
                 continue
-            if _get_answer(answers, qid) != "Vollständig":
-                missing_nums.append(f"{prev_no}.{i}")
-        return missing_nums
+            total += 1
+
+            a = _get_answer(answers, qid)
+
+            if a == "Vollständig":
+                cnt_full += 1
+            elif a == "Nicht anwendbar":
+                cnt_na += 1
+            else:
+                # Alles andere (inkl. None/unbeantwortet) blockiert
+                blocking.append(f"{prev_no}.{i}")
+
+        # Edge: Keine Fragen in der Vorstufe -> freischalten
+        if total == 0:
+            return True, [], False
+
+        # Sonderfall: ALLES "Nicht anwendbar" -> NICHT freischalten
+        if cnt_na == total and cnt_full == 0 and not blocking:
+            return False, [], True
+
+        # Normalfall: Nur "Vollständig"/"Nicht anwendbar" und mind. 1x "Vollständig"
+        if not blocking and cnt_full >= 1 and (cnt_full + cnt_na == total):
+            return True, [], False
+
+        # Sonst blockiert (fehlend/andere Antworten/keine Vollständig)
+        return False, blocking, False
+
 
     for li, lvl in enumerate(levels):
         level_no = int(lvl.get("level_number", 0) or 0)
@@ -1729,18 +1774,16 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
 
         # ---------------------------------------------------------
         # Freischaltlogik:
-        # Stufe > 1 nur anzeigen, wenn alle Fragen der Vorstufe "Vollständig" sind
         # ---------------------------------------------------------
         if li > 0:
             prev_lvl = levels[li - 1]
-            missing = _prev_level_missing(prev_lvl)
+            ok = _prev_level_gate(prev_lvl)
 
-            if missing:
+            if not ok:
                 prev_no = int(prev_lvl.get("level_number", li) or li)
-                st.info(
-                    f"Stufe {level_no} ist noch gesperrt, weil Stufe {prev_no} nicht erreicht wurde."
-                )
+                st.info(f"Stufe {level_no} ist noch gesperrt, weil Stufe {prev_no} noch nicht erreicht wurde. ")
                 break  # weitere Stufen nicht rendern
+
 
         # --- ab hier dein bestehender Code für die Stufe ---
         st.markdown(f"**Stufe {level_no} – {level_name}**" if level_name else f"**Stufe {level_no}**")

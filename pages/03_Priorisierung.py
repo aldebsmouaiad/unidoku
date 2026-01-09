@@ -44,12 +44,14 @@ def collect_priorities_from_session(codes: list[str], keep_existing: dict) -> di
         prio = st.session_state.get(f"prio_{code}", "") or ""
         action = st.session_state.get(f"action_{code}", "") or ""
         timeframe = st.session_state.get(f"timeframe_{code}", "") or ""
+        responsible = st.session_state.get(f"resp_{code}", "") or ""
 
-        if prio or action or timeframe:
+        if prio or action or timeframe or responsible:
             new_priorities[code] = {
                 "priority": prio,
                 "action": action,
                 "timeframe": timeframe,
+                "responsible": responsible,
             }
         else:
             new_priorities.pop(code, None)
@@ -126,6 +128,7 @@ def main() -> None:
             prev_prio = prev.get("priority", "")
             prev_action = prev.get("action", "")
             prev_time = prev.get("timeframe", "")
+            prev_resp = prev.get("responsible", "")
 
             try:
                 default_index = PRIORITY_OPTIONS.index(prev_prio)
@@ -135,9 +138,10 @@ def main() -> None:
             with st.expander(f"{code} – {name_short}", expanded=(gap >= 1.0)):
                 st.caption(f"Gap (Soll–Ist): **{gap:.2f}** Reifegradstufen")
 
-                col1, col2, col3 = st.columns([1, 3, 2])
+                # Zeile 1: Priorität + Maßnahme
+                r1c1, r1c2 = st.columns([1, 5], gap="large")
 
-                with col1:
+                with r1c1:
                     st.selectbox(
                         "Priorität",
                         options=PRIORITY_OPTIONS,
@@ -145,7 +149,7 @@ def main() -> None:
                         key=f"prio_{code}",
                     )
 
-                with col2:
+                with r1c2:
                     st.text_input(
                         "Maßnahme",
                         value=prev_action,
@@ -153,13 +157,28 @@ def main() -> None:
                         placeholder="z. B. Redaktionsleitfaden erstellen",
                     )
 
-                with col3:
+                # kleine optische Trennung (optional, aber meistens schöner)
+                st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
+
+                # Zeile 2: Verantwortlich + Zeitraum
+                r2c1, r2c2 = st.columns([3, 2], gap="large")
+
+                with r2c1:
+                    st.text_input(
+                        "Verantwortlich",
+                        value=prev_resp,
+                        key=f"resp_{code}",
+                        placeholder="z. B. Christian Koch",
+                    )
+
+                with r2c2:
                     st.text_input(
                         "Zeitraum",
                         value=prev_time,
                         key=f"timeframe_{code}",
                         placeholder="z. B. Q1/2026",
                     )
+
 
         # Draft aus Widgets aktualisieren
         st.session_state["priorities_draft"] = collect_priorities_from_session(
