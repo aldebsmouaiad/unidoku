@@ -25,6 +25,13 @@ def _inject_dashboard_css() -> None:
     card_bg = "rgba(255,255,255,0.05)" if dark else "rgba(255,255,255,1.00)"
     card_solid = "#111827" if dark else "#ffffff"  # SOLID für Fullscreen + Download korrekt
     text_color = "rgba(255,255,255,0.92)" if dark else "#111111"
+    df_bg = "#0f172a" if dark else "#ffffff"
+    df_header = "#111827" if dark else "#f3f4f6"
+    df_grid = "rgba(255,255,255,0.10)" if dark else "rgba(0,0,0,0.10)"
+    df_hover = "rgba(202,116,6,0.18)" if dark else "rgba(202,116,6,0.10)"
+    df_text = "rgba(250,250,250,0.92)" if dark else "#111111"
+    df_muted = "rgba(250,250,250,0.70)" if dark else "rgba(0,0,0,0.60)"
+
 
     # Modebar (Plotly)
     modebar_bg = "rgba(17,24,39,0.85)" if dark else "rgba(255,255,255,0.92)"
@@ -45,6 +52,12 @@ def _inject_dashboard_css() -> None:
     --rgm-card-bg: {card_bg};
     --rgm-card-solid: {card_solid};
     --rgm-text: {text_color};
+    --rgm-df-bg: {df_bg};
+    --rgm-df-header: {df_header};
+    --rgm-df-grid: {df_grid};
+    --rgm-df-hover: {df_hover};
+    --rgm-df-text: {df_text};
+    --rgm-df-muted: {df_muted};
   }}
 
   div[data-testid="stAppViewContainer"] .block-container {{
@@ -156,6 +169,161 @@ def _inject_dashboard_css() -> None:
     margin-top: 12px;
     overflow: hidden;
   }}
+
+    /* =========================================================
+     DataFrame (st.dataframe) – Darkmode/Lightmode Styling
+     Funktioniert für neue Grid-Renderer + Fallback für HTML-Table
+     ========================================================= */
+
+  /* Container transparent lassen, aber innen das Grid einfärben */
+  div[data-testid="stDataFrame"] .stDataFrame,
+  div[data-testid="stDataFrame"] [data-testid="stDataFrameResizable"] {{
+    background: transparent !important;
+  }}
+
+  /* ---------
+     MODERN GRID (roles) – robust in vielen Streamlit-Versionen
+     --------- */
+  div[data-testid="stDataFrame"] [role="grid"],
+  div[data-testid="stDataFrame"] [role="grid"] * {{
+    color: var(--rgm-df-text) !important;
+  }}
+
+  div[data-testid="stDataFrame"] [role="grid"] {{
+    background: var(--rgm-df-bg) !important;
+    border: 1px solid var(--rgm-df-grid) !important;
+    border-radius: 10px !important;
+  }}
+
+  /* Header (Spaltennamen + Indexkopf) */
+  div[data-testid="stDataFrame"] [role="columnheader"],
+  div[data-testid="stDataFrame"] [role="rowheader"] {{
+    background: var(--rgm-df-header) !important;
+    border-bottom: 1px solid var(--rgm-df-grid) !important;
+    font-weight: 700 !important;
+    color: var(--rgm-df-text) !important;
+  }}
+
+  /* Zellen */
+  div[data-testid="stDataFrame"] [role="gridcell"] {{
+    background: var(--rgm-df-bg) !important;
+    border-bottom: 1px solid var(--rgm-df-grid) !important;
+    color: var(--rgm-df-text) !important;
+  }}
+
+  /* Hover */
+  div[data-testid="stDataFrame"] [role="row"]:hover [role="gridcell"] {{
+    background: var(--rgm-df-hover) !important;
+  }}
+
+  /* Scrollbar (Webkit) */
+  div[data-testid="stDataFrame"] ::-webkit-scrollbar {{
+    height: 10px;
+    width: 10px;
+  }}
+  div[data-testid="stDataFrame"] ::-webkit-scrollbar-thumb {{
+    background: var(--rgm-df-grid);
+    border-radius: 999px;
+  }}
+  div[data-testid="stDataFrame"] ::-webkit-scrollbar-track {{
+    background: transparent;
+  }}
+
+  /* ---------
+     FALLBACK: falls Streamlit als HTML-Table rendert
+     --------- */
+  div[data-testid="stDataFrame"] table {{
+    background: var(--rgm-df-bg) !important;
+    color: var(--rgm-df-text) !important;
+  }}
+  div[data-testid="stDataFrame"] thead th {{
+    background: var(--rgm-df-header) !important;
+    color: var(--rgm-df-text) !important;
+    border-bottom: 1px solid var(--rgm-df-grid) !important;
+  }}
+  div[data-testid="stDataFrame"] tbody td {{
+    background: var(--rgm-df-bg) !important;
+    color: var(--rgm-df-text) !important;
+    border-bottom: 1px solid var(--rgm-df-grid) !important;
+  }}
+  div[data-testid="stDataFrame"] tbody tr:hover td {{
+    background: var(--rgm-df-hover) !important;
+  }}
+
+
+
+    /* =========================================================
+     Ergebnis-Tabelle als HTML (dark-mode-fähig, sticky header)
+     ========================================================= */
+  .rgm-table-card {{
+    background: var(--rgm-card-solid);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.40);
+    overflow: hidden;
+    margin-top: 12px;
+  }}
+
+  .rgm-table-scroll {{
+    max-height: 420px;
+    overflow: auto;
+  }}
+
+  table.rgm-table {{
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--rgm-df-bg);
+    color: var(--rgm-df-text);
+    font-size: 14px;
+  }}
+
+  table.rgm-table thead th {{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  /* WICHTIG: opaker Header (kein Durchscheinen) */
+  background-color: var(--rgm-df-header) !important;
+  background-image: none !important;
+  opacity: 1 !important;
+
+  color: var(--rgm-df-text);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rgm-df-grid);
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 1px 0 var(--rgm-df-grid);
+}}
+
+
+  table.rgm-table tbody td {{
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--rgm-df-grid);
+    color: var(--rgm-df-text);
+    vertical-align: top;
+  }}
+
+  table.rgm-table tbody tr:hover td {{
+    background: var(--rgm-df-hover);
+  }}
+
+  /* Zahlen rechtsbündig */
+  table.rgm-table tbody td:nth-child(3),
+  table.rgm-table tbody td:nth-child(4) {{
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }}
+
+  /* Scrollbar */
+  .rgm-table-scroll::-webkit-scrollbar {{ height: 10px; width: 10px; }}
+  .rgm-table-scroll::-webkit-scrollbar-thumb {{
+    background: var(--rgm-df-grid);
+    border-radius: 999px;
+  }}
+  .rgm-table-scroll::-webkit-scrollbar-track {{ background: transparent; }}
+
+
 
   /* =========================================================
      Plotly Modebar: sichtbar + nicht abgeschnitten
@@ -332,14 +500,14 @@ def main() -> None:
     col1, col2 = st.columns(2)
 
     with col1:
-        fig_td = tune_plotly(radar_ist_soll(df, category="TD", title="TD-Dimensionen"))
+        fig_td = radar_ist_soll(df, "TD", "TD-Dimensionen", dark=dark)
         if fig_td is not None:
             st.plotly_chart(fig_td, use_container_width=True, config=plotly_cfg_td)
         else:
             st.info("Noch keine TD-Daten vorhanden – bitte zuerst die Erhebung ausfüllen.")
 
     with col2:
-        fig_og = tune_plotly(radar_ist_soll(df, category="OG", title="OG-Dimensionen"))
+        fig_og = radar_ist_soll(df, "OG", "OG-Dimensionen", dark=dark)
         if fig_og is not None:
             st.plotly_chart(fig_og, use_container_width=True, config=plotly_cfg_og)
         else:
@@ -413,7 +581,22 @@ def main() -> None:
                 key="dl_table_csv",
             )
 
-        st.dataframe(df_view, use_container_width=True)
+        for c in ["Ist-Reifegrad", "Soll-Reifegrad"]:
+            df_view[c] = df_view[c].apply(lambda x: "" if x != x else f"{float(x):.2f}".rstrip("0").rstrip("."))
+
+        # als HTML-Tabelle rendern (dark-mode-fähig)
+        table_html = df_view.to_html(index=False, classes="rgm-table", border=0, escape=True)
+
+        st.markdown(
+            f"""
+            <div class="rgm-table-card">
+              <div class="rgm-table-scroll">
+                {table_html}
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
     # Navigation
     st.markdown("---")

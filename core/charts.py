@@ -31,7 +31,13 @@ def after_dash(text: str) -> str:
     return s.split("-", 1)[1].strip() if "-" in s else s.strip()
 
 
-def radar_ist_soll(df: pd.DataFrame, category: str, title: str = "") -> Optional[go.Figure]:
+def radar_ist_soll(
+    df: pd.DataFrame,
+    category: str,
+    title: str = "",
+    *,
+    dark: bool = False,
+) -> Optional[go.Figure]:
     """
     Erzeugt ein Radar-Diagramm (Ist vs Soll) für eine Kategorie (TD/OG).
 
@@ -41,6 +47,8 @@ def radar_ist_soll(df: pd.DataFrame, category: str, title: str = "") -> Optional
       - ist_level
       - target_level
       - category
+
+    dark: Theme-Schalter für Darkmode
     """
     if df is None or df.empty:
         return None
@@ -68,13 +76,37 @@ def radar_ist_soll(df: pd.DataFrame, category: str, title: str = "") -> Optional
     ist_closed = ist + [ist[0]]
     soll_closed = soll + [soll[0]]
 
-    # Farbschema wie im Screenshot
+    # Farbschema
     if category == "TD":
-        ist_color = "#7AB0B4"   # schwarz
+        ist_color = "#7AB0B4"   # teal
         soll_color = "#2ca02c"  # grün
     else:  # OG
         ist_color = "#1f77b4"   # blau
         soll_color = "#ff7f0e"  # orange
+
+    # -------------------------
+    # Theme Tokens (Light/Dark)
+    # -------------------------
+    red_ticks = "#d62728"  # rot wie Legende (0..5)
+
+    if dark:
+        title_color = "rgba(250,250,250,0.92)"        # TD-/OG-Titel heller
+        angular_color = "rgba(250,250,250,0.88)"      # Achsenlabels heller
+        grid_color = "rgba(255,255,255,0.14)"         # Grid heller
+        axis_line = "rgba(255,255,255,0.22)"
+        legend_bg = "rgba(15,23,42,0.85)"
+        legend_border = "rgba(255,255,255,0.16)"
+        legend_font_color = "rgba(250,250,250,0.92)"
+        polar_bg = "rgba(255,255,255,0.02)"
+    else:
+        title_color = "rgba(0,0,0,0.88)"
+        angular_color = "rgba(0,0,0,0.70)"
+        grid_color = "rgba(0,0,0,0.15)"
+        axis_line = "rgba(0,0,0,0.25)"
+        legend_bg = "rgba(255,255,255,0.80)"
+        legend_border = "rgba(0,0,0,0.15)"
+        legend_font_color = "rgba(0,0,0,0.85)"
+        polar_bg = "rgba(0,0,0,0)"
 
     fig = go.Figure()
 
@@ -101,7 +133,14 @@ def radar_ist_soll(df: pd.DataFrame, category: str, title: str = "") -> Optional
     )
 
     fig.update_layout(
-        title=dict(text=title or "", x=0.0, xanchor="left"),
+        # Titel (TD-/OG-Dimensionen) im Darkmode hell
+        title=dict(
+            text=title or "",
+            x=0.0,
+            xanchor="left",
+            font=dict(color=title_color),
+        ),
+
         showlegend=True,
         legend=dict(
             orientation="v",
@@ -109,48 +148,51 @@ def radar_ist_soll(df: pd.DataFrame, category: str, title: str = "") -> Optional
             y=0.0,
             xanchor="left",
             yanchor="bottom",
-            bgcolor="rgba(255,255,255,0.80)",
-            bordercolor="rgba(0,0,0,0.15)",
+            bgcolor=legend_bg,
+            bordercolor=legend_border,
             borderwidth=1,
-            font=dict(size=12),
+            font=dict(size=12, color=legend_font_color),
         ),
-        dragmode=False,  # verhindert Drag-Zoom/Drag-Pan im Plot selbst
+
+        dragmode=False,
         margin=dict(l=40, r=40, t=70, b=40),
-        paper_bgcolor="white",
-        plot_bgcolor="white",
+
+        # Wichtig: NICHT "white" – transparent, damit Dark-Card-Hintergrund passt
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+
         polar=dict(
+            bgcolor=polar_bg,
+
             radialaxis=dict(
                 range=[0, 5],
-
-                # Stufen 1..5 (ohne 0-Label)
                 tickmode="array",
                 tickvals=[0, 1, 2, 3, 4, 5],
                 ticktext=["0", "1", "2", "3", "4", "5"],
-                tickfont=dict(color="#d62728", size=12),
 
-                # Stufen-Kreise beibehalten
+                # 0..5 ROT wie Legende
+                tickfont=dict(color=red_ticks, size=12),
+
                 showgrid=True,
-                gridcolor="rgba(0,0,0,0.15)",
+                gridcolor=grid_color,
                 gridwidth=1,
 
-                # Linie, auf der die Zahlen "sitzen", entfernen
                 showline=False,
-
-                # kleine Tick-Striche entfernen (Zahlen bleiben)
                 ticks="",
                 ticklen=0,
             ),
+
             angularaxis=dict(
-                tickfont=dict(size=10, color="rgba(0,0,0,0.70)"),
+                # Beschriftung (Codes+Namen) im Darkmode hell
+                tickfont=dict(size=10, color=angular_color),
                 rotation=90,
                 direction="clockwise",
-
-                # Speichen (radiale Linien) kannst du optional ausdünnen:
-                gridcolor="rgba(0,0,0,0.10)",
-                linecolor="rgba(0,0,0,0.25)",
+                gridcolor=grid_color,
+                linecolor=axis_line,
                 showline=True,
             ),
         ),
     )
 
     return fig
+
