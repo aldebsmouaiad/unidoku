@@ -333,11 +333,7 @@ def main():
         else:
             st.error(f"PDF-Export nicht verfügbar: {pdf_error}")
 
-    st.markdown("---")
-    if st.button("Weiter → Dashboard", type="primary", use_container_width=True):
-        st.session_state["nav_request"] = "Dashboard"
-        st.rerun()
-
+    
 
 if __name__ == "__main__":
     main()

@@ -70,7 +70,7 @@ def radar_ist_soll(df: pd.DataFrame, category: str, title: str = "") -> Optional
 
     # Farbschema wie im Screenshot
     if category == "TD":
-        ist_color = "#111111"   # schwarz
+        ist_color = "#7AB0B4"   # schwarz
         soll_color = "#2ca02c"  # grün
     else:  # OG
         ist_color = "#1f77b4"   # blau

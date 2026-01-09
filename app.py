@@ -267,18 +267,35 @@ def apply_global_theme_css(dark: bool) -> None:
     color: inherit !important;
   }}
 
-  /* Hover für ALLE Buttons -> Orange + Weiß */
+  /* Hover für ALLE Buttons -> Orange + Weiß
+   (inkl. DownloadButton + FileUploader Browse Button) */
   .stApp div.stButton > button:not(:disabled):hover,
   .stApp button[data-testid^="baseButton-"]:not(:disabled):hover,
-  .stApp div[data-testid="stFormSubmitButton"] button:not(:disabled):hover {{
+  .stApp div[data-testid="stFormSubmitButton"] button:not(:disabled):hover,
+
+  /* NEU: DownloadButton (st.download_button) */
+  .stApp div[data-testid="stDownloadButton"] button:not(:disabled):hover,
+
+  /* NEU: FileUploader Browse files Button */
+  .stApp div[data-testid="stFileUploader"] [data-baseweb="button"] button:not(:disabled):hover {{
     background: var(--tu-orange) !important;
+    background-color: var(--tu-orange) !important;
+    background-image: none !important;
     border-color: var(--tu-orange) !important;
     color: #ffffff !important;
+    opacity: 1 !important;
   }}
+
   .stApp div.stButton > button:not(:disabled):hover *,
   .stApp button[data-testid^="baseButton-"]:not(:disabled):hover *,
-  .stApp div[data-testid="stFormSubmitButton"] button:not(:disabled):hover * {{
+  .stApp div[data-testid="stFormSubmitButton"] button:not(:disabled):hover *,
+
+  /* NEU: innerer Text/Icon auch weiß */
+  .stApp div[data-testid="stDownloadButton"] button:not(:disabled):hover *,
+  .stApp div[data-testid="stFileUploader"] [data-baseweb="button"] button:not(:disabled):hover * {{
     color: #ffffff !important;
+    fill: currentColor !important;
+    stroke: currentColor !important;
   }}
 
   /* ---- PATCH: Form-Submit-Buttons (Step 0 + alle Erhebung-Steps) sicher treffen ---- */

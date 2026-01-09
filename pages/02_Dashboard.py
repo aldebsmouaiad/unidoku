@@ -13,7 +13,7 @@ OG_ORANGE = "#F28C28"
 
 
 def _inject_dashboard_css() -> None:
-    """UI-Style (Abstand/Divider/Toolbar weg) + Dark-Mode-lesbar. Keine Logikänderung."""
+    """Dashboard-UI (Hero/Divider/Cards) + Dark/Light + Plotly-Modebar sauber sichtbar."""
     dark = bool(st.session_state.get("dark_mode", False))
 
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
@@ -21,9 +21,14 @@ def _inject_dashboard_css() -> None:
     header_bg = "rgba(255,255,255,0.08)" if dark else "rgba(127,127,127,0.10)"
     shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
 
-    # Dark-Mode Lesbarkeit
+    # Card/Typo
     card_bg = "rgba(255,255,255,0.05)" if dark else "rgba(255,255,255,1.00)"
+    card_solid = "#111827" if dark else "#ffffff"  # SOLID für Fullscreen + Download korrekt
     text_color = "rgba(255,255,255,0.92)" if dark else "#111111"
+
+    # Modebar (Plotly)
+    modebar_bg = "rgba(17,24,39,0.85)" if dark else "rgba(255,255,255,0.92)"
+    modebar_hover = "rgba(202,116,6,0.25)" if dark else "rgba(202,116,6,0.14)"
 
     st.markdown(
         f"""
@@ -38,6 +43,7 @@ def _inject_dashboard_css() -> None:
     --rgm-soft: {soft_bg};
     --rgm-header-bg: {header_bg};
     --rgm-card-bg: {card_bg};
+    --rgm-card-solid: {card_solid};
     --rgm-text: {text_color};
   }}
 
@@ -112,13 +118,13 @@ def _inject_dashboard_css() -> None:
   }}
 
   /* =========================================================
-     Divider + Section-Titel (mit "Luft" wie Screenshot)
+     Divider + Section-Titel
      ========================================================= */
   .rgm-divider {{
     height: 1px;
     width: 100%;
     background: var(--rgm-border);
-    margin: 34px 0 22px 0; /* mehr Abstand wie gewünscht */
+    margin: 34px 0 22px 0;
   }}
 
   .rgm-section-title {{
@@ -129,15 +135,60 @@ def _inject_dashboard_css() -> None:
   }}
 
   /* =========================================================
-     Cards
+     "Cards" direkt auf Streamlit-Elemente
      ========================================================= */
-  .rgm-card {{
-    background: var(--rgm-card-bg);
+  div[data-testid="stPlotlyChart"] {{
+    background: var(--rgm-card-solid);
     border: 1px solid var(--rgm-border);
     border-radius: 14px;
     box-shadow: {shadow};
     padding: 12px 12px 10px 12px;
     margin-top: 12px;
+    overflow: hidden; /* darf bleiben, Modebar wird nach innen verschoben */
+  }}
+
+  div[data-testid="stDataFrame"] {{
+    background: var(--rgm-card-solid);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    box-shadow: {shadow};
+    padding: 12px;
+    margin-top: 12px;
+    overflow: hidden;
+  }}
+
+  /* =========================================================
+     Plotly Modebar: sichtbar + nicht abgeschnitten
+     ========================================================= */
+
+  /* Modebar nach innen (damit Symbole vollständig sichtbar sind) */
+  div[data-testid="stPlotlyChart"] .js-plotly-plot .modebar {{
+    top: 10px !important;
+    right: 10px !important;
+    z-index: 50 !important;
+  }}
+
+  div[data-testid="stPlotlyChart"] .modebar {{
+    background: transparent !important;
+  }}
+
+  div[data-testid="stPlotlyChart"] .modebar-group {{
+    background: {modebar_bg} !important;
+    border: 1px solid var(--rgm-border) !important;
+    border-radius: 10px !important;
+    padding: 2px 4px !important;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.25) !important;
+    backdrop-filter: blur(8px);
+    margin: 0 !important;
+  }}
+
+  /* Icons */
+  div[data-testid="stPlotlyChart"] .modebar-btn path {{
+    fill: var(--rgm-text) !important;
+  }}
+  div[data-testid="stPlotlyChart"] .modebar-btn:hover {{
+    background: {modebar_hover} !important;
+    border-radius: 8px !important;
   }}
 
   button[kind="primary"] {{
@@ -148,8 +199,11 @@ def _inject_dashboard_css() -> None:
   @media (max-width: 900px) {{
     .rgm-h1 {{ font-size: 26px; }}
     .rgm-hero {{ padding: 16px; }}
-    .rgm-card {{ padding: 10px 10px 8px 10px; }}
     .rgm-divider {{ margin: 28px 0 18px 0; }}
+    div[data-testid="stPlotlyChart"] .js-plotly-plot .modebar {{
+      top: 8px !important;
+      right: 8px !important;
+    }}
   }}
 </style>
         """,
@@ -198,43 +252,98 @@ def main() -> None:
         priorities=priorities,
     )
 
-    plotly_cfg = {
+    # -----------------------------
+    # Plotly Config: Modebar nur Fullscreen + Download
+    # Download soll "Fullscreen-Qualität" liefern -> große Exportgröße setzen
+    # -----------------------------
+    plotly_cfg_base = {
         "displayModeBar": "hover",
         "displaylogo": False,
         "scrollZoom": False,
         "doubleClick": False,
         "editable": False,
         "responsive": True,
+        "toImageButtonOptions": {
+            "format": "png",
+            # große Exportfläche => wirkt wie Fullscreen-Export
+            "width": 1600,
+            "height": 1000,
+            "scale": 2,
+        },
         "modeBarButtonsToRemove": [
             "zoom2d", "pan2d", "select2d", "lasso2d",
             "zoomIn2d", "zoomOut2d", "autoScale2d", "resetScale2d",
+            "hoverClosestCartesian", "hoverCompareCartesian",
+            "toggleSpikelines",
+            "hoverClosestPolar", "hoverComparePolar",
         ],
-        "toImageButtonOptions": {"format": "png", "filename": "reifegrad_radar", "scale": 2},
+    }
+    plotly_cfg_td = {
+        **plotly_cfg_base,
+        "toImageButtonOptions": {**plotly_cfg_base["toImageButtonOptions"], "filename": "reifegrad_radar_td"},
+    }
+    plotly_cfg_og = {
+        **plotly_cfg_base,
+        "toImageButtonOptions": {**plotly_cfg_base["toImageButtonOptions"], "filename": "reifegrad_radar_og"},
     }
 
-    # ---------- Radar-Diagramme (Divider + Abstand) ----------
+    # -----------------------------
+    # Plotly Styling: SOLID background (Fullscreen + PNG-Export korrekt)
+    # -----------------------------
+    dark = bool(st.session_state.get("dark_mode", False))
+
+    def tune_plotly(fig):
+        """Sicherer Dark/Light-Look für Anzeige + Fullscreen + PNG-Export (Radar = polar)."""
+        if fig is None:
+            return None
+
+        bg = "#111827" if dark else "#ffffff"
+        font_color = "rgba(255,255,255,0.92)" if dark else "#111111"
+        grid = "rgba(255,255,255,0.14)" if dark else "rgba(0,0,0,0.10)"
+        axis_line = "rgba(255,255,255,0.22)" if dark else "rgba(0,0,0,0.14)"
+        legend_bg = "rgba(17,24,39,0.85)" if dark else "rgba(255,255,255,0.92)"
+        legend_border = "rgba(255,255,255,0.18)" if dark else "rgba(0,0,0,0.12)"
+
+        fig.update_layout(
+            template="plotly_dark" if dark else "plotly_white",
+            paper_bgcolor=bg,
+            plot_bgcolor=bg,
+            font=dict(color=font_color),
+            margin=dict(l=30, r=30, t=55, b=30),
+            legend=dict(
+                bgcolor=legend_bg,
+                bordercolor=legend_border,
+                borderwidth=1,
+                font=dict(color=font_color),
+            ),
+        )
+
+        fig.update_polars(
+            bgcolor=bg,
+            radialaxis=dict(gridcolor=grid, linecolor=axis_line, tickfont=dict(color=font_color)),
+            angularaxis=dict(gridcolor=grid, linecolor=axis_line, tickfont=dict(color=font_color)),
+        )
+        return fig
+
+    # ---------- Radar-Diagramme ----------
     st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
     st.markdown('<div class="rgm-section-title">Radar-Diagramme</div>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('<div class="rgm-card">', unsafe_allow_html=True)
-        fig_td = radar_ist_soll(df, category="TD", title="TD-Dimensionen")
+        fig_td = tune_plotly(radar_ist_soll(df, category="TD", title="TD-Dimensionen"))
         if fig_td is not None:
-            st.plotly_chart(fig_td, use_container_width=True, config=plotly_cfg)
+            st.plotly_chart(fig_td, use_container_width=True, config=plotly_cfg_td)
         else:
             st.info("Noch keine TD-Daten vorhanden – bitte zuerst die Erhebung ausfüllen.")
-        st.markdown("</div>", unsafe_allow_html=True)
 
     with col2:
-        st.markdown('<div class="rgm-card">', unsafe_allow_html=True)
-        fig_og = radar_ist_soll(df, category="OG", title="OG-Dimensionen")
+        fig_og = tune_plotly(radar_ist_soll(df, category="OG", title="OG-Dimensionen"))
         if fig_og is not None:
-            st.plotly_chart(fig_og, use_container_width=True, config=plotly_cfg)
+            st.plotly_chart(fig_og, use_container_width=True, config=plotly_cfg_og)
         else:
             st.info("Noch keine OG-Daten vorhanden – bitte zuerst die Erhebung ausfüllen.")
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # Legende (dark-mode-fähig)
     st.markdown(
@@ -274,17 +383,15 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    # ---------- Ergebnis in Tabellenform (Divider + Abstand) ----------
+    # ---------- Ergebnis in Tabellenform ----------
     st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
     st.markdown('<div class="rgm-section-title">Ergebnis in Tabellenform</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="rgm-card">', unsafe_allow_html=True)
     if df is None or df.empty:
         st.info("Noch keine Ergebnisse vorhanden.")
     else:
         df_view = df[["code", "name", "ist_level", "target_level"]].copy()
         df_view["name"] = df_view["name"].apply(after_dash)
-
         df_view = df_view.rename(
             columns={
                 "code": "Kürzel",
@@ -293,8 +400,20 @@ def main() -> None:
                 "target_level": "Soll-Reifegrad",
             }
         )
+
+        # Download (CSV) rechts über der Tabelle
+        _, right = st.columns([0.72, 0.28])
+        with right:
+            st.download_button(
+                label="Tabelle herunterladen (CSV)",
+                data=df_view.to_csv(index=False).encode("utf-8"),
+                file_name="ergebnis_tabelle.csv",
+                mime="text/csv",
+                use_container_width=True,
+                key="dl_table_csv",
+            )
+
         st.dataframe(df_view, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
     # Navigation
     st.markdown("---")

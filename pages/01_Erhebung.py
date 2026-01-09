@@ -47,35 +47,74 @@ ANSWER_OPTIONS = [
     "Vollständig",
 ]
 
-# Keine Platzhalter-Option mehr: wir nutzen index=None (keine Vorauswahl)
-ANSWER_OPTIONS_WIDGET = ANSWER_OPTIONS
-
-
 def _inject_erhebung_page_css() -> None:
     """Einheitliches Design für Erhebung (Cards/Typografie/Abstände) – kompatibel mit globalem Theme."""
     dark = bool(st.session_state.get("dark_mode", False))
 
+    # Core tokens
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
     header_bg = "rgba(255,255,255,0.08)" if dark else "rgba(127,127,127,0.10)"
     shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
 
-    # Für Dropdown/Popover Hover/Selected
-    pop_hover = "rgba(202,116,6,0.22)" if dark else "rgba(202,116,6,0.14)"  # TU-Orange (leicht)
+    # Selectbox dropdown hover/selected
+    pop_hover = "rgba(202,116,6,0.22)" if dark else "rgba(202,116,6,0.14)"
     pop_sel = "rgba(255,255,255,0.08)" if dark else "rgba(0,0,0,0.04)"
+
+    # File uploader
+    uploader_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.02)"
+    uploader_hover = "rgba(255,255,255,0.10)" if dark else "rgba(0,0,0,0.05)"
+
+    # Globaler TU-Orange Hover (wie bei allen Buttons)
+    btn_hover_bg = "rgba(202,116,6,0.22)" if dark else "rgba(202,116,6,0.14)"
+    btn_hover_ring = "rgba(202,116,6,0.32)" if dark else "rgba(202,116,6,0.22)"
+
+    # Tooltip (help=...) – Darkmode: Kreis + ? hell
+    if dark:
+        tip_icon_bg = "rgba(255,255,255,0.06)"
+        tip_icon_hover = "rgba(255,255,255,0.12)"
+        tip_icon_fg = "rgba(255,255,255,0.92)"  # helles Fragezeichen
+        tip_pop_bg = "rgba(17,24,39,0.98)"
+        tip_pop_fg = "rgba(250,250,250,0.92)"
+        tip_pop_border = "rgba(255,255,255,0.18)"
+        tip_pop_shadow = "0 12px 28px rgba(0,0,0,0.55)"
+    else:
+        tip_icon_bg = "rgba(17,24,39,0.06)"
+        tip_icon_hover = "rgba(17,24,39,0.10)"
+        tip_icon_fg = "rgba(17,24,39,0.82)"
+        tip_pop_bg = "#ffffff"
+        tip_pop_fg = "rgba(17,24,39,0.92)"
+        tip_pop_border = "rgba(0,0,0,0.12)"
+        tip_pop_shadow = "0 10px 24px rgba(0,0,0,0.10)"
 
     st.markdown(
         f"""
 <style>
-  /* =========================================================
-     Design Tokens (Seite)
-     ========================================================= */
+  /* =========================
+     Tokens (nur für diese Seite)
+     ========================= */
   div[data-testid="stAppViewContainer"] {{
     --rgm-td-blue: {TD_BLUE};
     --rgm-og-orange: {OG_ORANGE};
     --rgm-border: {border};
     --rgm-soft: {soft_bg};
     --rgm-header-bg: {header_bg};
+    --rgm-shadow: {shadow};
+
+    --rgm-pop-hover: {pop_hover};
+    --rgm-pop-sel: {pop_sel};
+
+    --rgm-uploader-bg: {uploader_bg};
+    --rgm-uploader-hover: {uploader_hover};
+
+    --rgm-tip-icon-bg: {tip_icon_bg};
+    --rgm-tip-icon-hover: {tip_icon_hover};
+    --rgm-tip-icon-fg: {tip_icon_fg};
+
+    --rgm-tip-pop-bg: {tip_pop_bg};
+    --rgm-tip-pop-fg: {tip_pop_fg};
+    --rgm-tip-pop-border: {tip_pop_border};
+    --rgm-tip-pop-shadow: {tip_pop_shadow};
   }}
 
   /* Content Breite wie andere Seiten */
@@ -93,15 +132,15 @@ def _inject_erhebung_page_css() -> None:
     display: none !important;
   }}
 
-  /* =========================================================
-     HERO (wie Einführung/Ausfüllhinweise)
-     ========================================================= */
+  /* =========================
+     HERO
+     ========================= */
   .rgm-hero {{
     background: var(--rgm-card-bg, #fff);
     border: 1px solid var(--rgm-border);
     border-radius: 14px;
     padding: 18px 18px 14px 18px;
-    box-shadow: {shadow};
+    box-shadow: var(--rgm-shadow);
     margin-top: 6px;
   }}
 
@@ -113,19 +152,13 @@ def _inject_erhebung_page_css() -> None:
     color: var(--rgm-text, #111);
   }}
 
-  .rgm-lead {{
-    font-size: 15px;
-    line-height: 1.75;
-    color: var(--rgm-text, #111);
-    opacity: 0.92;
-    margin: 0;
-  }}
-
+  .rgm-lead,
   .rgm-muted {{
     font-size: 15px;
     line-height: 1.75;
     color: var(--rgm-text, #111);
     opacity: 0.92;
+    margin: 0;
   }}
 
   .rgm-accent-line {{
@@ -136,7 +169,7 @@ def _inject_erhebung_page_css() -> None:
     background: linear-gradient(90deg, var(--rgm-td-blue), var(--rgm-og-orange));
   }}
 
-  /* Badges unter Hero (Organisation/Bereich/Datum/Ziel) */
+  /* Badges unter Hero */
   .rgm-badges {{
     display: flex;
     flex-wrap: wrap;
@@ -156,13 +189,11 @@ def _inject_erhebung_page_css() -> None:
     line-height: 1.3;
     white-space: nowrap;
   }}
-  .rgm-badge b {{
-    font-weight: 850;
-  }}
+  .rgm-badge b {{ font-weight: 850; }}
 
-  /* =========================================================
+  /* =========================
      Step 0: Form-Card (volle Breite)
-     ========================================================= */
+     ========================= */
   div.stForm,
   div[data-testid="stForm"],
   form[data-testid="stForm"] {{
@@ -171,17 +202,15 @@ def _inject_erhebung_page_css() -> None:
     margin: 0 !important;
   }}
 
-  /* Optik der Card auf dem WRAPPER */
   div.stForm,
   div[data-testid="stForm"] {{
     border: 1px solid var(--rgm-border) !important;
     border-radius: 14px !important;
     background: var(--rgm-card-bg, #fff) !important;
-    box-shadow: {shadow} !important;
+    box-shadow: var(--rgm-shadow) !important;
     padding: 14px 16px 12px 16px !important;
   }}
 
-  /* Innerer Block ebenfalls volle Breite */
   div.stForm > div,
   div[data-testid="stForm"] > div {{
     width: 100% !important;
@@ -193,43 +222,31 @@ def _inject_erhebung_page_css() -> None:
     font-weight: 750 !important;
   }}
 
-  /* =========================================================
-     WICHTIG:
-     KEIN Override für Primary Buttons hier!
-     -> globales apply_global_theme_css steuert:
-        Primary = Grün, Hover = Orange
-     ========================================================= */
-
-  /* =========================================================
-     Fokus: Inputs/Select (Orange, wie global)
-     ========================================================= */
+  /* =========================
+     Focus: Inputs/Select (TU-Orange)
+     ========================= */
   div[data-testid="stTextInput"] input:focus {{
     border-color: var(--tu-orange, #CA7406) !important;
     box-shadow: 0 0 0 2px rgba(202,116,6,0.28) !important;
   }}
 
-  /* BaseWeb Selectbox */
   div[data-baseweb="select"]:focus-within > div {{
     border-color: var(--tu-orange, #CA7406) !important;
     box-shadow: 0 0 0 2px rgba(202,116,6,0.28) !important;
   }}
 
-  /* =========================================================
-     Selectbox Dropdown (Popover) – Darkmode lesbar machen
-     ========================================================= */
-  div[data-baseweb="popover"] > div {{
-    background: var(--rgm-card-bg, #111827) !important;
-    color: var(--rgm-text, rgba(250,250,250,0.92)) !important;
-    border: 1px solid var(--rgm-border) !important;
-    border-radius: 12px !important;
-    overflow: hidden !important;
-  }}
-
+  /* =========================
+     Selectbox Dropdown (Popover) – nur Listbox/Menu
+     (Wichtig: KEIN popover > div Styling, damit Tooltips nicht kaputtgehen)
+     ========================= */
   div[data-baseweb="popover"] ul[role="listbox"],
   div[data-baseweb="popover"] div[role="listbox"],
   div[data-baseweb="menu"] {{
     background: var(--rgm-card-bg, #111827) !important;
     color: var(--rgm-text, rgba(250,250,250,0.92)) !important;
+    border: 1px solid var(--rgm-border) !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
   }}
 
   div[data-baseweb="popover"] li[role="option"],
@@ -240,19 +257,19 @@ def _inject_erhebung_page_css() -> None:
 
   div[data-baseweb="popover"] li[role="option"]:hover,
   div[data-baseweb="menu"] li:hover {{
-    background: {pop_hover} !important;
+    background: var(--rgm-pop-hover) !important;
   }}
 
   div[data-baseweb="popover"] li[aria-selected="true"],
   div[data-baseweb="menu"] li[aria-selected="true"] {{
-    background: {pop_sel} !important;
+    background: var(--rgm-pop-sel) !important;
   }}
 
-  /* =========================================================
+  /* =========================
      Fragenlayout
-     ========================================================= */
+     ========================= */
   .rgm-q {{
-    margin: 6px 0 6px 0;
+    margin: 6px 0;
     line-height: 1.40;
   }}
   .rgm-qno {{
@@ -275,7 +292,7 @@ def _inject_erhebung_page_css() -> None:
     border-radius: 14px;
     overflow: hidden;
     background: var(--rgm-card-bg, #fff);
-    box-shadow: {shadow};
+    box-shadow: var(--rgm-shadow);
   }}
   .rgm-kv-row {{
     display: grid;
@@ -295,8 +312,13 @@ def _inject_erhebung_page_css() -> None:
   }}
 
   /* Radios kompakter */
-  div[data-testid="stRadio"] > div {{
-    gap: 0.35rem;
+  div[data-testid="stRadio"] > div {{ gap: 0.35rem; }}
+
+  .rgm-split-title {{
+    font-size: 18px;
+    font-weight: 850;
+    margin: 2px 0 10px 0;
+    color: var(--rgm-text, #111);
   }}
 
   /* Mobile */
@@ -304,11 +326,153 @@ def _inject_erhebung_page_css() -> None:
     .rgm-h1 {{ font-size: 26px; }}
     .rgm-hero {{ padding: 16px; }}
   }}
+
+  /* =========================
+     File Uploader (Import)
+     ========================= */
+  div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"],
+  div[data-testid="stFileUploader"] section[aria-label="File uploader"] {{
+    background: var(--rgm-uploader-bg) !important;
+    border: 1px dashed var(--rgm-border) !important;
+    border-radius: 12px !important;
+  }}
+
+  /* Text im Dropzone */
+  div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"] *,
+  div[data-testid="stFileUploader"] section[aria-label="File uploader"] * {{
+    color: var(--rgm-text, #111) !important;
+  }}
+
+  div[data-testid="stFileUploader"] small {{
+    color: var(--rgm-text, #111) !important;
+    opacity: 0.78 !important;
+  }}
+
+  /* Upload/Icon NUR im Dropzone-Bereich (nicht global!) */
+  div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"] svg,
+  div[data-testid="stFileUploader"] section[aria-label="File uploader"] svg {{
+    color: var(--rgm-text, #111) !important;
+    opacity: 0.92 !important;
+  }}
+
+  /* Browse files Button */
+  div[data-testid="stFileUploader"] [data-baseweb="button"] button {{
+    background: transparent !important;
+    border: 1px solid var(--rgm-border) !important;
+    color: var(--rgm-text, #111) !important;
+    border-radius: 10px !important;
+  }}
+  div[data-testid="stFileUploader"] > div {{
+    background: transparent !important;
+  }}
+
+  /* =========================
+     Tooltip Icon (help=...)
+     ========================= */
+  div[data-testid="stTooltipIcon"] button {{
+    background: var(--rgm-tip-icon-bg) !important;
+    border: 1px solid var(--rgm-tip-pop-border) !important;
+    border-radius: 999px !important;
+    width: 26px !important;
+    height: 26px !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }}
+  div[data-testid="stTooltipIcon"] button:hover {{
+    background: var(--rgm-tip-icon-hover) !important;
+  }}
+  div[data-testid="stTooltipIcon"] svg {{
+    color: var(--rgm-tip-icon-fg) !important;
+    fill: none !important;            /* verhindert "gefüllten Kreis" */
+    stroke: currentColor !important;
+    opacity: 1 !important;
+  }}
+
+  /* =========================
+     Tooltip Popup (help=...)
+     ========================= */
+  *[data-baseweb="tooltip"],
+  *[role="tooltip"] {{
+    background: var(--rgm-tip-pop-bg) !important;
+    color: var(--rgm-tip-pop-fg) !important;
+    border: 1px solid var(--rgm-tip-pop-border) !important;
+    border-radius: 12px !important;
+    box-shadow: var(--rgm-tip-pop-shadow) !important;
+    max-width: 560px !important;
+    padding: 10px 12px !important;
+  }}
+
+  *[data-baseweb="tooltip"] *,
+  *[role="tooltip"] * {{
+    color: var(--rgm-tip-pop-fg) !important;
+  }}
+
+  /* "Textbox-in-Textbox" verhindern */
+  *[data-baseweb="tooltip"] > *,
+  *[role="tooltip"] > * {{
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }}
+
+  *[data-baseweb="tooltip"] *[role="tooltip"] {{
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }}
+
+  /* =========================================================
+   FIX (final): FileUploader "Browse files" + DownloadButton Hover
+   -> exakt wie global: FULL ORANGE + Text/Icons weiß
+   ========================================================= */
+    /* Optional: nur auf der Own-Target-Seite aktiv (wenn du den Marker nutzt).
+       Wenn du es global willst: entferne einfach den ":has(#rgm-own-target-marker)" Teil. */
+    div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
+      div[data-testid="stFileUploader"] [data-baseweb="button"] button,
+    div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
+      div[data-testid="stDownloadButton"] button,
+    div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
+      div[data-testid="stDownloadButton"] [data-baseweb="button"] button {{
+      transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+    }}
+
+    /* Hover: FULL ORANGE */
+    div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
+      div[data-testid="stFileUploader"] [data-baseweb="button"] button:not(:disabled):hover,
+    div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
+      div[data-testid="stDownloadButton"] button:not(:disabled):hover,
+    div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
+      div[data-testid="stDownloadButton"] [data-baseweb="button"] button:not(:disabled):hover {{
+      background: var(--tu-orange, #CA7406) !important;
+      background-color: var(--tu-orange, #CA7406) !important;
+      background-image: none !important;
+      border-color: var(--tu-orange, #CA7406) !important;
+      box-shadow: none !important;
+      color: #ffffff !important;
+      opacity: 1 !important;
+    }}
+
+    /* Hover: alle inneren Elemente (Text/SVG) ebenfalls weiß */
+    div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
+      div[data-testid="stFileUploader"] [data-baseweb="button"] button:not(:disabled):hover *,
+    div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
+      div[data-testid="stDownloadButton"] button:not(:disabled):hover *,
+    div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
+      div[data-testid="stDownloadButton"] [data-baseweb="button"] button:not(:disabled):hover * {{
+      color: #ffffff !important;
+      fill: currentColor !important;
+      stroke: currentColor !important;
+    }}
+
+
 </style>
         """,
         unsafe_allow_html=True,
     )
-
 
 
 def _render_hero(title: str, lead: str = "", body: str = "", extra_html: str = "") -> None:
@@ -1126,9 +1290,6 @@ def _footer_navigation(model: dict, aid: str) -> None:
                     break
             dim_done_flags.append(any_answered)
 
-        done_dims = sum(1 for x in dim_done_flags if x)
-        total_dims = len(dim_done_flags)
-
         pipe: list[str] = []
         pipe.append('<div class="rgm-progress-wrap">')
         pipe.append(
@@ -1284,6 +1445,7 @@ def _own_target_step(aid: str) -> None:
         "Optional können Sie vorhandene Zielwerte importieren oder exportieren.",
     )
     st.markdown("")
+    st.markdown('<div id="rgm-own-target-marker"></div>', unsafe_allow_html=True)
 
     model = load_model_config()
     dims_sorted = _dims_sorted_from_model(model)
@@ -1291,17 +1453,24 @@ def _own_target_step(aid: str) -> None:
         st.error("Keine Subdimensionen gefunden (Model-Konfiguration leer).")
         return
 
-    st.markdown("#### Import / Export")
 
-    col_imp, col_exp = st.columns([1.3, 1.0], gap="large")
+    col_imp, col_exp = st.columns([1.3, 1.0], gap="large", vertical_alignment="top")
+
     with col_imp:
+        st.markdown('<div class="rgm-split-title">Import</div>', unsafe_allow_html=True)
+
         up = st.file_uploader(
             "Eigenes Ziel hochladen (JSON oder CSV):",
             type=["json", "csv"],
             key="own_target_upload_file",
-            help="JSON: exportiertes Format. CSV: Spalten z.B. code,target",
         )
-        if st.button("Importieren", use_container_width=True, key="own_target_import_btn", disabled=(up is None)):
+
+        if st.button(
+            "Importieren",
+            use_container_width=True,
+            key="own_target_import_btn",
+            disabled=(up is None),
+        ):
             try:
                 raw = up.getvalue() if up is not None else b""
                 imported = _parse_own_targets_upload(up.name if up else "", raw)
@@ -1315,18 +1484,24 @@ def _own_target_step(aid: str) -> None:
                         " Fehlende Subdimensionen wurden mit dem Standardwert vorbelegt "
                         f"({int(round(float(st.session_state.get('global_target_level', 3.0))))})."
                     )
+
                 st.session_state["own_target_import_msg"] = ("success", msg)
                 persist.rerun_with_save(aid)
+
             except Exception as e:
                 st.session_state["own_target_import_msg"] = ("error", str(e))
                 persist.rerun_with_save(aid)
 
     with col_exp:
+        st.markdown('<div class="rgm-split-title">Export</div>', unsafe_allow_html=True)
+
         targets_now: dict[str, float] = st.session_state.get("dimension_targets", {})
         can_export = bool(targets_now)
+
         meta = st.session_state.meta
         fn = f"eigenes_ziel_{_safe_filename(meta.get('org',''))}_{_safe_filename(meta.get('date_str',''))}.json"
         data = _export_own_targets_json(targets_now, model, meta) if can_export else b""
+
         st.download_button(
             "Eigenes Ziel herunterladen",
             data=data,
@@ -1336,6 +1511,8 @@ def _own_target_step(aid: str) -> None:
             disabled=not can_export,
         )
         st.caption("Download ist verfügbar, sobald Werte vorhanden sind (Import oder Speicherung).")
+
+
 
     if st.session_state.get("own_target_import_msg"):
         kind, msg = st.session_state.pop("own_target_import_msg")
@@ -1427,15 +1604,21 @@ def _own_target_step(aid: str) -> None:
 
     st.markdown("---")
 
-    b1, b2, _ = st.columns([1, 1, 2])
-    with b1:
+    c1, c2 = st.columns([1, 1])
+
+    with c1:
         if st.button("Zurück", use_container_width=True, key="own_target_back_btn"):
             st.session_state.erhebung_step = 0
             persist.rerun_with_save(aid)
 
-    with b2:
+    with c2:
         save_label = "Änderungen speichern" if dirty else "Eigenes Ziel speichern"
-        save_clicked = st.button(save_label, type="primary", use_container_width=True, key="own_target_save_btn")
+        save_clicked = st.button(
+            save_label,
+            type="primary",
+            use_container_width=True,
+            key="own_target_save_btn",
+        )
 
     if save_clicked:
         targets: dict[str, float] = {}
@@ -1454,7 +1637,7 @@ def _own_target_step(aid: str) -> None:
         persist.rerun_with_save(aid)
 
     if st.session_state.get("own_target_saved_msg_bottom", False):
-        st.success("Eigenes Ziel wurde gespeichert. Du kannst jetzt die Erhebung starten.")
+        st.success("Eigenes Ziel wurde gespeichert. Sie können jetzt die Erhebung starten.")
         st.session_state.pop("own_target_saved_msg_bottom", None)
         st.session_state["own_target_dirty"] = False
         dirty = False
