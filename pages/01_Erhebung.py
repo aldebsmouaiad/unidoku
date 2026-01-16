@@ -1777,12 +1777,29 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
         # ---------------------------------------------------------
         if li > 0:
             prev_lvl = levels[li - 1]
-            ok = _prev_level_gate(prev_lvl)
-
+            ok, blocking_nums, all_na = _prev_level_gate(prev_lvl)
+        
             if not ok:
                 prev_no = int(prev_lvl.get("level_number", li) or li)
-                st.info(f"Stufe {level_no} ist noch gesperrt, weil Stufe {prev_no} noch nicht erreicht wurde. ")
+        
+                if all_na:
+                    st.info(
+                        f"Stufe {level_no} ist noch gesperrt, weil in Stufe {prev_no} alle Fragen mit "
+                        f"„Nicht anwendbar“ beantwortet wurden."
+                    )
+                elif blocking_nums:
+                    st.info(
+                        f"Stufe {level_no} ist noch gesperrt, weil in Stufe {prev_no} folgende Fragen nicht "
+                        f"„Vollständig“ oder „Nicht anwendbar“ sind: {', '.join(blocking_nums)}."
+                    )
+                else:
+                    st.info(
+                        f"Stufe {level_no} ist noch gesperrt, weil in Stufe {prev_no} mindestens eine Frage "
+                        f"„Vollständig“ sein muss."
+                    )
+        
                 break  # weitere Stufen nicht rendern
+
 
 
         # --- ab hier dein bestehender Code für die Stufe ---
