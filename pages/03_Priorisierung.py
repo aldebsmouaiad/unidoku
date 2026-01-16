@@ -10,6 +10,9 @@ from core.model_loader import load_model_config
 from core.overview import build_overview_table
 from core.state import init_session_state
 
+TU_ORANGE = "#CA7406"
+TD_BLUE = "#2F3DB8"
+OG_ORANGE = "#F28C28"
 
 PRIORITY_OPTIONS = ["", "A (hoch)", "B (mittel)", "C (niedrig)"]
 
@@ -59,12 +62,217 @@ def collect_priorities_from_session(codes: list[str], keep_existing: dict) -> di
     return new_priorities
 
 
+def _inject_priorisierung_css() -> None:
+    """Einheitliches Design (wie Einführung/Ausfüllhinweise) für Priorisierung."""
+    # Darkmode robust (falls App "ui_dark_mode" nutzt)
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
+
+    border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
+    soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
+    header_bg = "rgba(255,255,255,0.08)" if dark else "rgba(127,127,127,0.10)"
+    hover_bg = "rgba(255,255,255,0.07)" if dark else "rgba(0,0,0,0.035)"
+    shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
+
+    # Secondary-Button (Zurück) – wie in Einführung
+    btn2_bg = "rgba(255,255,255,0.06)" if dark else "#ffffff"
+    btn2_text = "rgba(250,250,250,0.92)" if dark else "#111111"
+
+    st.markdown(
+        f"""
+<style>
+  .rgm-page {{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 6px;
+  }}
+
+  .rgm-h1 {{
+    font-size: 30px;
+    font-weight: 850;
+    line-height: 1.15;
+    margin: 0 0 6px 0;
+    color: var(--rgm-text, #111);
+  }}
+
+  .rgm-lead {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+    margin: 0;
+  }}
+
+  .rgm-muted {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+  }}
+
+  .rgm-hero {{
+    background: var(--rgm-card-bg, #fff);
+    border: 1px solid {border};
+    border-radius: 14px;
+    padding: 18px 18px 14px 18px;
+    box-shadow: {shadow};
+  }}
+
+  .rgm-accent-line {{
+    height: 3px;
+    width: 96px;
+    border-radius: 999px;
+    margin: 10px 0 14px 0;
+    background: linear-gradient(90deg, {TD_BLUE}, {OG_ORANGE});
+  }}
+
+  .rgm-card {{
+    background: var(--rgm-card-bg, #fff);
+    border: 1px solid {border};
+    border-radius: 14px;
+    padding: 14px 16px;
+    box-shadow: {shadow};
+    margin-top: 16px;
+  }}
+
+  .rgm-card-title {{
+    font-weight: 850;
+    font-size: 15px;
+    margin: 0 0 10px 0;
+    color: var(--rgm-text, #111);
+  }}
+
+  .rgm-subtle {{
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--rgm-text, #111);
+    opacity: 0.85;
+    margin: 0;
+  }}
+
+  .rgm-divider {{
+    height: 1px;
+    background: {border};
+    margin: 16px 0 8px 0;
+  }}
+
+  /* Expander als „Card“ */
+  div[data-testid="stExpander"] {{
+    border: 1px solid {border};
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: {shadow};
+    background: var(--rgm-card-bg, #fff);
+  }}
+
+  div[data-testid="stExpander"] summary {{
+    padding: 12px 14px !important;
+    font-weight: 850 !important;
+    color: var(--rgm-text, #111) !important;
+    background: {header_bg} !important;
+  }}
+
+  div[data-testid="stExpander"] summary:hover {{
+    background: {hover_bg} !important;
+  }}
+
+  div[data-testid="stExpander"] details {{
+    border-radius: 14px;
+  }}
+
+  /* Expander Body Padding (Innenraum) */
+  div[data-testid="stExpander"] div[data-testid="stExpanderDetails"] {{
+    padding: 12px 14px 14px 14px;
+  }}
+
+  /* Kleine Pill für Gap */
+  .rgm-pill {{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid {border};
+    background: {soft_bg};
+    color: var(--rgm-text, #111);
+    font-size: 13px;
+    font-weight: 750;
+    margin: 8px 0 8px 0;
+    width: fit-content;
+  }}
+
+  /* Widgets: etwas ruhiger (ohne zu aggressiv in Streamlit einzugreifen) */
+  div[data-testid="stTextInput"] input,
+  div[data-testid="stSelectbox"] div {{
+    border-radius: 10px !important;
+  }}
+
+  /* =========================================
+     NAV-BUTTONS: Secondary wie in Einführung
+     ========================================= */
+  .stApp button[data-testid="baseButton-secondary"],
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) {{
+    background: {btn2_bg} !important;
+    color: {btn2_text} !important;
+    border: 1px solid {border} !important;
+    border-radius: 10px !important;
+    font-weight: 650 !important;
+    opacity: 1 !important;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  }}
+
+  .stApp button[data-testid="baseButton-secondary"] *,
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) * {{
+    color: inherit !important;
+  }}
+
+  .stApp button[data-testid="baseButton-secondary"]:not(:disabled):hover,
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover {{
+    background: {TU_ORANGE} !important;
+    border-color: {TU_ORANGE} !important;
+    color: #ffffff !important;
+  }}
+
+  .stApp button[data-testid="baseButton-secondary"]:not(:disabled):hover *,
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover * {{
+    color: #ffffff !important;
+  }}
+
+  .stApp button[data-testid="baseButton-secondary"]:focus,
+  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):focus {{
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(99,154,0,0.25) !important;
+  }}
+
+  @media (max-width: 900px) {{
+    .rgm-h1 {{ font-size: 26px; }}
+    .rgm-hero {{ padding: 16px; }}
+    .rgm-card {{ padding: 12px 12px; }}
+  }}
+</style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def main() -> None:
     init_session_state()
+    _inject_priorisierung_css()
 
-    st.title("Priorisierung & Maßnahmenplanung")
-    st.caption("Legen Sie für jede Dimension fest, wie wichtig sie ist und welche konkreten Maßnahmen Sie angehen möchten.")
-    st.markdown("---")
+    st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
+
+    # HERO
+    st.markdown(
+        """
+<div class="rgm-hero">
+  <div class="rgm-h1">Priorisierung &amp; Maßnahmenplanung</div>
+  <div class="rgm-accent-line"></div>
+  <p class="rgm-lead">
+    Legen Sie für jede Dimension fest, wie wichtig sie ist und welche konkreten Maßnahmen Sie angehen möchten.
+  </p>
+</div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     model = load_model_config()
 
@@ -90,14 +298,24 @@ def main() -> None:
     )
 
     if df is None or df.empty:
-        st.info("Noch keine Ergebnisse vorhanden – bitte zuerst die Erhebung durchführen.")
+        st.markdown(
+            """
+<div class="rgm-card">
+  <div class="rgm-card-title">Hinweis</div>
+  <p class="rgm-subtle">Noch keine Ergebnisse vorhanden – bitte zuerst die Erhebung durchführen.</p>
+</div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
         return
 
     df = df.copy()
     df["name_short"] = df["name"].apply(after_dash)
 
-    # Filter
-    c1, c2 = st.columns([1, 1])
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    c1, c2 = st.columns([1, 1], gap="large")
     with c1:
         cat = st.selectbox("Kategorie", options=["Alle", "TD", "OG"], index=0)
     with c2:
@@ -108,6 +326,8 @@ def main() -> None:
         df_view = df_view[df_view["category"] == cat]
     if not show_all:
         df_view = df_view[df_view["gap"] > 0]
+
+    st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
 
     # -----------------------------
     # Eingaben (Draft) – ohne Form
@@ -135,12 +355,12 @@ def main() -> None:
             except ValueError:
                 default_index = 0
 
-            with st.expander(f"{code} – {name_short}", expanded=(gap >= 1.0)):
-                st.caption(f"Gap (Soll–Ist): **{gap:.2f}** Reifegradstufen")
+            label = f"{code} – {name_short} · Gap {gap:.2f}"
+            with st.expander(label, expanded=(gap >= 1.0)):
+                st.markdown(f"<div class='rgm-pill'>Gap (Soll–Ist): <b>{gap:.2f}</b> Reifegradstufen</div>", unsafe_allow_html=True)
 
                 # Zeile 1: Priorität + Maßnahme
                 r1c1, r1c2 = st.columns([1, 5], gap="large")
-
                 with r1c1:
                     st.selectbox(
                         "Priorität",
@@ -148,7 +368,6 @@ def main() -> None:
                         index=default_index,
                         key=f"prio_{code}",
                     )
-
                 with r1c2:
                     st.text_input(
                         "Maßnahme",
@@ -157,12 +376,10 @@ def main() -> None:
                         placeholder="z. B. Redaktionsleitfaden erstellen",
                     )
 
-                # kleine optische Trennung (optional, aber meistens schöner)
                 st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
 
                 # Zeile 2: Verantwortlich + Zeitraum
                 r2c1, r2c2 = st.columns([3, 2], gap="large")
-
                 with r2c1:
                     st.text_input(
                         "Verantwortlich",
@@ -170,7 +387,6 @@ def main() -> None:
                         key=f"resp_{code}",
                         placeholder="z. B. Christian Koch",
                     )
-
                 with r2c2:
                     st.text_input(
                         "Zeitraum",
@@ -178,7 +394,6 @@ def main() -> None:
                         key=f"timeframe_{code}",
                         placeholder="z. B. Q1/2026",
                     )
-
 
         # Draft aus Widgets aktualisieren
         st.session_state["priorities_draft"] = collect_priorities_from_session(
@@ -192,13 +407,8 @@ def main() -> None:
     dirty = _stable_json(draft_now) != _stable_json(committed_now)
 
     # -----------------------------
-    # FOOTER-BEREICH (stabil wie im Screenshot)
-    # 1) Übernehmen-Leiste
-    # 2) Button-Zeile (Zurück/Weiter) bleibt unverändert
-    # 3) Hinweis UNTER der Button-Zeile (verschiebt keine Buttons)
+    # Übernehmen + Hinweis
     # -----------------------------
-    # st.markdown("---")
-
     if st.button(
         "Priorisierungen übernehmen",
         type="primary",
@@ -210,7 +420,6 @@ def main() -> None:
         st.success("Priorisierungen wurden übernommen.")
         st.rerun()
 
-    # Hinweis kommt danach (unter den Buttons) -> Buttons springen nicht
     if dirty:
         st.warning(
             "Sie haben Priorisierungen geändert, die noch nicht übernommen wurden. "
@@ -219,16 +428,16 @@ def main() -> None:
 
     st.markdown("---")
 
-    left, right = st.columns([1, 1])
-
+    # Navigation (einheitlich)
+    left, right = st.columns([1, 1], gap="large")
     with left:
-        if st.button("← Zurück", use_container_width=True):
+        if st.button("Zurück", use_container_width=True):
             st.session_state["nav_request"] = "Dashboard"
             st.rerun()
 
     with right:
         if st.button(
-            "Weiter zu Gesamtübersicht",
+            "Weiter zur Gesamtübersicht",
             type="primary",
             use_container_width=True,
             disabled=dirty,
@@ -236,7 +445,7 @@ def main() -> None:
             st.session_state["nav_request"] = "Gesamtübersicht"
             st.rerun()
 
-    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 if __name__ == "__main__":

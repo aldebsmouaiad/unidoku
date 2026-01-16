@@ -49,7 +49,7 @@ ANSWER_OPTIONS = [
 
 def _inject_erhebung_page_css() -> None:
     """Einheitliches Design für Erhebung (Cards/Typografie/Abstände) – kompatibel mit globalem Theme."""
-    dark = bool(st.session_state.get("dark_mode", False))
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
     # Core tokens
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
@@ -60,6 +60,10 @@ def _inject_erhebung_page_css() -> None:
     # Selectbox dropdown hover/selected
     pop_hover = "rgba(202,116,6,0.22)" if dark else "rgba(202,116,6,0.14)"
     pop_sel = "rgba(255,255,255,0.08)" if dark else "rgba(0,0,0,0.04)"
+
+    pop_bg = "rgba(17,24,39,0.98)" if dark else "#ffffff"
+    pop_fg = "rgba(250,250,250,0.92)" if dark else "rgba(17,24,39,0.92)"
+
 
     # File uploader
     uploader_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.02)"
@@ -239,15 +243,23 @@ def _inject_erhebung_page_css() -> None:
      Selectbox Dropdown (Popover) – nur Listbox/Menu
      (Wichtig: KEIN popover > div Styling, damit Tooltips nicht kaputtgehen)
      ========================= */
-  div[data-baseweb="popover"] ul[role="listbox"],
-  div[data-baseweb="popover"] div[role="listbox"],
-  div[data-baseweb="menu"] {{
-    background: var(--rgm-card-bg, #111827) !important;
-    color: var(--rgm-text, rgba(250,250,250,0.92)) !important;
-    border: 1px solid var(--rgm-border) !important;
-    border-radius: 12px !important;
-    overflow: hidden !important;
-  }}
+    div[data-baseweb="popover"] ul[role="listbox"],
+    div[data-baseweb="popover"] div[role="listbox"],
+    div[data-baseweb="menu"]{{
+      background: %(pop_bg)s !important;
+      color: %(pop_fg)s !important;
+      border: 1px solid var(--rgm-border) !important;
+      border-radius: 12px !important;
+      overflow: hidden !important;
+    }}
+
+    div[data-baseweb="popover"] li[role="option"],
+    div[data-baseweb="menu"] li{{
+      background: transparent !important;
+      color: %(pop_fg)s !important;
+    }}
+
+
 
   div[data-baseweb="popover"] li[role="option"],
   div[data-baseweb="menu"] li {{
@@ -468,6 +480,57 @@ def _inject_erhebung_page_css() -> None:
       stroke: currentColor !important;
     }}
 
+    btn2_bg = "rgba(255,255,255,0.06)" if dark else "#ffffff"
+    btn2_text = "rgba(250,250,250,0.92)" if dark else "#111111"
+
+    /* =========================================
+   Secondary Buttons (wie andere Pages) – NUR Erhebung
+   ========================================= */
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      button[data-testid="baseButton-secondary"],
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) {{
+      background: {{btn2_bg}} !important;
+      color: {{btn2_text}} !important;
+      border: 1px solid var(--rgm-border) !important;
+      border-radius: 10px !important;
+      font-weight: 650 !important;
+      opacity: 1 !important;
+      transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+    }}
+
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      button[data-testid="baseButton-secondary"] *,
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) *{{
+      color: inherit !important;
+    }}
+
+    /* Hover: ORANGE + Weiß */
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      button[data-testid="baseButton-secondary"]:not(:disabled):hover,
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover{{
+      background: var(--tu-orange, #CA7406) !important;
+      border-color: var(--tu-orange, #CA7406) !important;
+      color: #ffffff !important;
+    }}
+
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      button[data-testid="baseButton-secondary"]:not(:disabled):hover *,
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover *{{
+      color: #ffffff !important;
+    }}
+
+    /* Focus Ring */
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      button[data-testid="baseButton-secondary"]:focus,
+    div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+      div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):focus{{
+      outline: none !important;
+      box-shadow: 0 0 0 3px rgba(99,154,0,0.25) !important;
+    }}
 
 </style>
         """,
@@ -1113,7 +1176,7 @@ def _apply_imported_targets(imported: dict[str, int], dims_sorted: list[dict]) -
 # Footer (Navigation + Fortschritt Pipeline)
 # -----------------------------
 def _inject_erhebung_css_for_footer() -> None:
-    dark = bool(st.session_state.get("dark_mode", False))
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     bg = "rgba(17,24,39,0.96)" if dark else "rgba(246,247,249,0.96)"
@@ -1147,7 +1210,7 @@ def _inject_erhebung_css_for_footer() -> None:
   .rgm-footer-title {{
     font-weight: 850;
     margin-bottom: 8px;
-    color: var(--rgm-text, #111);
+    color: {{txt}};
   }}
 
   .rgm-progress-wrap{{ margin-top: 10px; }}
@@ -1161,8 +1224,7 @@ def _inject_erhebung_css_for_footer() -> None:
   .rgm-progress-label{{
     font-size:12px;
     font-weight:750;
-    color: var(--rgm-text, #111);
-    opacity: 0.80;
+    color: {{muted}};
   }}
 
   .rgm-pipe{{
@@ -1184,6 +1246,12 @@ def _inject_erhebung_css_for_footer() -> None:
   .rgm-pipe .rgm-seg.rgm-seg-done {{
     background-color: #7FB800 !important;
   }}
+
+  txt = "rgba(250,250,250,0.92)" if dark else "#111111"
+  muted = "rgba(250,250,250,0.75)" if dark else "rgba(17,24,39,0.75)"
+
+
+
 </style>
         """,
         unsafe_allow_html=True,
@@ -1936,6 +2004,7 @@ def _questions_step(aid: str) -> None:
 def main():
     init_session_state()
     _inject_erhebung_page_css()
+    st.markdown('<div id="rgm-erhebung-page-marker"></div>', unsafe_allow_html=True)
 
     aid = _ensure_aid_sticky()
     if st.session_state.get("_rgm_restored_aid") != aid:

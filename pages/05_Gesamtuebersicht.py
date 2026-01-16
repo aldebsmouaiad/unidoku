@@ -19,6 +19,8 @@ TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
 
 
+
+
 def get_answers() -> dict:
     return st.session_state.get("answers", {}) or {}
 
@@ -32,7 +34,7 @@ def _pick_first_col(df: pd.DataFrame, candidates: list[str]) -> Optional[str]:
 
 def _inject_gesamtuebersicht_css() -> None:
     """Gesamtübersicht-Design (Cards/Typo) + Measures-Tabelle (Sticky Header + Toolbar) + Modal robust."""
-    dark = bool(st.session_state.get("dark_mode", False))
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
@@ -58,6 +60,61 @@ def _inject_gesamtuebersicht_css() -> None:
     st.markdown(
         f"""
 <style>
+   /* =========================
+   BASE-LOOK (wie fertige Seiten)
+   ========================= */
+  .rgm-page {{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 6px;
+  }}
+
+  .rgm-h1 {{
+    font-size: 30px;
+    font-weight: 850;
+    line-height: 1.15;
+    margin: 0 0 6px 0;
+    color: var(--rgm-text, #111);
+  }}
+
+  .rgm-lead {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+    margin: 0;
+  }}
+
+  .rgm-muted {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+  }}
+
+  .rgm-hero {{
+    background: var(--rgm-card-solid, #fff);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    padding: 18px 18px 14px 18px;
+    box-shadow: var(--rgm-shadow);
+  }}
+
+  .rgm-accent-line {{
+    height: 3px;
+    width: 96px;
+    border-radius: 999px;
+    margin: 10px 0 14px 0;
+    background: linear-gradient(90deg, var(--rgm-td-blue), var(--rgm-og-orange));
+  }}
+
+  .rgm-card-title {{
+    font-weight: 850;
+    font-size: 15px;
+    margin: 0 0 10px 0;
+    color: var(--rgm-text);
+  }}
+
   /* =========================
      Tokens + Container
      ========================= */
@@ -103,12 +160,12 @@ def _inject_gesamtuebersicht_css() -> None:
     height: 1px;
     width: 100%;
     background: var(--rgm-border);
-    margin: 34px 0 22px 0;
+    margin: 22px 0 16px 0;
   }}
 
   .rgm-section-title {{
     font-weight: 850;
-    font-size: 18px;
+    font-size: 16px;
     margin: 0 0 14px 0;
     color: var(--rgm-text);
   }}
@@ -171,62 +228,32 @@ def _inject_gesamtuebersicht_css() -> None:
     font-weight: 850 !important;
   }}
 
-  /* =========================================================
-   FIX: components.html (iframe) MUSS in st.columns volle Breite nehmen
-   (sonst entstehen diese schmalen Cards + riesige Lücke in der Mitte)
-   ========================================================= */
+  /* =========================
+   Streamlit-Container als Card (Anchor + Sibling)
+   -> für Meta/KPIs/Filter/Export, ohne Logik-Änderung
+   ========================= */
+  /* Streamlit rendert marker-DIVs i.d.R. in einem eigenen stElementContainer.
+     Deshalb: Marker-Container finden und das NÄCHSTE ElementContainer-Wrapper-DIV als Card stylen. */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_meta) + div[data-testid="stElementContainer"] > div,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_kpis) + div[data-testid="stElementContainer"] > div,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_filters) + div[data-testid="stElementContainer"] > div,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export) + div[data-testid="stElementContainer"] > div,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_empty) + div[data-testid="stElementContainer"] > div,
 
-  /* Der Element-Wrapper, der das iframe enthält */
-  div[data-testid="stAppViewContainer"] div.element-container:has(iframe[title="streamlit.components.v1.html"]),
-  div[data-testid="stAppViewContainer"] div.element-container:has(> iframe[title="streamlit.components.v1.html"]) {{
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
-    flex: 1 1 0% !important;
-    min-width: 0 !important;
+  /* Fallback (falls data-testid anders ist) */
+  div.element-container:has(div#rgm_overview_meta) + div.element-container > div,
+  div.element-container:has(div#rgm_overview_kpis) + div.element-container > div,
+  div.element-container:has(div#rgm_overview_filters) + div.element-container > div,
+  div.element-container:has(div#rgm_overview_export) + div.element-container > div,
+  div.element-container:has(div#rgm_overview_empty) + div.element-container > div {{
+    background: var(--rgm-card-solid);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    box-shadow: var(--rgm-shadow);
+    padding: 14px 16px;
+    margin-top: 12px;
   }}
 
-  /* Fallback: irgendein direkter Parent, der das iframe hält */
-  div[data-testid="stAppViewContainer"] div:has(> iframe[title="streamlit.components.v1.html"]) {{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }}
-
-  /* iframe selbst */
-  div[data-testid="stAppViewContainer"] iframe[title="streamlit.components.v1.html"] {{
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
-  }}
-
-  /* Optional: nur für die Row mit den Plot-Frames den Column-Gap klein halten */
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) {{
-    gap: 0.35rem  !important;
-  }}
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div {{
-    min-width: 0 !important;
-  }}
-
-  /* ===== columns: components.html darf nicht "shrink" werden ===== */
-  div[data-testid="column"] div[data-testid="stElementContainer"],
-  div[data-testid="column"] div[data-testid="stElementContainer"] > div,
-  div[data-testid="column"] div[data-testid="stCustomComponentV1"],
-  div[data-testid="column"] div[data-testid="stCustomComponentV1"] > div {{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }}
-
-  div[data-testid="column"] iframe[srcdoc],
-  div[data-testid="column"] iframe[title="streamlit.components.v1.html"]{{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    display: block !important;
-  }}
-
-  
   /* =========================
      Maßnahmen-Card + Toolbar (Modebar-Look)
      ========================= */
@@ -473,21 +500,19 @@ def _inject_gesamtuebersicht_css() -> None:
     div[data-testid="stAppViewContainer"] .block-container {{
     padding-left: 0.7rem;
     padding-right: 0.7rem;}}
+    .rgm-h1 {{ font-size: 26px; }}
+    .rgm-hero {{ padding: 16px; }}
   }}
 
-  /* =========================
-   components.html: Wrapper in Streamlit zuverlässig auf volle Breite
-   (damit keine 300px-"Mini-Frames" entstehen)
-   ========================= */
+  /* =========================================================
+     components.html / iframe – ROBUST (dedupliziert)
+     - volle Breite in Columns/Containers
+     - Plot-Row (2 Cards) nutzt gleiche Spaltenbreite
+     ========================================================= */
 
-  /* stHtml Wrapper (components.html landet oft hier) */
+  /* Wrapper, in denen components.html landet (variiert je nach Streamlit-Version) */
   div[data-testid="stAppViewContainer"] div[data-testid="stHtml"],
-  div[data-testid="stAppViewContainer"] div[data-testid="stHtml"] > div {{
-    width: 100% !important;
-    max-width: 100% !important;
-  }}
-
-  /* CustomComponent / IFrame Wrapper (variiert je nach Streamlit-Version) */
+  div[data-testid="stAppViewContainer"] div[data-testid="stHtml"] > div,
   div[data-testid="stAppViewContainer"] div[data-testid="stCustomComponentV1"],
   div[data-testid="stAppViewContainer"] div[data-testid="stCustomComponentV1"] > div,
   div[data-testid="stAppViewContainer"] div[data-testid="stIFrame"],
@@ -496,55 +521,23 @@ def _inject_gesamtuebersicht_css() -> None:
   div[data-testid="stAppViewContainer"] div[data-testid="stIframe"] > div {{
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
   }}
 
-  /* ElementContainer, der ein components-iframe enthält */
-  div[data-testid="stAppViewContainer"] div[data-testid="stElementContainer"]:has(iframe[title="streamlit.components.v1.html"]) {{
+  /* Element-Container/Parent, der das iframe hält */
+  div[data-testid="stAppViewContainer"] div.element-container:has(iframe[title="streamlit.components.v1.html"]),
+  div[data-testid="stAppViewContainer"] div[data-testid="stElementContainer"]:has(iframe[title="streamlit.components.v1.html"]),
+  div[data-testid="stAppViewContainer"] div:has(> iframe[title="streamlit.components.v1.html"]) {{
     width: 100% !important;
     max-width: 100% !important;
+    display: block !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
   }}
 
   /* iframe selbst */
-  div[data-testid="stAppViewContainer"] iframe[title="streamlit.components.v1.html"]{{
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
-    border: 0 !important;
-  }}
-
-  /* =========================================================
-   FINAL FIX (robust):
-   Plot-Row mit components.html -> Columns müssen wirklich "stretch" nutzen
-   Ergebnis: Cards = volle Column-Breite (wie Button), Gap kontrolliert
-   ========================================================= */
-
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) {{
-    gap: 0.75rem !important;                 /* Abstand zwischen den beiden Cards */
-    justify-content: stretch !important;     /* nicht "space-between" */
-    align-items: stretch !important;
-    width: 100% !important;
-  }}
-
-  /* Columns/Children in dieser Row dürfen NICHT schrumpfen und müssen wachsen */
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div,
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div[data-testid="column"] {{
-    flex: 1 1 0% !important;
-    min-width: 0 !important;
-    width: 0 !important;                    /* sorgt für wirklich gleiche Breite */
-  }}
-
-  /* Wrapper der Custom-Component auf 100% zwingen */
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) div[data-testid="stCustomComponentV1"],
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) div[data-testid="stCustomComponentV1"] > div {{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    display: block !important;
-  }}
-
-  /* iframe selbst: volle Breite */
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) iframe[title="streamlit.components.v1.html"],
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) iframe[srcdoc] {{
+  div[data-testid="stAppViewContainer"] iframe[title="streamlit.components.v1.html"],
+  div[data-testid="stAppViewContainer"] iframe[srcdoc] {{
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -552,29 +545,26 @@ def _inject_gesamtuebersicht_css() -> None:
     border: 0 !important;
   }}
 
-
-  /* =========================================================
-   FINAL: Plot-Row (components.html) MUSS volle Spaltenbreite nutzen
-   -> Cards werden so breit wie der Button/Divider
-   ========================================================= */
-
-  /* Die Row, die components.html enthält */
+  /* Row mit components.html: Columns müssen strecken und wirklich gleich breit sein */
   div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]),
   div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) {{
     width: 100% !important;
     align-items: stretch !important;
-    gap: 0.9rem !important;              /* elegant, aber nicht zu groß */
+    justify-content: stretch !important;
+    gap: 0.9rem !important;
   }}
 
-  /* WICHTIG: Columns in dieser Row dürfen nicht shrinken */
   div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) > div,
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div {{
+  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div,
+  div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) > div[data-testid="column"],
+  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div[data-testid="column"] {{
     flex: 1 1 0% !important;
     min-width: 0 !important;
+    width: 0 !important;         /* sorgt für wirklich gleiche Breite */
     max-width: none !important;
   }}
 
-  /* Streamlit-Wrapper der Custom-Components auf 100% */
+  /* Wrapper der Custom-Component in der Row auf 100% zwingen */
   div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) div[data-testid="stCustomComponentV1"],
   div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) div[data-testid="stCustomComponentV1"] > div,
   div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) div[data-testid="stCustomComponentV1"],
@@ -582,17 +572,18 @@ def _inject_gesamtuebersicht_css() -> None:
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-  }}
-
-  /* iframe selbst */
-  div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) iframe,
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) iframe {{
-    width: 100% !important;
-    max-width: 100% !important;
     display: block !important;
   }}
 
-
+  /* Fallback: Column-Umgebung darf nicht "shrink" werden */
+  div[data-testid="column"] div[data-testid="stElementContainer"],
+  div[data-testid="column"] div[data-testid="stElementContainer"] > div,
+  div[data-testid="column"] div[data-testid="stCustomComponentV1"],
+  div[data-testid="column"] div[data-testid="stCustomComponentV1"] > div {{
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }}
 
 </style>
         """,
@@ -837,7 +828,7 @@ def _render_dual_plot_cards(
         st.info("Keine Daten vorhanden.")
         return
 
-    dark = bool(st.session_state.get("dark_mode", False))
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
@@ -1691,11 +1682,19 @@ def main() -> None:
     init_session_state()
     _inject_gesamtuebersicht_css()
 
-    st.title("Gesamtübersicht")
-    st.caption(
-        "Zusammenfassung der Angaben zur Erhebung, visualisierte Ergebnisse und geplante Maßnahmen."
+    st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="rgm-hero">
+        <div class="rgm-h1">Gesamtübersicht</div>
+        <div class="rgm-accent-line"></div>
+        <p class="rgm-lead">
+        Zusammenfassung der Angaben zur Erhebung, visualisierte Ergebnisse und geplante Maßnahmen.
+        </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-    st.markdown("---")
 
     model = load_model_config()
     answers = get_answers()
@@ -1718,19 +1717,25 @@ def main() -> None:
 
     df_report = _clean_overview_df(df_raw)
 
-    # 1) Angaben zur Erhebung
-    a1, a2 = st.columns(2)
-    with a1:
-        st.write(f"**Name der Organisation:** {meta.get('org','') or '-'}")
-        st.write(f"**Bereich:** {meta.get('area','') or '-'}")
-        st.write(f"**Erhebung durchgeführt von:** {meta.get('assessor','') or '-'}")
-    with a2:
-        st.write(f"**Datum der Durchführung:** {meta.get('date_str','') or '-'}")
-        st.write(f"**Angestrebtes Ziel:** {meta.get('target_label','') or '-'}")
-        st.write(f"**Soll-Niveau (global):** {float(global_target):.1f}")
+    # 1) Angaben zur Erhebung (Card)
+    st.markdown('<div id="rgm_overview_meta"></div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="rgm-card-title">Angaben zur Erhebung</div>', unsafe_allow_html=True)
+        a1, a2 = st.columns(2)
+        with a1:
+            st.write(f"**Name der Organisation:** {meta.get('org','') or '-'}")
+            st.write(f"**Bereich:** {meta.get('area','') or '-'}")
+            st.write(f"**Erhebung durchgeführt von:** {meta.get('assessor','') or '-'}")
+        with a2:
+            st.write(f"**Datum der Durchführung:** {meta.get('date_str','') or '-'}")
+            st.write(f"**Angestrebtes Ziel:** {meta.get('target_label','') or '-'}")
+            st.write(f"**Soll-Niveau (global):** {float(global_target):.1f}")
 
-    st.markdown("")
-    n_answered = _kpi_block(df_report)
+    # 1b) KPIs (Card)
+    st.markdown('<div id="rgm_overview_kpis"></div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="rgm-card-title">Kennzahlen</div>', unsafe_allow_html=True)
+        n_answered = _kpi_block(df_report)
 
     if n_answered == 0:
         st.warning("Noch keine Dimensionen bewertet.")
@@ -1745,7 +1750,7 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    dark = bool(st.session_state.get("dark_mode", False))
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
     
     def tune_plotly(fig):
         """Einheitliches Theme + etwas kompaktere Margins, damit das Radar größer wirkt."""
@@ -1829,13 +1834,17 @@ def main() -> None:
 
     need = m["Gap"].fillna(-1) > 0 if "Gap" in m.columns else pd.Series([True] * len(m))
 
-    show_all = st.checkbox("Alle anzeigen (inkl. ohne Handlungsbedarf)", value=False)
-    prio_filter = st.multiselect(
-            "Priorität filtern",
-            ["A (hoch)", "B (mittel)", "C (niedrig)"],
-            default=[],
-            placeholder="Prioritäten auswählen …",
-        )
+    # Filter (Card)
+    st.markdown('<div id="rgm_overview_filters"></div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="rgm-card-title">Filter</div>', unsafe_allow_html=True)
+        show_all = st.checkbox("Alle anzeigen (inkl. ohne Handlungsbedarf)", value=False)
+        prio_filter = st.multiselect(
+                "Priorität filtern",
+                ["A (hoch)", "B (mittel)", "C (niedrig)"],
+                default=[],
+                placeholder="Prioritäten auswählen …",
+            )
 
     filtered = m.copy() if show_all else m[need].copy()
     if prio_filter and "Priorität" in filtered.columns:
@@ -1927,16 +1936,21 @@ def main() -> None:
     except Exception as e:
         pdf_error = str(e)
 
-    if pdf_bytes is not None:
-      st.download_button(
-          "PDF-Bericht herunterladen",
-          data=pdf_bytes,
-          file_name="reifegrad_gesamtuebersicht.pdf",
-          mime="application/pdf",
-          use_container_width=True,
-      )
-    else:
-        st.error(f"PDF-Export nicht verfügbar: {pdf_error}")
+    st.markdown('<div id="rgm_overview_export"></div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="rgm-card-title">Export</div>', unsafe_allow_html=True)
+        if pdf_bytes is not None:
+            st.download_button(
+                "PDF-Bericht herunterladen",
+                data=pdf_bytes,
+                file_name="reifegrad_gesamtuebersicht.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        else:
+            st.error(f"PDF-Export nicht verfügbar: {pdf_error}")
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
