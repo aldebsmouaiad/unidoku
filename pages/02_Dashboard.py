@@ -1405,7 +1405,7 @@ def _render_dual_plot_cards(
 </body>
 </html>
 """
-    components.html(html_doc, height=initial_height, scrolling=False)
+    components.html(html_doc, height=initial_height, scrolling=False, width=1200)
 
 
 # ---------------------------------------------------------------------
