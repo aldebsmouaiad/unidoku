@@ -4,6 +4,8 @@ from __future__ import annotations
 import streamlit as st
 from core.state import init_session_state
 
+TU_GREEN = "#639A00"
+TU_ORANGE = "#CA7406"
 TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
 
@@ -11,7 +13,8 @@ OG_ORANGE = "#F28C28"
 def main() -> None:
     init_session_state()
 
-    dark = bool(st.session_state.get("dark_mode", False))
+    # Darkmode robust (wie in 00_Einfuehrung.py)
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
@@ -19,6 +22,10 @@ def main() -> None:
     zebra_bg = "rgba(255,255,255,0.04)" if dark else "rgba(0,0,0,0.018)"
     hover_bg = "rgba(255,255,255,0.07)" if dark else "rgba(0,0,0,0.035)"
     shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
+
+    # Secondary-Button Grundzustand (Zurück)
+    btn2_bg = "rgba(255,255,255,0.06)" if dark else "#ffffff"
+    btn2_text = "rgba(250,250,250,0.92)" if dark else "#111111"
 
     st.markdown(
         f"""
@@ -68,7 +75,7 @@ def main() -> None:
     background: linear-gradient(90deg, {TD_BLUE}, {OG_ORANGE});
   }}
 
-  /* Schnellnavigation (optional aber sehr „tool-like“) */
+  /* Schnellnavigation */
   .rgm-chips {{
     display: flex;
     flex-wrap: wrap;
@@ -155,7 +162,7 @@ def main() -> None:
     background: transparent;
   }}
 
-  /* Zebra + Hover -> bessere Lesbarkeit */
+  /* Zebra + Hover */
   .rgm-table tbody tr:nth-child(even) td {{
     background: {zebra_bg};
   }}
@@ -197,6 +204,43 @@ def main() -> None:
 
   .rgm-warning li {{
     margin: 0;
+  }}
+
+  /* =========================================
+     NAV-BUTTONS: Secondary NUR im Nav-Bereich
+     ========================================= */
+  .rgm-nav button[data-testid="baseButton-secondary"],
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) {{
+    background: {btn2_bg} !important;
+    color: {btn2_text} !important;
+    border: 1px solid {border} !important;
+    border-radius: 10px !important;
+    font-weight: 650 !important;
+    opacity: 1 !important;
+    transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+  }}
+
+  .rgm-nav button[data-testid="baseButton-secondary"] *,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) * {{
+    color: inherit !important;
+  }}
+
+  .rgm-nav button[data-testid="baseButton-secondary"]:not(:disabled):hover,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover {{
+    background: {TU_ORANGE} !important;
+    border-color: {TU_ORANGE} !important;
+    color: #ffffff !important;
+  }}
+
+  .rgm-nav button[data-testid="baseButton-secondary"]:not(:disabled):hover *,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover * {{
+    color: #ffffff !important;
+  }}
+
+  .rgm-nav button[data-testid="baseButton-secondary"]:focus,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):focus {{
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(99,154,0,0.25) !important;
   }}
 
   @media (max-width: 900px) {{
@@ -397,6 +441,8 @@ def main() -> None:
 
     st.markdown("---")
 
+    # Navigation scoped
+    st.markdown('<div class="rgm-nav">', unsafe_allow_html=True)
     c1, c2 = st.columns([1, 1])
     with c1:
         if st.button("Zurück", use_container_width=True):
@@ -406,6 +452,7 @@ def main() -> None:
         if st.button("Weiter zur Erhebung", type="primary", use_container_width=True):
             st.session_state["nav_request"] = "Erhebung"
             st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
