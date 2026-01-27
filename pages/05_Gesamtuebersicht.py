@@ -18,7 +18,6 @@ from core.exporter import df_results_for_export, make_csv_bytes, make_pdf_bytes
 TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
 
-
 def get_answers() -> dict:
     return st.session_state.get("answers", {}) or {}
 
@@ -32,7 +31,7 @@ def _pick_first_col(df: pd.DataFrame, candidates: list[str]) -> Optional[str]:
 
 def _inject_gesamtuebersicht_css() -> None:
     """Gesamtübersicht-Design (Cards/Typo) + Measures-Tabelle (Sticky Header + Toolbar) + Modal robust."""
-    dark = bool(st.session_state.get("dark_mode", False))
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
@@ -44,7 +43,7 @@ def _inject_gesamtuebersicht_css() -> None:
     text_color = "rgba(255,255,255,0.92)" if dark else "#111111"
 
     df_bg = "#0f172a" if dark else "#ffffff"
-    df_header = "#111827" if dark else "#f3f4f6"
+    df_header = "#0b1220" if dark else "#f3f4f6"
     df_grid = "rgba(255,255,255,0.10)" if dark else "rgba(0,0,0,0.10)"
     df_hover = "rgba(202,116,6,0.18)" if dark else "rgba(202,116,6,0.10)"
     df_text = "rgba(250,250,250,0.92)" if dark else "#111111"
@@ -53,11 +52,66 @@ def _inject_gesamtuebersicht_css() -> None:
     # Toolbar-Look (wie Tabelle) + grüne Icons
     toolbar_bg = "rgba(17,24,39,0.85)" if dark else "rgba(255,255,255,0.92)"
     toolbar_hover = "rgba(202,116,6,0.25)" if dark else "rgba(202,116,6,0.14)"
-    icon_green = "#2f9e44"  # grün wie in deiner Tabellen-Toolbar
+    icon_green = "#639A00"
 
     st.markdown(
         f"""
 <style>
+   /* =========================
+   BASE-LOOK (wie fertige Seiten)
+   ========================= */
+  .rgm-page {{
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 6px;
+  }}
+
+  .rgm-h1 {{
+    font-size: 30px;
+    font-weight: 850;
+    line-height: 1.15;
+    margin: 0 0 6px 0;
+    color: var(--rgm-text, #111);
+  }}
+
+  .rgm-lead {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+    margin: 0;
+  }}
+
+  .rgm-muted {{
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--rgm-text, #111);
+    opacity: 0.92;
+  }}
+
+  .rgm-hero {{
+    background: var(--rgm-card-solid, #fff);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    padding: 18px 18px 14px 18px;
+    box-shadow: var(--rgm-shadow);
+  }}
+
+  .rgm-accent-line {{
+    height: 3px;
+    width: 96px;
+    border-radius: 999px;
+    margin: 10px 0 14px 0;
+    background: linear-gradient(90deg, var(--rgm-td-blue), var(--rgm-og-orange));
+  }}
+
+  .rgm-card-title {{
+    font-weight: 850;
+    font-size: 15px;
+    margin: 0 0 10px 0;
+    color: var(--rgm-text);
+  }}
+
   /* =========================
      Tokens + Container
      ========================= */
@@ -103,12 +157,12 @@ def _inject_gesamtuebersicht_css() -> None:
     height: 1px;
     width: 100%;
     background: var(--rgm-border);
-    margin: 34px 0 22px 0;
+    margin: 22px 0 16px 0;
   }}
 
   .rgm-section-title {{
     font-weight: 850;
-    font-size: 18px;
+    font-size: 16px;
     margin: 0 0 14px 0;
     color: var(--rgm-text);
   }}
@@ -170,62 +224,191 @@ def _inject_gesamtuebersicht_css() -> None:
     border-radius: 12px !important;
     font-weight: 850 !important;
   }}
+  
+  
+  /* =========================
+   SECTION-CARDS (Marker -> nächstes Element)
+   ========================= */
 
-  /* =========================================================
-   FIX: components.html (iframe) MUSS in st.columns volle Breite nehmen
-   (sonst entstehen diese schmalen Cards + riesige Lücke in der Mitte)
-   ========================================================= */
-
-  /* Der Element-Wrapper, der das iframe enthält */
-  div[data-testid="stAppViewContainer"] div.element-container:has(iframe[title="streamlit.components.v1.html"]),
-  div[data-testid="stAppViewContainer"] div.element-container:has(> iframe[title="streamlit.components.v1.html"]) {{
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
-    flex: 1 1 0% !important;
-    min-width: 0 !important;
+  /* Marker selbst soll keinen Platz belegen */
+  #rgm_overview_meta,
+  #rgm_overview_kpis,
+  #rgm_overview_filters,
+  #rgm_overview_export,
+  #rgm_overview_empty {{
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
   }}
 
-  /* Fallback: irgendein direkter Parent, der das iframe hält */
-  div[data-testid="stAppViewContainer"] div:has(> iframe[title="streamlit.components.v1.html"]) {{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
+  /* Der Block NACH dem Marker wird als Card gestylt */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_meta) + div[data-testid="stElementContainer"] > div,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_kpis) + div[data-testid="stElementContainer"] > div,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_filters) + div[data-testid="stElementContainer"] > div,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export) + div[data-testid="stElementContainer"] > div,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_empty) + div[data-testid="stElementContainer"] > div,
+
+  /* Fallback für manche Streamlit-Versionen */
+  div.element-container:has(div#rgm_overview_meta) + div.element-container > div,
+  div.element-container:has(div#rgm_overview_kpis) + div.element-container > div,
+  div.element-container:has(div#rgm_overview_filters) + div.element-container > div,
+  div.element-container:has(div#rgm_overview_export) + div.element-container > div,
+  div.element-container:has(div#rgm_overview_empty) + div.element-container > div {{
+    background: var(--rgm-card-solid);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    box-shadow: var(--rgm-shadow);
+    padding: 14px 16px;
+    margin-top: 12px;
+    overflow: hidden;
+  }}
+  
+  /* Key-Value Grid für "Angaben zur Erhebung" */
+  .rgm-kv {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 28px;
+    margin-top: 6px;
+  }}
+  .rgm-kv-row{{
+    display:flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rgm-border);
+  }}
+  
+  .rgm-kv-col{{ min-width: 0; }}
+  .rgm-kv-col .rgm-kv-row:last-child{{ border-bottom: 0; }}
+  .rgm-kv-row{{ align-items: center; }}
+  .rgm-k{{ min-width: 0; white-space: normal; }}
+  .rgm-v{{ max-width: 55%; }}
+
+  .rgm-k {{
+    font-weight: 500;
+    color: var(--rgm-text);
+    opacity: 0.78;
+    white-space: nowrap;
+  }}
+  .rgm-v {{
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--rgm-text);
+    opacity: 0.92;
+    text-align: right;
   }}
 
-  /* iframe selbst */
-  div[data-testid="stAppViewContainer"] iframe[title="streamlit.components.v1.html"] {{
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
+  /* Mobile: einspaltig */
+  @media (max-width: 900px){{
+    .rgm-kv {{ grid-template-columns: 1fr; }}
+    .rgm-v {{ text-align: left; }}
+  }}
+  
+  /* =========================
+     KPI-LOOK (st.metric) wie Dashboard-Kacheln
+     ========================= */
+  div[data-testid="stMetric"],
+  div[data-testid="stMetric"] > div {{
+    background: var(--rgm-soft) !important;
+    border: 1px solid var(--rgm-border) !important;
+    border-radius: 14px !important;
   }}
 
-  /* Optional: nur für die Row mit den Plot-Frames den Column-Gap klein halten */
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) {{
-    gap: 0.35rem  !important;
-  }}
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div {{
-    min-width: 0 !important;
+  div[data-testid="stMetric"] {{
+    padding: 14px 14px !important;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.08) !important;
   }}
 
-  /* ===== columns: components.html darf nicht "shrink" werden ===== */
-  div[data-testid="column"] div[data-testid="stElementContainer"],
-  div[data-testid="column"] div[data-testid="stElementContainer"] > div,
-  div[data-testid="column"] div[data-testid="stCustomComponentV1"],
-  div[data-testid="column"] div[data-testid="stCustomComponentV1"] > div {{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
+  /* Label */
+  div[data-testid="stMetric"] [data-testid="stMetricLabel"] p {{
+    margin: 0 !important;
+    font-weight: 800 !important;
+    opacity: 0.78 !important;
+    color: var(--rgm-text) !important;
+    letter-spacing: 0.2px;
   }}
 
-  div[data-testid="column"] iframe[srcdoc],
-  div[data-testid="column"] iframe[title="streamlit.components.v1.html"]{{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    display: block !important;
+  /* Value */
+  div[data-testid="stMetric"] [data-testid="stMetricValue"] {{
+    margin-top: 6px !important;
+  }}
+  div[data-testid="stMetric"] [data-testid="stMetricValue"] > div {{
+    font-weight: 900 !important;
+    font-size: 34px !important;
+    line-height: 1.1 !important;
+    color: var(--rgm-text) !important;
+  }}
+  
+  /* Mini-Panels für TD/OG-Kennzahlen (kompakt, elegant) */
+  .rgm-kpi-mini{{
+    padding: 12px 14px;
   }}
 
+  .rgm-kpi-mini-title{{
+    font-weight: 850;
+    font-size: 13px;
+    margin: 0 0 8px 0;
+    color: var(--rgm-text);
+  }}
+
+  .rgm-kpi-line{{
+    display:flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid var(--rgm-border);
+  }}
+
+  .rgm-kpi-line:first-of-type{{ border-top: 0; }}
+
+  .rgm-kpi-line .k{{
+    font-weight: 500;
+    opacity: 0.78;
+    color: var(--rgm-text);
+  }}
+
+  .rgm-kpi-line .v{{
+    font-weight: 850;
+    color: var(--rgm-text);
+  }}
+  
+  /* Grid innerhalb der Kennzahlen-Card (2 Spalten, mobil 1 Spalte) */
+  .rgm-kpi-grid{{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 6px;
+    box-sizing: border-box;
+  }}
+
+  @media (max-width: 900px){{
+    .rgm-kpi-grid{{ grid-template-columns: 1fr; }}
+  }}
+  
+  /* Cards wie in 00_Einfuehrung.py */
+  .rgm-card{{
+    background: var(--rgm-card-solid);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: var(--rgm-shadow);
+  }}
+
+  .rgm-card-td{{ border: 2px solid var(--rgm-td-blue); }}
+  .rgm-card-og{{ border: 2px solid var(--rgm-og-orange); }}
+
+  /* =========================
+     Alerts (st.warning/info/error) optisch ruhiger
+     ========================= */
+  div[data-testid="stAlert"] {{
+    border-radius: 14px !important;
+    border: 1px solid var(--rgm-border) !important;
+    box-shadow: 0 10px 22px rgba(0,0,0,0.06) !important;
+  }}
+  div[data-testid="stAlert"] p {{
+    margin: 0.15rem 0 !important;
+  }}
   
   /* =========================
      Maßnahmen-Card + Toolbar (Modebar-Look)
@@ -285,42 +468,6 @@ def _inject_gesamtuebersicht_css() -> None:
     background: var(--rgm-card-solid);
   }}
 
-  table.rgm-measures-table {{
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    background: var(--rgm-df-bg) !important;
-    color: var(--rgm-df-text) !important;
-    font-size: 14px;
-  }}
-
-  /* Sticky Header: bleibt stehen, nur Inhalt scrollt */
-  table.rgm-measures-table thead th {{
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background-color: var(--rgm-df-header) !important;
-    color: var(--rgm-df-text) !important;
-    text-align: left;
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--rgm-df-grid) !important;
-    font-weight: 800;
-    white-space: nowrap;
-    box-shadow: 0 1px 0 var(--rgm-df-grid);
-  }}
-
-  table.rgm-measures-table tbody td {{
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--rgm-df-grid) !important;
-    color: var(--rgm-df-text) !important;
-    vertical-align: top;
-    background: var(--rgm-df-bg) !important;
-  }}
-
-  table.rgm-measures-table tbody tr:hover td {{
-    background: var(--rgm-df-hover) !important;
-  }}
-
   td.rgm-num {{
     text-align: right;
     font-variant-numeric: tabular-nums;
@@ -360,6 +507,30 @@ def _inject_gesamtuebersicht_css() -> None:
     -webkit-line-clamp: 3;
     overflow: hidden;
   }}
+  .rgm-clamp-4 {{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+  }}
+  .rgm-clamp-6 {{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6;
+    overflow: hidden;
+  }}
+  .rgm-clamp-8 {{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 8;
+    overflow: hidden;
+  }}
+  .rgm-clamp-10 {{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 10;
+    overflow: hidden;
+  }}
 
   /* Scrollbar */
   .rgm-measures-scroll::-webkit-scrollbar {{ height: 10px; width: 10px; }}
@@ -368,6 +539,33 @@ def _inject_gesamtuebersicht_css() -> None:
     border-radius: 999px;
   }}
   .rgm-measures-scroll::-webkit-scrollbar-track {{ background: transparent; }}
+  
+  /* Measures-Tabelle: Header immer deckend (kein Durchscheinen) */
+  table.rgm-measures-table thead th{{
+    background-color: var(--rgm-df-header) !important;  /* SOLID */
+    color: var(--rgm-df-text) !important;
+    opacity: 1 !important;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    border-bottom: 1px solid var(--rgm-df-grid) !important;
+
+    /* optional, verhindert Artefakte bei Sticky */
+    background-clip: padding-box;
+  }}
+  
+  table.rgm-measures-table{{
+    width: 100%;
+    table-layout: fixed;
+  }}
+  
+  td.rgm-nowrap {{ white-space: nowrap; }}
+  .rgm-nowrap-cell{{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+  }}
 
   /* =========================
      Vollbild-Modal (robust, ohne Code-Text)
@@ -459,10 +657,6 @@ def _inject_gesamtuebersicht_css() -> None:
     box-shadow: 0 1px 0 var(--rgm-df-grid);
   }}
 
-  /* Im Vollbild keine Clamps */
-  .rgm-measures-full .rgm-cell {{
-    display: block;
-  }}
 
   /* Im Modal horizontal scrollen, falls nötig */
   .rgm-modal-body table.rgm-measures-table {{
@@ -473,21 +667,19 @@ def _inject_gesamtuebersicht_css() -> None:
     div[data-testid="stAppViewContainer"] .block-container {{
     padding-left: 0.7rem;
     padding-right: 0.7rem;}}
+    .rgm-h1 {{ font-size: 26px; }}
+    .rgm-hero {{ padding: 16px; }}
   }}
 
-  /* =========================
-   components.html: Wrapper in Streamlit zuverlässig auf volle Breite
-   (damit keine 300px-"Mini-Frames" entstehen)
-   ========================= */
+  /* =========================================================
+     components.html / iframe – ROBUST (dedupliziert)
+     - volle Breite in Columns/Containers
+     - Plot-Row (2 Cards) nutzt gleiche Spaltenbreite
+     ========================================================= */
 
-  /* stHtml Wrapper (components.html landet oft hier) */
+  /* Wrapper, in denen components.html landet (variiert je nach Streamlit-Version) */
   div[data-testid="stAppViewContainer"] div[data-testid="stHtml"],
-  div[data-testid="stAppViewContainer"] div[data-testid="stHtml"] > div {{
-    width: 100% !important;
-    max-width: 100% !important;
-  }}
-
-  /* CustomComponent / IFrame Wrapper (variiert je nach Streamlit-Version) */
+  div[data-testid="stAppViewContainer"] div[data-testid="stHtml"] > div,
   div[data-testid="stAppViewContainer"] div[data-testid="stCustomComponentV1"],
   div[data-testid="stAppViewContainer"] div[data-testid="stCustomComponentV1"] > div,
   div[data-testid="stAppViewContainer"] div[data-testid="stIFrame"],
@@ -496,55 +688,23 @@ def _inject_gesamtuebersicht_css() -> None:
   div[data-testid="stAppViewContainer"] div[data-testid="stIframe"] > div {{
     width: 100% !important;
     max-width: 100% !important;
+    min-width: 0 !important;
   }}
 
-  /* ElementContainer, der ein components-iframe enthält */
-  div[data-testid="stAppViewContainer"] div[data-testid="stElementContainer"]:has(iframe[title="streamlit.components.v1.html"]) {{
+  /* Element-Container/Parent, der das iframe hält */
+  div[data-testid="stAppViewContainer"] div.element-container:has(iframe[title="streamlit.components.v1.html"]),
+  div[data-testid="stAppViewContainer"] div[data-testid="stElementContainer"]:has(iframe[title="streamlit.components.v1.html"]),
+  div[data-testid="stAppViewContainer"] div:has(> iframe[title="streamlit.components.v1.html"]) {{
     width: 100% !important;
     max-width: 100% !important;
+    display: block !important;
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
   }}
 
   /* iframe selbst */
-  div[data-testid="stAppViewContainer"] iframe[title="streamlit.components.v1.html"]{{
-    width: 100% !important;
-    max-width: 100% !important;
-    display: block !important;
-    border: 0 !important;
-  }}
-
-  /* =========================================================
-   FINAL FIX (robust):
-   Plot-Row mit components.html -> Columns müssen wirklich "stretch" nutzen
-   Ergebnis: Cards = volle Column-Breite (wie Button), Gap kontrolliert
-   ========================================================= */
-
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) {{
-    gap: 0.75rem !important;                 /* Abstand zwischen den beiden Cards */
-    justify-content: stretch !important;     /* nicht "space-between" */
-    align-items: stretch !important;
-    width: 100% !important;
-  }}
-
-  /* Columns/Children in dieser Row dürfen NICHT schrumpfen und müssen wachsen */
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div,
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div[data-testid="column"] {{
-    flex: 1 1 0% !important;
-    min-width: 0 !important;
-    width: 0 !important;                    /* sorgt für wirklich gleiche Breite */
-  }}
-
-  /* Wrapper der Custom-Component auf 100% zwingen */
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) div[data-testid="stCustomComponentV1"],
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) div[data-testid="stCustomComponentV1"] > div {{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    display: block !important;
-  }}
-
-  /* iframe selbst: volle Breite */
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) iframe[title="streamlit.components.v1.html"],
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) iframe[srcdoc] {{
+  div[data-testid="stAppViewContainer"] iframe[title="streamlit.components.v1.html"],
+  div[data-testid="stAppViewContainer"] iframe[srcdoc] {{
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
@@ -552,29 +712,26 @@ def _inject_gesamtuebersicht_css() -> None:
     border: 0 !important;
   }}
 
-
-  /* =========================================================
-   FINAL: Plot-Row (components.html) MUSS volle Spaltenbreite nutzen
-   -> Cards werden so breit wie der Button/Divider
-   ========================================================= */
-
-  /* Die Row, die components.html enthält */
+  /* Row mit components.html: Columns müssen strecken und wirklich gleich breit sein */
   div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]),
   div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) {{
     width: 100% !important;
     align-items: stretch !important;
-    gap: 0.9rem !important;              /* elegant, aber nicht zu groß */
+    justify-content: stretch !important;
+    gap: 0.9rem !important;
   }}
 
-  /* WICHTIG: Columns in dieser Row dürfen nicht shrinken */
   div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) > div,
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div {{
+  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div,
+  div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) > div[data-testid="column"],
+  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) > div[data-testid="column"] {{
     flex: 1 1 0% !important;
     min-width: 0 !important;
+    width: 0 !important;         /* sorgt für wirklich gleiche Breite */
     max-width: none !important;
   }}
 
-  /* Streamlit-Wrapper der Custom-Components auf 100% */
+  /* Wrapper der Custom-Component in der Row auf 100% zwingen */
   div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) div[data-testid="stCustomComponentV1"],
   div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) div[data-testid="stCustomComponentV1"] > div,
   div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) div[data-testid="stCustomComponentV1"],
@@ -582,17 +739,18 @@ def _inject_gesamtuebersicht_css() -> None:
     width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
-  }}
-
-  /* iframe selbst */
-  div[data-testid="stHorizontalBlock"]:has(iframe[srcdoc]) iframe,
-  div[data-testid="stHorizontalBlock"]:has(iframe[title="streamlit.components.v1.html"]) iframe {{
-    width: 100% !important;
-    max-width: 100% !important;
     display: block !important;
   }}
 
-
+  /* Fallback: Column-Umgebung darf nicht "shrink" werden */
+  div[data-testid="column"] div[data-testid="stElementContainer"],
+  div[data-testid="column"] div[data-testid="stElementContainer"] > div,
+  div[data-testid="column"] div[data-testid="stCustomComponentV1"],
+  div[data-testid="column"] div[data-testid="stCustomComponentV1"] > div {{
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }}
 
 </style>
         """,
@@ -619,26 +777,68 @@ def _clean_overview_df(df: pd.DataFrame) -> pd.DataFrame:
     return d
 
 
-def _kpi_block(df: pd.DataFrame) -> int:
-    if df.empty:
-        return 0
+def _kpi_block(df: pd.DataFrame) -> tuple[int, str]:
+    if df is None or df.empty:
+        return 0, "<div class='rgm-muted'>Keine Kennzahlen verfügbar.</div>"
 
     d = df.copy()
-    n_total = len(d)
-    n_answered = int(d["answered"].sum()) if "answered" in d.columns else 0
-    d_ans = d[d["answered"]].copy() if n_answered else d.iloc[0:0].copy()
+    n_answered_global = int(d["answered"].sum()) if "answered" in d.columns else 0
 
-    n_need = int(
-        (pd.to_numeric(d_ans.get("gap", 0), errors="coerce").fillna(0.0) > 0).sum()
-    ) if n_answered else 0
+    code_col = _pick_first_col(d, ["Kürzel", "Kuerzel", "code", "Code"])
+    if code_col:
+        pref = (
+            d[code_col]
+            .astype(str)
+            .fillna("")
+            .str.strip()
+            .str.upper()
+            .str.extract(r"^(TD|OG)")[0]
+            .fillna("")
+        )
+        d_td = d[pref.eq("TD")].copy()
+        d_og = d[pref.eq("OG")].copy()
+    else:
+        d_td = d.iloc[0:0].copy()
+        d_og = d.iloc[0:0].copy()
 
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Dimensionen", f"{n_total}")
-    c2.metric("Bewertet", f"{n_answered} / {n_total}")
-    c3.metric("Handlungsbedarf (Gap > 0)", f"{n_need}")
+    def counts(x: pd.DataFrame) -> tuple[int, int, int]:
+        nt = len(x)
+        na = int(x["answered"].sum()) if (not x.empty and "answered" in x.columns) else 0
+        if na and "gap" in x.columns:
+            xn = x[x["answered"]].copy()
+            nn = int((pd.to_numeric(xn["gap"], errors="coerce").fillna(0.0) > 0).sum())
+        else:
+            nn = 0
+        return nt, na, nn
 
-    return n_answered
+    def mini_card(title: str, nt: int, na: int, nn: int, extra_cls: str) -> str:
+        return f"""
+    <div class="rgm-card rgm-kpi-mini {extra_cls}">
+      <div class="rgm-kpi-mini-title">{html.escape(title)}</div>
 
+      <div class="rgm-kpi-line">
+        <span class="k">Bewertet</span>
+        <span class="v">{na} / {nt}</span>
+      </div>
+
+      <div class="rgm-kpi-line">
+        <span class="k">Handlungsbedarf (Gap &gt; 0)</span>
+        <span class="v">{nn}</span>
+      </div>
+    </div>
+    """.strip()
+
+    td_nt, td_na, td_nn = counts(d_td)
+    og_nt, og_na, og_nn = counts(d_og)
+
+    html_block = f"""
+    <div class="rgm-kpi-grid">
+      {mini_card("TD-Dimensionen", td_nt, td_na, td_nn, "rgm-card-td")}
+      {mini_card("OG-Dimensionen", og_nt, og_na, og_nn, "rgm-card-og")}
+    </div>
+    """.strip()
+
+    return n_answered_global, html_block
 
 def _scale_legend_centered() -> None:
     st.markdown(
@@ -712,19 +912,18 @@ def _icons_svg() -> tuple[str, str, str]:
 
     return download_svg, fullscreen_svg, close_svg
 
-
 def _build_measures_table_html(df_view: pd.DataFrame, compact: bool) -> str:
     cols = list(df_view.columns)
 
     width_map = {
         "Priorität": 110,
         "Kürzel": 90,
-        "Themenbereich": 260,
-        "Ist-Reifegrad": 130,
-        "Soll-Reifegrad": 140,
+        "Themenbereich": 300,
+        "Ist-Reifegrad": 80,
+        "Soll-Reifegrad": 80,
         "Gap": 80,
-        "Maßnahme": 420,
-        "Verantwortlich": 300,
+        "Maßnahme": 460,
+        "Verantwortlich": 280,
         "Zeitraum": 160,
     }
 
@@ -733,15 +932,28 @@ def _build_measures_table_html(df_view: pd.DataFrame, compact: bool) -> str:
     )
     thead = "".join(f"<th>{_escape(c)}</th>" for c in cols)
 
-    wrap_cols = {"Themenbereich", "Maßnahme", "Verantwortlich", "Zeitraum"}
+    nowrap_cols = {"Themenbereich"}
+    wrap_cols = {"Maßnahme", "Verantwortlich", "Zeitraum"}
     num_cols = {"Ist-Reifegrad", "Soll-Reifegrad", "Gap"}
+    
 
-    clamp_map = {
+    # Kompaktansicht: sehr knapp
+    clamp_map_compact = {
         "Themenbereich": "rgm-clamp-2",
         "Maßnahme": "rgm-clamp-3",
         "Verantwortlich": "rgm-clamp-2",
         "Zeitraum": "rgm-clamp-1",
     }
+
+    # Vollbild/Modal: deutlich mehr, aber nicht unendlich (professionell, keine Riesenzellen)
+    clamp_map_modal = {
+        "Themenbereich": "rgm-clamp-4",
+        "Maßnahme": "",
+        "Verantwortlich": "rgm-clamp-6",
+        "Zeitraum": "rgm-clamp-2",
+    }
+
+    clamp_map = clamp_map_compact if compact else clamp_map_modal
 
     rows_html: list[str] = []
     for _, row in df_view.iterrows():
@@ -753,16 +965,22 @@ def _build_measures_table_html(df_view: pd.DataFrame, compact: bool) -> str:
             if c in num_cols:
                 tds.append(f'<td class="rgm-num" title="{safe}">{safe}</td>')
                 continue
+              
+            if c in nowrap_cols:
+              tds.append(
+                f'<td class="rgm-nowrap" title="{safe}">'
+                f'<div class="rgm-nowrap-cell">{safe}</div></td>'
+              )
+              continue
 
             if c in wrap_cols:
-                clamp_cls = clamp_map.get(c, "rgm-clamp-2") if compact else ""
-                inner_cls = "rgm-cell"
-                if compact and clamp_cls:
-                    inner_cls += f" {clamp_cls}"
-                tds.append(
-                    f'<td class="rgm-wrap" title="{safe}"><div class="{inner_cls}">{safe}</div></td>'
-                )
-                continue
+              clamp_cls = clamp_map.get(c, "")
+              inner_cls = ("rgm-cell " + clamp_cls).strip() if clamp_cls else "rgm-cell"
+
+              tds.append(
+                f'<td class="rgm-wrap" title="{safe}"><div class="{inner_cls}">{safe}</div></td>'
+              )
+              continue
 
             tds.append(f'<td title="{safe}">{safe}</td>')
 
@@ -781,7 +999,6 @@ def _build_measures_table_html(df_view: pd.DataFrame, compact: bool) -> str:
         f"<tbody>{''.join(rows_html)}</tbody>"
         f"</table>"
     )
-
 
 def _render_measures_block(
     df_view: pd.DataFrame, csv_filename: str = "geplante_massnahmen.csv"
@@ -815,7 +1032,7 @@ def _render_measures_block(
         f'  <a href="#rgm-close" class="rgm-modal-backdrop" aria-label="Schließen"></a>'
         f'  <div class="rgm-modal-content" role="dialog" aria-modal="true">'
         f'    <div class="rgm-modal-header">'
-        f'      <div class="rgm-modal-title">Geplante Maßnahmen (Vollbild)</div>'
+        f'      <div class="rgm-modal-title">Geplante Maßnahmen</div>'
         f'      <a class="rgm-modal-close" href="#rgm-close" title="Schließen" aria-label="Schließen">{close_svg}</a>'
         f"    </div>"
         f'    <div class="rgm-modal-body">{table_modal}</div>'
@@ -837,7 +1054,7 @@ def _render_dual_plot_cards(
         st.info("Keine Daten vorhanden.")
         return
 
-    dark = bool(st.session_state.get("dark_mode", False))
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
@@ -847,7 +1064,7 @@ def _render_dual_plot_cards(
 
     toolbar_bg = "rgba(17,24,39,0.85)" if dark else "rgba(255,255,255,0.92)"
     toolbar_hover = "rgba(202,116,6,0.25)" if dark else "rgba(202,116,6,0.14)"
-    icon_green = "#2f9e44"
+    icon_green = "#639A00"
 
     download_svg, fullscreen_svg, _ = _icons_svg()
 
@@ -909,6 +1126,9 @@ def _render_dual_plot_cards(
       flex-direction: column;
       --plotH: 520px; /* wird per JS gesetzt */
     }}
+    
+    .rgm-card.td {{ border: 2px solid {TD_BLUE}; }}
+    .rgm-card.og {{ border: 2px solid {OG_ORANGE}; }}
 
     .rgm-head {{
       display: flex;
@@ -1035,7 +1255,7 @@ def _render_dual_plot_cards(
 
 <body>
   <div class="rgm-grid">
-    <div id="cardL" class="rgm-card">
+    <div id="cardL" class="rgm-card td">
       <div id="headL" class="rgm-head">
         <div>
           <div class="rgm-title">{html.escape(title_left)}</div>
@@ -1061,7 +1281,7 @@ def _render_dual_plot_cards(
       <div id="plotL" class="rgm-plot"></div>
     </div>
 
-    <div id="cardR" class="rgm-card">
+    <div id="cardR" class="rgm-card og">
       <div id="headR" class="rgm-head">
         <div>
           <div class="rgm-title">{html.escape(title_right)}</div>
@@ -1683,7 +1903,7 @@ def _render_dual_plot_cards(
 </body>
 </html>
 """
-    components.html(html_doc, height=initial_height, scrolling=True, width=1200)
+    components.html(html_doc, height=initial_height, scrolling=False)
 
 
 
@@ -1691,11 +1911,21 @@ def main() -> None:
     init_session_state()
     _inject_gesamtuebersicht_css()
 
-    st.title("Gesamtübersicht")
-    st.caption(
-        "Zusammenfassung der Angaben zur Erhebung, visualisierte Ergebnisse und geplante Maßnahmen."
+    st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
+    st.markdown(
+        """
+        <div class="rgm-hero">
+        <div class="rgm-h1">Gesamtübersicht</div>
+        <div class="rgm-accent-line"></div>
+        <p class="rgm-lead">
+        Zusammenfassung der Angaben zur Erhebung, visualisierte Ergebnisse und geplante Maßnahmen.
+        </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
-    st.markdown("---")
+    
+    st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
 
     model = load_model_config()
     answers = get_answers()
@@ -1713,30 +1943,62 @@ def main() -> None:
     )
 
     if df_raw is None or df_raw.empty:
-        st.info("Noch keine Ergebnisse vorhanden – bitte zuerst die Erhebung durchführen.")
-        return
+      st.info("Noch keine Ergebnisse vorhanden – bitte zuerst die Erhebung durchführen.")
+      st.markdown("</div>", unsafe_allow_html=True)
+      return
 
     df_report = _clean_overview_df(df_raw)
+            
+    # --- Angaben zur Erhebung (Card) ---
+    def fmt(v) -> str:
+        s = (v or "").strip()
+        return s if s else "—"
 
-    # 1) Angaben zur Erhebung
-    a1, a2 = st.columns(2)
-    with a1:
-        st.write(f"**Name der Organisation:** {meta.get('org','') or '-'}")
-        st.write(f"**Bereich:** {meta.get('area','') or '-'}")
-        st.write(f"**Erhebung durchgeführt von:** {meta.get('assessor','') or '-'}")
-    with a2:
-        st.write(f"**Datum der Durchführung:** {meta.get('date_str','') or '-'}")
-        st.write(f"**Angestrebtes Ziel:** {meta.get('target_label','') or '-'}")
-        st.write(f"**Soll-Niveau (global):** {float(global_target):.1f}")
+    def kv_col(rows):
+        return "".join(
+            f"<div class='rgm-kv-row'>"
+            f"  <span class='rgm-k'>{html.escape(k)}</span>"
+            f"  <span class='rgm-v'>{html.escape(str(v))}</span>"
+            f"</div>"
+            for k, v in rows
+        )
 
-    st.markdown("")
-    n_answered = _kpi_block(df_report)
+    left = [
+        ("Name der Organisation", fmt(meta.get("org", ""))),
+        ("Bereich", fmt(meta.get("area", ""))),
+        ("Erhebung durchgeführt von", fmt(meta.get("assessor", ""))),
+    ]
+    right = [
+        ("Datum der Durchführung", fmt(meta.get("date_str", ""))),
+        ("Angestrebtes Ziel", fmt(meta.get("target_label", ""))),
+        ("Kontakt", fmt(meta.get("assessor_contact", ""))),
+    ]
 
-    if n_answered == 0:
-        st.warning("Noch keine Dimensionen bewertet.")
-        if st.button("Zur Erhebung", type="primary", use_container_width=True):
-            st.session_state["nav_request"] = "Erhebung"
-            st.rerun()
+    st.markdown('<div id="rgm_overview_meta"></div>', unsafe_allow_html=True)
+
+    st.markdown(
+        f"""
+    <div class="rgm-card-title">Angaben zur Erhebung</div>
+    <div class="rgm-kv">
+      <div class="rgm-kv-col">{kv_col(left)}</div>
+      <div class="rgm-kv-col">{kv_col(right)}</div>
+    </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # --- Kennzahlen (Card) ---
+    st.markdown('<div id="rgm_overview_kpis"></div>', unsafe_allow_html=True)
+
+    n_answered, kpi_html = _kpi_block(df_report)
+
+    st.markdown(
+        f"""
+    <div class="rgm-card-title">Kennzahlen</div>
+    {kpi_html}
+        """,
+        unsafe_allow_html=True,
+    )
 
     # 2) Graphen
     st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
@@ -1745,7 +2007,7 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    dark = bool(st.session_state.get("dark_mode", False))
+    dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
     
     def tune_plotly(fig):
         """Einheitliches Theme + etwas kompaktere Margins, damit das Radar größer wirkt."""
@@ -1818,10 +2080,10 @@ def main() -> None:
     if code_col is not None:
 
         def _resp_for_code(code: str) -> str:
-            try:
-                return str(priorities.get(str(code), {}).get("responsible", "") or "")
-            except Exception:
-                return ""
+          try:
+              return str(priorities.get(str(code), {}).get("responsible", "") or "")
+          except Exception:
+              return ""
 
         mapped = m[code_col].astype(str).map(_resp_for_code).fillna("")
         m["Verantwortlich"] = m["Verantwortlich"].astype(str).fillna("")
@@ -1829,14 +2091,19 @@ def main() -> None:
 
     need = m["Gap"].fillna(-1) > 0 if "Gap" in m.columns else pd.Series([True] * len(m))
 
-    show_all = st.checkbox("Alle anzeigen (inkl. ohne Handlungsbedarf)", value=False)
-    prio_filter = st.multiselect(
-            "Priorität filtern",
-            ["A (hoch)", "B (mittel)", "C (niedrig)"],
-            default=[],
-            placeholder="Prioritäten auswählen …",
-        )
+    # Filter (Card)
+    st.markdown('<div id="rgm_overview_filters"></div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="rgm-card-title">Filter</div>', unsafe_allow_html=True)
+        show_all = st.checkbox("Alle anzeigen (inkl. ohne Handlungsbedarf)", value=False)
+        prio_filter = st.multiselect(
+                "Priorität filtern",
+                ["A (hoch)", "B (mittel)", "C (niedrig)"],
+                default=[],
+                placeholder="Prioritäten auswählen …",
+            )
 
+    view_for_pdf = pd.DataFrame()
     filtered = m.copy() if show_all else m[need].copy()
     if prio_filter and "Priorität" in filtered.columns:
         filtered = filtered[filtered["Priorität"].isin(prio_filter)].copy()
@@ -1905,6 +2172,7 @@ def main() -> None:
         ]
         cols = [c for c in cols if c in filtered.columns]
         view = filtered[cols].copy()
+        view_for_pdf = view.copy()
 
         # Zahlen hübsch formatieren
         for c in ["Ist-Reifegrad", "Soll-Reifegrad", "Gap"]:
@@ -1912,6 +2180,8 @@ def main() -> None:
                 view[c] = pd.to_numeric(view[c], errors="coerce").apply(
                     lambda x: "" if x != x else f"{float(x):.2f}".rstrip("0").rstrip(".")
                 )
+
+        view_for_pdf = view.copy()
 
         _render_measures_block(view, csv_filename="geplante_massnahmen.csv")
 
@@ -1923,20 +2193,34 @@ def main() -> None:
     try:
         meta_pdf = dict(meta)
         meta_pdf["global_target"] = f"{float(global_target):.1f}"
-        pdf_bytes = make_pdf_bytes(meta=meta_pdf, df_raw=df_raw)
+        pdf_bytes = make_pdf_bytes(
+          meta=meta_pdf,
+          df_raw=df_raw,
+          df_report=df_report,
+          df_measures=view_for_pdf,
+          fig_td=fig_td,
+          fig_og=fig_og,
+          dark=dark,
+        )
+
     except Exception as e:
         pdf_error = str(e)
 
-    if pdf_bytes is not None:
-      st.download_button(
-          "PDF-Bericht herunterladen",
-          data=pdf_bytes,
-          file_name="reifegrad_gesamtuebersicht.pdf",
-          mime="application/pdf",
-          use_container_width=True,
-      )
-    else:
-        st.error(f"PDF-Export nicht verfügbar: {pdf_error}")
+    st.markdown('<div id="rgm_overview_export"></div>', unsafe_allow_html=True)
+    with st.container():
+        st.markdown('<div class="rgm-card-title">Export</div>', unsafe_allow_html=True)
+        if pdf_bytes is not None:
+            st.download_button(
+                "PDF-Bericht herunterladen",
+                data=pdf_bytes,
+                file_name="reifegrad_gesamtuebersicht.pdf",
+                mime="application/pdf",
+                use_container_width=True,
+            )
+        else:
+            st.error(f"PDF-Export nicht verfügbar: {pdf_error}")
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
