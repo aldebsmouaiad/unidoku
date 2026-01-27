@@ -1,10 +1,14 @@
 # app.py
-import importlib.util
-from pathlib import Path
+from __future__ import annotations
 
-import streamlit as st
 import base64
 import html
+import importlib.util
+from pathlib import Path
+from typing import Optional
+
+import streamlit as st
+
 from core.state import init_session_state
 from core import persist
 
@@ -19,11 +23,68 @@ st.set_page_config(
 BASE_DIR = Path(__file__).resolve().parent
 IMAGES_DIR = BASE_DIR / "images"
 
+# Interner Widget-Key (Pages sollen KEIN Widget mit diesem Key erzeugen)
+_DARK_TOGGLE_KEY = "_rgm_dark_toggle"
+
+
 @st.cache_data(show_spinner=False)
-def _img_b64(path: Path) -> str | None:
+def _img_b64(path: Path) -> Optional[str]:
     if not path.exists():
         return None
     return base64.b64encode(path.read_bytes()).decode("utf-8")
+
+
+def _clear_query_params_keep_aid(aid: str) -> None:
+    """
+    Robust: erst persist-Helfer, dann Streamlit-Fallback.
+    """
+    try:
+        persist.clear_query_params_keep_aid(aid)
+        return
+    except Exception:
+        pass
+
+    # Fallbacks (je nach Streamlit-Version)
+    try:
+        st.query_params.clear()
+        st.query_params["aid"] = aid
+        return
+    except Exception:
+        pass
+
+    try:
+        st.experimental_set_query_params(aid=aid)
+    except Exception:
+        pass
+
+
+def _theme_from_toggle() -> bool:
+    return bool(st.session_state.get(_DARK_TOGGLE_KEY, False))
+
+
+def _sync_theme_aliases_from_toggle() -> None:
+    """
+    Canonical für die UI ist _DARK_TOGGLE_KEY (Widget-State).
+    Aliases für alte Pages:
+      - ui_dark_mode
+      - dark_mode
+      - dark_mode_ui (falls irgendwo noch genutzt)
+    """
+    d = _theme_from_toggle()
+    st.session_state["ui_dark_mode"] = d
+    st.session_state["dark_mode"] = d
+    st.session_state["dark_mode_ui"] = d
+
+
+def _init_theme_state_from_snapshot() -> None:
+    """
+    Setzt den Toggle-State NUR initial (damit Klicks nicht überschrieben werden).
+    Quelle: ui_dark_mode / dark_mode aus Snapshot (persist.restore).
+    """
+    if _DARK_TOGGLE_KEY not in st.session_state:
+        d = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
+        st.session_state[_DARK_TOGGLE_KEY] = d
+    _sync_theme_aliases_from_toggle()
 
 
 def apply_global_theme_css(dark: bool) -> None:
@@ -33,15 +94,12 @@ def apply_global_theme_css(dark: bool) -> None:
     card_bg = "#111827" if dark else "#ffffff"
     border = "rgba(255,255,255,0.10)" if dark else "rgba(0,0,0,0.10)"
 
-    # Secondary-Button Grundzustand passend zu Light/Dark
     btn2_bg = "rgba(255,255,255,0.06)" if dark else "#ffffff"
     btn2_text = "rgba(250,250,250,0.92)" if dark else "#111111"
 
-    # Dropdown/Popover (Selectbox-Menü)
-    pop_hover = "rgba(202,116,6,0.22)" if dark else "rgba(202,116,6,0.14)"  # TU_ORANGE leicht
+    pop_hover = "rgba(202,116,6,0.22)" if dark else "rgba(202,116,6,0.14)"
     pop_sel = "rgba(255,255,255,0.08)" if dark else "rgba(0,0,0,0.04)"
 
-    # Fortschritt-Pipeline: inaktiv sichtbar machen
     pipe_inactive = "rgba(255,255,255,0.14)" if dark else "rgba(0,0,0,0.10)"
 
     st.markdown(
@@ -56,22 +114,16 @@ def apply_global_theme_css(dark: bool) -> None:
 
     --rgm-footer-bg: {("#0e1117" if dark else "#ffffff")};
 
-    /* Logo-Karte in Sidebar (IPS) */
     --rgm-logo-bg: {("rgba(255,255,255,0.95)" if dark else "#ffffff")};
     --rgm-logo-border: {("rgba(255,255,255,0.14)" if dark else "rgba(0,0,0,0.10)")};
     --rgm-logo-shadow: {("0 6px 18px rgba(0,0,0,0.35)" if dark else "0 6px 18px rgba(0,0,0,0.20)")};
 
-    /* TU Farben */
     --tu-green: {TU_GREEN};
     --tu-orange: {TU_ORANGE};
 
-    /* Pipeline */
     --rgm-pipe-inactive: {pipe_inactive};
   }}
 
-  /* =========================================================
-     APP BACKGROUND / LAYOUT
-     ========================================================= */
   div[data-testid="stAppViewContainer"] {{
     background: var(--rgm-bg) !important;
     color: var(--rgm-text) !important;
@@ -83,7 +135,6 @@ def apply_global_theme_css(dark: bool) -> None:
     background: var(--rgm-bg) !important;
   }}
 
-  /* Sidebar */
   section[data-testid="stSidebar"] {{
     background: var(--rgm-sidebar-bg) !important;
     border-right: 1px solid var(--rgm-border) !important;
@@ -92,7 +143,6 @@ def apply_global_theme_css(dark: bool) -> None:
     background: var(--rgm-sidebar-bg) !important;
   }}
 
-  /* Default text */
   html, body,
   .stMarkdown, .stText, p, li, span, label,
   div[data-testid="stCaptionContainer"],
@@ -104,14 +154,10 @@ def apply_global_theme_css(dark: bool) -> None:
     border-color: var(--rgm-border) !important;
   }}
 
-  /* Links */
   a {{
     color: var(--tu-green) !important;
   }}
 
-  /* =========================================================
-     INPUTS
-     ========================================================= */
   div[data-baseweb="input"] input,
   div[data-baseweb="textarea"] textarea,
   div[data-baseweb="select"] > div {{
@@ -120,21 +166,15 @@ def apply_global_theme_css(dark: bool) -> None:
     border-color: var(--rgm-border) !important;
   }}
 
-  /* Selectbox Pfeil/Icons sichtbar halten */
   div[data-baseweb="select"] svg {{
     color: var(--rgm-text) !important;
   }}
 
-  /* Radio-Labels (inkl. Sidebar) */
   div[role="radiogroup"] label,
   div[data-testid="stSidebar"] label {{
     color: var(--rgm-text) !important;
   }}
 
-  /* =========================================================
-   SELECTBOX DROPDOWN (BaseWeb Popover/Menu)
-   Fix: Optionen im Darkmode lesbar + Menü im App-Style
-   ========================================================= */
   div[data-baseweb="popover"] div[data-baseweb="menu"],
   div[data-baseweb="popover"] ul {{
     background: var(--rgm-card-bg) !important;
@@ -142,29 +182,23 @@ def apply_global_theme_css(dark: bool) -> None:
     box-shadow: 0 12px 28px rgba(0,0,0,0.35) !important;
   }}
 
-  /* Option-Text */
   div[data-baseweb="popover"] div[role="option"],
-  div[data-baseweb="popover"] div[role="option"] * ,
+  div[data-baseweb="popover"] div[role="option"] *,
   div[data-baseweb="popover"] li,
   div[data-baseweb="popover"] li * {{
     color: var(--rgm-text) !important;
   }}
 
-  /* Hover im Dropdown */
   div[data-baseweb="popover"] div[role="option"]:hover,
   div[data-baseweb="popover"] li:hover {{
     background: rgba(202,116,6,0.18) !important;
   }}
 
-  /* Selected Option */
   div[data-baseweb="popover"] div[role="option"][aria-selected="true"],
   div[data-baseweb="popover"] li[aria-selected="true"] {{
     background: rgba(99,154,0,0.18) !important;
   }}
 
-  /* =========================================================
-     BASEWEB POPOVER / SELECT DROPDOWN (Darkmode-Lesbarkeit!)
-     ========================================================= */
   div[data-baseweb="popover"] > div {{
     background: var(--rgm-card-bg) !important;
     color: var(--rgm-text) !important;
@@ -196,9 +230,6 @@ def apply_global_theme_css(dark: bool) -> None:
     background: {pop_sel} !important;
   }}
 
-  /* =========================================================
-     SIDEBAR LOGO (IPS)
-     ========================================================= */
   .rgm-sidebar-logo {{
     width: 100%;
     display: flex;
@@ -225,21 +256,7 @@ def apply_global_theme_css(dark: bool) -> None:
     object-fit: contain;
     display: block;
   }}
-  @media (max-width: 1200px) {{
-    .rgm-sidebar-logo img {{ height: 58px; }}
-  }}
-  @media (max-width: 900px) {{
-    .rgm-sidebar-logo img {{ height: 52px; }}
-  }}
 
-  /* =========================================================
-     BUTTONS
-     - Primary: Grün
-     - Hover (alle Buttons): Orange
-     - Secondary: neutral (light/dark), Hover: Orange
-     ========================================================= */
-
-  /* Primary */
   .stApp button[kind="primary"],
   .stApp button[data-testid="baseButton-primary"] {{
     background: var(--tu-green) !important;
@@ -250,7 +267,6 @@ def apply_global_theme_css(dark: bool) -> None:
     opacity: 1 !important;
   }}
 
-  /* Secondary */
   .stApp button[kind="secondary"],
   .stApp button[data-testid="baseButton-secondary"] {{
     background: {btn2_bg} !important;
@@ -261,22 +277,15 @@ def apply_global_theme_css(dark: bool) -> None:
     opacity: 1 !important;
   }}
 
-  /* Innerer Text/Icons erbt Buttonfarbe */
   .stApp div.stButton > button *,
   .stApp button[data-testid^="baseButton-"] * {{
     color: inherit !important;
   }}
 
-  /* Hover für ALLE Buttons -> Orange + Weiß
-   (inkl. DownloadButton + FileUploader Browse Button) */
   .stApp div.stButton > button:not(:disabled):hover,
   .stApp button[data-testid^="baseButton-"]:not(:disabled):hover,
   .stApp div[data-testid="stFormSubmitButton"] button:not(:disabled):hover,
-
-  /* NEU: DownloadButton (st.download_button) */
   .stApp div[data-testid="stDownloadButton"] button:not(:disabled):hover,
-
-  /* NEU: FileUploader Browse files Button */
   .stApp div[data-testid="stFileUploader"] [data-baseweb="button"] button:not(:disabled):hover {{
     background: var(--tu-orange) !important;
     background-color: var(--tu-orange) !important;
@@ -289,8 +298,6 @@ def apply_global_theme_css(dark: bool) -> None:
   .stApp div.stButton > button:not(:disabled):hover *,
   .stApp button[data-testid^="baseButton-"]:not(:disabled):hover *,
   .stApp div[data-testid="stFormSubmitButton"] button:not(:disabled):hover *,
-
-  /* NEU: innerer Text/Icon auch weiß */
   .stApp div[data-testid="stDownloadButton"] button:not(:disabled):hover *,
   .stApp div[data-testid="stFileUploader"] [data-baseweb="button"] button:not(:disabled):hover * {{
     color: #ffffff !important;
@@ -298,53 +305,23 @@ def apply_global_theme_css(dark: bool) -> None:
     stroke: currentColor !important;
   }}
 
-  /* ---- PATCH: Form-Submit-Buttons (Step 0 + alle Erhebung-Steps) sicher treffen ---- */
-  div[data-testid="stAppViewContainer"] div.stFormSubmitButton > button[kind="primary"],
-  div[data-testid="stAppViewContainer"] div[data-testid="stFormSubmitButton"] > button[kind="primary"] {{
-    background: var(--tu-green) !important;
-    border-color: var(--tu-green) !important;
-    color: #ffffff !important;
-  }}
-  div[data-testid="stAppViewContainer"] div.stFormSubmitButton > button[kind="secondary"],
-  div[data-testid="stAppViewContainer"] div[data-testid="stFormSubmitButton"] > button[kind="secondary"] {{
-    background: {btn2_bg} !important;
-    border: 1px solid var(--rgm-border) !important;
-    color: {btn2_text} !important;
-  }}
-  div[data-testid="stAppViewContainer"] div.stFormSubmitButton > button:not(:disabled):hover,
-  div[data-testid="stAppViewContainer"] div[data-testid="stFormSubmitButton"] > button:not(:disabled):hover {{
-    background: var(--tu-orange) !important;
-    border-color: var(--tu-orange) !important;
-    color: #ffffff !important;
-  }}
-  div[data-testid="stAppViewContainer"] div.stFormSubmitButton > button:not(:disabled):hover *,
-  div[data-testid="stAppViewContainer"] div[data-testid="stFormSubmitButton"] > button:not(:disabled):hover * {{
-    color: #ffffff !important;
-  }}
-
-  /* Disabled */
   .stApp div.stButton > button:disabled,
   .stApp button[data-testid^="baseButton-"]:disabled {{
     opacity: 0.55 !important;
     cursor: not-allowed !important;
   }}
 
-  /* Focus ring */
   .stApp div.stButton > button:focus,
   .stApp button[data-testid^="baseButton-"]:focus {{
     outline: none !important;
     box-shadow: 0 0 0 3px rgba(99,154,0,0.25) !important;
   }}
 
-  /* Smooth transitions */
   .stApp div.stButton > button,
   .stApp button[data-testid^="baseButton-"] {{
     transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
   }}
 
-  /* =========================================================
-     SIDEBAR NAVIGATION (st.radio): Hover -> Orange
-     ========================================================= */
   section[data-testid="stSidebar"] div[role="radiogroup"] label {{
     padding: 6px 10px;
     border-radius: 10px;
@@ -360,10 +337,6 @@ def apply_global_theme_css(dark: bool) -> None:
     color: var(--tu-orange) !important;
   }}
 
-  /* =========================================================
-     PATCH: Fortschritt-Pipeline in Darkmode sichtbar
-     (deine Pipeline nutzt i.d.R. .rgm-seg; wir setzen inaktive Segmente fest)
-     ========================================================= */
   div[data-testid="stAppViewContainer"] .rgm-seg {{
     background: var(--rgm-pipe-inactive) !important;
   }}
@@ -374,9 +347,6 @@ def apply_global_theme_css(dark: bool) -> None:
     background: var(--tu-green) !important;
   }}
 
-  /* =========================================================
-   EXPANDER (st.expander) – UNVERÄNDERT wie bei dir (war korrekt)
-   ========================================================= */
   div[data-testid="stExpander"],
   details[data-testid="stExpander"],
   .stExpander {{
@@ -395,8 +365,8 @@ def apply_global_theme_css(dark: bool) -> None:
     border-radius: 14px !important;
   }}
 
-  div[data-testid="stExpander"] summary * ,
-  details[data-testid="stExpander"] summary * ,
+  div[data-testid="stExpander"] summary *,
+  details[data-testid="stExpander"] summary *,
   .stExpander summary * {{
     color: var(--rgm-text) !important;
   }}
@@ -435,7 +405,6 @@ def apply_global_theme_css(dark: bool) -> None:
     )
 
 
-
 def load_page_module(filename: str, module_name: str):
     file_path = BASE_DIR / "pages" / filename
     spec = importlib.util.spec_from_file_location(module_name, file_path)
@@ -468,29 +437,32 @@ PAGES = {
 
 
 def _apply_query_navigation(aid: str) -> None:
-    """
-    Liest Query-Params (über persist.qp_get) und setzt Session-Navigation.
-    Danach: entfernt NUR unsere Params, lässt 'aid' stehen.
-    """
     page = persist.qp_get("page")
     term = persist.qp_get("term")
     from_page = persist.qp_get("from")
 
-    # Backward compatibility: ?g=... oder ?glossary=...
     g = persist.qp_get("g") or persist.qp_get("glossary")
     if g and not term:
         term = g
 
-    # wenn g/term da ist, aber page fehlt: -> Glossar
     if term and not page:
         page = "Glossar"
 
     ret_step = persist.qp_get("ret_step")
     ret_idx = persist.qp_get("ret_idx")
     ret_code = persist.qp_get("ret_code")
-    ret_q    = persist.qp_get("ret_q")
+    ret_q = persist.qp_get("ret_q")
 
     did_apply = False
+
+    # ui_dark=0|1: darf NUR initial wirken (sonst überschreibt URL jeden Toggle-Klick)
+    ui_dark = (persist.qp_get("ui_dark") or "").strip()
+    if ui_dark in ("0", "1") and not st.session_state.get("_rgm_ui_dark_applied", False):
+        d = (ui_dark == "1")
+        st.session_state[_DARK_TOGGLE_KEY] = d
+        _sync_theme_aliases_from_toggle()
+        st.session_state["_rgm_ui_dark_applied"] = True
+        did_apply = True
 
     if page and page in PAGES:
         st.session_state["nav_request"] = page
@@ -518,40 +490,41 @@ def _apply_query_navigation(aid: str) -> None:
         did_apply = True
 
     if did_apply:
-        persist.clear_query_params_keep_aid(aid)
+        _clear_query_params_keep_aid(aid)
 
 
-def main():
+def main() -> None:
     init_session_state()
 
-    # AID: immer zuerst (und stabil in URL)
     aid = persist.get_or_create_aid()
 
-    # Restore kann hier global laufen (pages dürfen zusätzlich restore machen; restore überschreibt nicht “live”)
-    persist.restore(aid)
+    # Restore nur einmal pro Session/AID (sonst überschreibt es Widget-Klicks)
+    if st.session_state.get("_rgm_restored_aid") != aid:
+        persist.restore(aid)
+        st.session_state["_rgm_restored_aid"] = aid
 
-    # Query-Nav anwenden (und danach unsere Params säubern, AID bleibt)
-    _apply_query_navigation(aid)
+    # Theme-State initialisieren (NUR wenn Toggle-Key fehlt)
+    _init_theme_state_from_snapshot()
 
-    # ---- Defaults ----
-    if "dark_mode" not in st.session_state:
-        st.session_state["dark_mode"] = False
-
+    # Navigation Defaults
     if "nav_page" not in st.session_state:
         st.session_state["nav_page"] = "Start"
-
     if "nav_page_ui" not in st.session_state:
         st.session_state["nav_page_ui"] = st.session_state["nav_page"]
-
     if "nav_request" not in st.session_state:
         st.session_state["nav_request"] = None
-
     if "nav_history" not in st.session_state:
         st.session_state["nav_history"] = []
 
-    # ---- Sidebar: IPS Logo + Darkmode Toggle ----
-    IPS_URL = "https://ips.mb.tu-dortmund.de/"  # ggf. anpassen
+    # Query-Nav anwenden (und danach Params säubern)
+    _apply_query_navigation(aid)
 
+    # Wichtig: Nach Query-Nav nochmal Aliases aus Toggle synchronisieren
+    # (damit Pages, die dark_mode/ui_dark_mode lesen, konsistent sind)
+    _sync_theme_aliases_from_toggle()
+
+    # ---- Sidebar: IPS Logo + Darkmode Toggle ----
+    IPS_URL = "https://ips.mb.tu-dortmund.de/"
     ips_path = IMAGES_DIR / "IPS-Logo-RGB.png"
     ips_b64 = _img_b64(ips_path)
 
@@ -565,17 +538,23 @@ def main():
             unsafe_allow_html=True,
         )
 
+    def _on_dark_toggle() -> None:
+        # Toggle ist ab jetzt Chef (Query-Param darf nicht mehr überschreiben)
+        st.session_state["_rgm_ui_dark_applied"] = True
+        _sync_theme_aliases_from_toggle()
+        _clear_query_params_keep_aid(aid)
+
     if hasattr(st, "toggle"):
-        st.sidebar.toggle("Darkmodus", key="dark_mode")
+        st.sidebar.toggle("Darkmodus", key=_DARK_TOGGLE_KEY, on_change=_on_dark_toggle)
     else:
-        st.sidebar.checkbox("Darkmodus", key="dark_mode")
+        st.sidebar.checkbox("Darkmodus", key=_DARK_TOGGLE_KEY, on_change=_on_dark_toggle)
 
     st.sidebar.markdown("---")
 
-    # CSS anwenden
-    apply_global_theme_css(bool(st.session_state["dark_mode"]))
+    # CSS aus DIREKTEM Toggle-State (damit es IMMER sofort klappt)
+    apply_global_theme_css(_theme_from_toggle())
 
-    # ---- Programmatic Navigation (Weiter/Zurück) VOR dem Radio ----
+    # ---- Programmatic Navigation VOR dem Radio ----
     nav_req = st.session_state.get("nav_request")
     if nav_req:
         target = str(nav_req)
