@@ -120,9 +120,10 @@ def main() -> None:
   .rgm-td-title {{ color: {TD_BLUE}; }}
   .rgm-og-title {{ color: {OG_ORANGE}; }}
 
-  /* Cards */
+  /* Cards (Basis-Rahmen für Konsistenz mit anderen Seiten) */
   .rgm-card {{
     background: var(--rgm-card-bg, #fff);
+    border: 1px solid {border};
     border-radius: 14px;
     padding: 16px 18px;
     box-shadow: {shadow};
@@ -206,13 +207,12 @@ def main() -> None:
   }}
 
   /* =========================================
-     NAV-BUTTONS: "Zurück" (secondary) + Hover immer ORANGE,
-     Text in Dark/Light immer lesbar
+     NAV-BUTTONS: Secondary NUR im Nav-Bereich
+     (verhindert Styling von Download/Filter/etc.)
      ========================================= */
 
-  /* Secondary Grundzustand */
-  .stApp button[data-testid="baseButton-secondary"],
-  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) {{
+  .rgm-nav button[data-testid="baseButton-secondary"],
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) {{
     background: {btn2_bg} !important;
     color: {btn2_text} !important;
     border: 1px solid {border} !important;
@@ -222,28 +222,25 @@ def main() -> None:
     transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
   }}
 
-  /* Streamlit setzt Text teils in inneren Spans/ps -> erben lassen */
-  .stApp button[data-testid="baseButton-secondary"] *,
-  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) * {{
+  .rgm-nav button[data-testid="baseButton-secondary"] *,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) * {{
     color: inherit !important;
   }}
 
-  /* Hover: ORANGE + Weiß (nicht disabled) */
-  .stApp button[data-testid="baseButton-secondary"]:not(:disabled):hover,
-  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover {{
+  .rgm-nav button[data-testid="baseButton-secondary"]:not(:disabled):hover,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover {{
     background: {TU_ORANGE} !important;
     border-color: {TU_ORANGE} !important;
     color: #ffffff !important;
   }}
 
-  .stApp button[data-testid="baseButton-secondary"]:not(:disabled):hover *,
-  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover * {{
+  .rgm-nav button[data-testid="baseButton-secondary"]:not(:disabled):hover *,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover * {{
     color: #ffffff !important;
   }}
 
-  /* Focus-Ring (optional, sauber) */
-  .stApp button[data-testid="baseButton-secondary"]:focus,
-  .stApp div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):focus {{
+  .rgm-nav button[data-testid="baseButton-secondary"]:focus,
+  .rgm-nav div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):focus {{
     outline: none !important;
     box-shadow: 0 0 0 3px rgba(99,154,0,0.25) !important;
   }}
@@ -301,7 +298,7 @@ def main() -> None:
       <ul class="rgm-list">
         <li class="rgm-li"><span class="rgm-badge rgm-badge-td">TD1</span><span class="rgm-li-text">Redaktionsprozess</span></li>
         <li class="rgm-li"><span class="rgm-badge rgm-badge-td">TD2</span><span class="rgm-li-text">Content Management</span></li>
-        <li class="rgm-li"><span class="rgm-badge rgm-badge-td">TD3</span><span class="rgm-li-text">Content Delivery</span></li>
+        <li class="rgm-li"><span class="rgm-badge rgm-badge-td">TD3</span><span class="rgm-badge rgm-badge-td" style="display:none"></span><span class="rgm-li-text">Content Delivery</span></li>
         <li class="rgm-li"><span class="rgm-badge rgm-badge-td">TD4</span><span class="rgm-li-text">Zielgruppenorientierung</span></li>
       </ul>
     </div>
@@ -343,7 +340,8 @@ def main() -> None:
 
     st.markdown("---")
 
-    # Navigation
+    # Navigation (scoped)
+    st.markdown('<div class="rgm-nav">', unsafe_allow_html=True)
     c1, c2 = st.columns([1, 1])
     with c1:
         if st.button("Zurück", use_container_width=True):
@@ -354,6 +352,7 @@ def main() -> None:
         if st.button("Weiter zur Ausfüllhinweise", type="primary", use_container_width=True):
             st.session_state["nav_request"] = "Ausfüllhinweise"
             st.rerun()
+    st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
