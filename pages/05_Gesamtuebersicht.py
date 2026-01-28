@@ -225,7 +225,113 @@ def _inject_gesamtuebersicht_css() -> None:
     font-weight: 850 !important;
   }}
   
+  /* =========================
+   Export: PDF-Download Button -> TU Grün (ROBUST)
+   Marker steht DIREKT vor dem Download-Widget.
+   ========================= */
+
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button,
+
+  /* Fallback: manche Versionen nutzen .stDownloadButton */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div.stDownloadButton button,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div.stDownloadButton button {{
+
+    background: var(--rgm-icon-green) !important;
+    background-color: var(--rgm-icon-green) !important;
+    color: #ffffff !important;
+
+    border: 1px solid rgba(0,0,0,0.10) !important;
+    border-radius: 12px !important;
+    font-weight: 850 !important;
+
+    box-shadow: 0 10px 22px rgba(0,0,0,0.12) !important;
+  }}
+
+  /* Text/Spans im Button auch weiß erzwingen */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button *,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button *,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div.stDownloadButton button *,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div.stDownloadButton button * {{
+
+    color: #ffffff !important;
+  }}
+
+  /* Hover / Active -> Hover ORANGE */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button:hover,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button:hover,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div.stDownloadButton button:hover,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div.stDownloadButton button:hover {{
+    background: var(--rgm-og-orange) !important;
+    background-color: var(--rgm-og-orange) !important;
+    color: #ffffff !important;
+    filter: none !important;
+  }}
+
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button:active,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button:active,
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div.stDownloadButton button:active,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div.stDownloadButton button:active {{
+    background: var(--rgm-og-orange) !important;
+    background-color: var(--rgm-og-orange) !important;
+    filter: brightness(0.92) !important; /* etwas dunkler beim Klicken */
+  }}
   
+  /* Hover: kräftig TU-Orange */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button:hover,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button:hover {{
+    background-color: #CA7406 !important;
+    border-color: #CA7406 !important;
+    filter: none !important;
+  }}
+
+  /* Disabled */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button:disabled,
+  div.element-container:has(div#rgm_overview_export_btn)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button:disabled {{
+    opacity: 0.55 !important;
+    cursor: not-allowed !important;
+  }}
+
   /* =========================
    SECTION-CARDS (Marker -> nächstes Element)
    ========================= */
@@ -235,6 +341,7 @@ def _inject_gesamtuebersicht_css() -> None:
   #rgm_overview_kpis,
   #rgm_overview_filters,
   #rgm_overview_export,
+  #rgm_overview_export_btn,
   #rgm_overview_empty {{
     height: 0 !important;
     margin: 0 !important;
@@ -2207,6 +2314,7 @@ def main() -> None:
     st.markdown('<div id="rgm_overview_export"></div>', unsafe_allow_html=True)
     with st.container():
         st.markdown('<div class="rgm-card-title">Export</div>', unsafe_allow_html=True)
+        st.markdown('<div id="rgm_overview_export_btn"></div>', unsafe_allow_html=True)
         if pdf_bytes is not None:
             st.download_button(
                 "PDF-Bericht herunterladen",
