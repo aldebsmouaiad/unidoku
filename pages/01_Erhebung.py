@@ -983,14 +983,10 @@ def _render_save_resume_panel(aid: str) -> None:
     Import: überschreibt immer (exakt fortsetzen) und bleibt auf aktueller Seite (Step).
     """
 
-    # Flash-Message nach rerun -> NUR errors anzeigen (success NICHT)
-    msg = st.session_state.pop("_rgm_snapshot_msg", None)
-    if isinstance(msg, tuple) and len(msg) == 2:
-        kind, text = msg
-        if kind == "error":
-            st.error(text)
+    # Expander nach Import einmalig offen anzeigen
+    expanded_once = bool(st.session_state.pop("_rgm_open_save_resume_expander", False))
 
-    with st.expander("Speichern & Fortsetzen", expanded=False):
+    with st.expander("Speichern & Fortsetzen", expanded=expanded_once):
         st.caption(
             "Tipp: Für späteres Fortsetzen können Sie entweder die Erhebungs-ID/URL merken "
             "oder ein Savefile (JSON) herunterladen und später wieder hochladen."
@@ -1026,12 +1022,25 @@ def _render_save_resume_panel(aid: str) -> None:
         # Fest: "Alles überschreiben (exakt fortsetzen)"
         mode = "overwrite"
 
-        if st.button(
+        clicked = st.button(
             "Zwischenspeicher laden",
             use_container_width=True,
             disabled=(up is None),
             key="rgm_snapshot_load_btn",
-        ):
+        )
+
+        # ✅ Hinweis NACH dem Button (wird nach rerun hier angezeigt)
+        msg = st.session_state.pop("_rgm_snapshot_msg", None)
+        if isinstance(msg, tuple) and len(msg) == 2:
+            kind, text = msg
+            if kind == "success":
+                st.success(text)
+            elif kind == "warning":
+                st.warning(text)
+            else:
+                st.error(text)
+
+        if clicked:
             try:
                 # Aktuelle Ansicht merken -> danach wiederherstellen (bleibt auf dieser Seite)
                 cur_step = int(st.session_state.get("erhebung_step", 0))
@@ -1044,6 +1053,11 @@ def _render_save_resume_panel(aid: str) -> None:
                 # Import (überschreibt alles)
                 persist.apply_snapshot_dict(snap, mode=mode, keep_current_aid=True)
 
+                # 🔥 WICHTIG: Alte Widget-States entfernen, sonst überschreiben sie Import!
+                for k in list(st.session_state.keys()):
+                    if k.startswith("q_") or k.startswith("own_target_val_") or k.startswith("target_"):
+                        st.session_state.pop(k, None)
+
                 # WICHTIG: Seite bleibt hier (aktueller Step/Idx)
                 st.session_state["erhebung_step"] = cur_step
                 st.session_state["erhebung_dim_idx"] = cur_idx
@@ -1052,11 +1066,21 @@ def _render_save_resume_panel(aid: str) -> None:
                 # Meta-Widgets beim nächsten Render hart synchronisieren
                 st.session_state["_rgm_force_meta_sync"] = True
 
+                # Expander nach Import offen
+                st.session_state["_rgm_open_save_resume_expander"] = True
+
+                # ✅ Success-Hinweis setzen
+                st.session_state["_rgm_snapshot_msg"] = (
+                    "success",
+                    "Import erfolgreich: Antworten wurden übernommen.",
+                )
+
                 # speichern
                 persist.save(aid)
                 st.rerun()
 
             except Exception as e:
+                st.session_state["_rgm_open_save_resume_expander"] = True
                 st.session_state["_rgm_snapshot_msg"] = ("error", str(e))
                 st.rerun()
 
@@ -1470,6 +1494,7 @@ def _meta_form_step(aid: str) -> None:
 
     open_own_target_clicked = False
     start_clicked = False
+    dirty_own = bool(st.session_state.get("own_target_dirty", False))
 
     # ---------------------------------------------------------
     # FORM (nur key=..., kein value=...)
@@ -1523,6 +1548,7 @@ def _meta_form_step(aid: str) -> None:
                     "Erhebung starten",
                     type="primary",
                     use_container_width=True,
+                    disabled=dirty_own,
                 )
         else:
             start_clicked = st.form_submit_button(
@@ -1542,6 +1568,9 @@ def _meta_form_step(aid: str) -> None:
                 persist.rerun_with_save(aid)
         with right:
             st.success("Eigenes Ziel ist definiert.")
+    
+    if target_label == "Eigenes Ziel" and st.session_state.get("erhebung_own_target_defined", False) and dirty_own:
+        st.warning("Es gibt ungespeicherte Änderungen im Eigenen Ziel. Bitte erst speichern.")
 
     if not open_own_target_clicked and not start_clicked:
         return
@@ -1848,6 +1877,12 @@ def _own_target_step(aid: str) -> None:
             "Sie haben Werte geändert, die noch nicht gespeichert wurden. "
             "Bitte „Änderungen speichern“ klicken, damit diese Werte in der Erhebung verwendet werden."
         )
+        
+
+    targets_now = st.session_state.get("dimension_targets", {}) or {}
+    defined = bool(st.session_state.get("erhebung_own_target_defined", False))
+    # Start nur erlauben, wenn Ziel gespeichert ist, Werte existieren und keine ungespeicherten Änderungen vorliegen
+    can_start = defined and bool(targets_now) and not dirty
 
     if st.button("Erhebung starten", type="primary", use_container_width=True, key="own_target_start_btn", disabled=not can_start):
         has_answers = isinstance(st.session_state.get("answers"), dict) and bool(st.session_state.get("answers"))
