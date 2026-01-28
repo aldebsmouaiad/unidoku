@@ -15,7 +15,7 @@ import streamlit.components.v1 as components
 
 from core.state import init_session_state
 from core.model_loader import load_model_config
-from core import persist
+import core.persist as persist
 
 TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
