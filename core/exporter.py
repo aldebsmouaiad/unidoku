@@ -28,8 +28,19 @@ from reportlab.platypus import (
 )
 
 import os
-import tempfile
+import hashlib
 from pathlib import Path
+import tempfile
+
+_PLOT_CACHE_DIR = Path(tempfile.gettempdir()) / "rgm_plot_cache"
+_PLOT_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+
+def _plot_cache_path(fig, width: int, height: int, scale: int, dark_export: bool) -> Path:
+    j = fig.to_json() if hasattr(fig, "to_json") else str(fig)
+    h = hashlib.sha1()
+    h.update(j.encode("utf-8"))
+    h.update(f"|{width}|{height}|{scale}|{int(dark_export)}".encode("utf-8"))
+    return _PLOT_CACHE_DIR / f"{h.hexdigest()}.png"
 
 # Plotly optional (für PNG-Export in PDF)
 try:
@@ -141,15 +152,27 @@ def _plotly_fig_to_png_bytes(
     scale: int = 2,
     dark_export: bool = False,
 ) -> tuple[Optional[bytes], Optional[str]]:
+    """
+    Exportiert eine Plotly-Figure robust nach PNG (für PDF-Einbettung).
+    - mutiert die Original-Figure NICHT
+    - versucht Export (kaleido) -> bei Fehler: Browser vorbereiten -> retry
+    - cached PNGs in /tmp (Streamlit Cloud) für schnelle wiederholte Exporte
+    - liefert (png_bytes, None) oder (None, "Fehlertext")
+    """
     if fig is None:
         return None, "fig is None"
 
-    # Figure nicht mutieren
+    # ----------------------------
+    # 0) Figure copy (nicht mutieren)
+    # ----------------------------
     try:
         f = fig.full_copy()
     except Exception:
         f = copy.deepcopy(fig)
 
+    # ----------------------------
+    # 1) Styling für Export (labels nicht abschneiden)
+    # ----------------------------
     bg = "#111827" if dark_export else "#FFFFFF"
     fg = "rgba(255,255,255,0.92)" if dark_export else "#111111"
     grid = "rgba(255,255,255,0.18)" if dark_export else "rgba(0,0,0,0.10)"
@@ -168,23 +191,68 @@ def _plotly_fig_to_png_bytes(
         f.update_polars(
             domain=dict(x=[0.10, 0.90], y=[0.10, 0.90]),
             bgcolor=bg,
-            radialaxis=dict(gridcolor=grid, linecolor=axis_line, tickfont=dict(color=fg, size=16)),
-            angularaxis=dict(gridcolor=grid, linecolor=axis_line, tickfont=dict(color=fg, size=14)),
+            radialaxis=dict(
+                gridcolor=grid,
+                linecolor=axis_line,
+                tickfont=dict(color=fg, size=16),
+            ),
+            angularaxis=dict(
+                gridcolor=grid,
+                linecolor=axis_line,
+                tickfont=dict(color=fg, size=14),
+            ),
         )
     except Exception:
+        # styling ist "best effort"
         pass
 
-    def _try() -> tuple[Optional[bytes], Optional[str]]:
-        # plotly / kaleido nicht verfügbar
+    # ----------------------------
+    # 2) Cache (sehr wichtig für Speed auf Cloud)
+    # ----------------------------
+    def _cache_path_for_figure() -> Optional[Path]:
+        try:
+            import hashlib
+
+            cache_dir = Path(tempfile.gettempdir()) / "rgm_plot_cache"
+            cache_dir.mkdir(parents=True, exist_ok=True)
+
+            # JSON stabiler als str(fig)
+            if hasattr(f, "to_json"):
+                payload = f.to_json()
+            else:
+                payload = repr(f)
+
+            h = hashlib.sha1()
+            h.update(payload.encode("utf-8"))
+            h.update(f"|{width}|{height}|{scale}|{int(dark_export)}".encode("utf-8"))
+            return cache_dir / f"{h.hexdigest()}.png"
+        except Exception:
+            return None
+
+    cache_path = _cache_path_for_figure()
+    if cache_path is not None and cache_path.exists():
+        try:
+            return cache_path.read_bytes(), None
+        except Exception:
+            # Cache read fail => normal render
+            pass
+
+    # ----------------------------
+    # 3) Render helper
+    # ----------------------------
+    def _try_render() -> tuple[Optional[bytes], Optional[str]]:
+        # plotly.io fehlt => evtl. fig.to_image probieren
         if pio is None:
             try:
                 return f.to_image(format="png", width=width, height=height, scale=scale), None
             except Exception as e:
                 return None, f"{type(e).__name__}: {e}"
 
+        # plotly.io da => pio.to_image (kaleido)
         try:
             return pio.to_image(f, format="png", width=width, height=height, scale=scale, engine="kaleido"), None
         except TypeError:
+            # ältere plotly ohne engine param
             try:
                 return pio.to_image(f, format="png", width=width, height=height, scale=scale), None
             except Exception as e:
@@ -192,19 +260,39 @@ def _plotly_fig_to_png_bytes(
         except Exception as e:
             return None, f"{type(e).__name__}: {e}"
 
-    # 1) erster Versuch
-    png, err = _try()
+    # ----------------------------
+    # 4) 1. Versuch
+    # ----------------------------
+    png, err = _try_render()
     if png:
+        if cache_path is not None:
+            try:
+                cache_path.write_bytes(png)
+            except Exception:
+                pass
         return png, None
 
-    # 2) Browser vorbereiten + retry
-    _ensure_kaleido_browser()
-    png2, err2 = _try()
+    # ----------------------------
+    # 5) 2. Versuch: Browser (Chrome) sicherstellen + retry
+    # ----------------------------
+    try:
+        _ensure_kaleido_browser()
+    except Exception:
+        pass
+
+    png2, err2 = _try_render()
     if png2:
+        if cache_path is not None:
+            try:
+                cache_path.write_bytes(png2)
+            except Exception:
+                pass
         return png2, None
 
-    return None, err2 or err or "unknown export error"
-
+    # ----------------------------
+    # 6) Fail
+    # ----------------------------
+    return None, (err2 or err or "unknown export error")
 
 
 def _scaled_rl_image(png_bytes: bytes, *, max_width_pt: float) -> Optional[Image]:
