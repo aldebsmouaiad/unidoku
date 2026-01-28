@@ -15,28 +15,6 @@ from core import persist
 import os
 import tempfile
 
-@st.cache_resource(show_spinner=False)
-def _ensure_plotly_chrome() -> str:
-    import plotly.io as pio
-
-    # Writabler Ort in Streamlit Cloud (und auch lokal OK)
-    chrome_dir = Path(tempfile.gettempdir()) / "plotly-chrome"
-    chrome_dir.mkdir(parents=True, exist_ok=True)
-
-    # Installiert Chrome (falls nicht vorhanden) genau in dieses Verzeichnis
-    chrome_exe = pio.get_chrome(path=chrome_dir)  # <-- entscheidend :contentReference[oaicite:3]{index=3}
-
-    # Kaleido/Choreographer Browser-Erkennung fixieren
-    os.environ["BROWSER_PATH"] = str(chrome_exe)  # :contentReference[oaicite:4]{index=4}
-    return str(chrome_exe)
-
-# NICHT crashen lassen, falls Download mal hakt:
-try:
-    _ensure_plotly_chrome()
-except Exception as e:
-    st.warning(f"Chrome für Plotly-Export konnte nicht vorbereitet werden: {e}")
-
-
 TU_GREEN = "#639A00"
 TU_ORANGE = "#CA7406"
 
@@ -44,6 +22,19 @@ st.set_page_config(
     page_title="Reifegradmodell Technische Dokumentation",
     layout="wide",
 )
+
+@st.cache_resource(show_spinner=False)
+def _ensure_plotly_chrome() -> str:
+    import plotly.io as pio
+
+    chrome_dir = Path(tempfile.gettempdir()) / "plotly-chrome"
+    chrome_dir.mkdir(parents=True, exist_ok=True)
+
+    # benötigt plotly >= 6.3.0
+    chrome_exe = pio.get_chrome(path=chrome_dir)
+    os.environ["BROWSER_PATH"] = str(chrome_exe)
+    return str(chrome_exe)
+
 
 BASE_DIR = Path(__file__).resolve().parent
 IMAGES_DIR = BASE_DIR / "images"
@@ -563,6 +554,16 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
+
+
+
+    # Chrome nur einmal vorbereiten (cached)
+    try:
+        _ensure_plotly_chrome()
+    except Exception as e:
+        st.warning(f"Chrome für Plotly-Export konnte nicht vorbereitet werden: {e}")
+    
+    
     def _on_dark_toggle() -> None:
         # Toggle ist ab jetzt Chef (Query-Param darf nicht mehr überschreiben)
         st.session_state["_rgm_ui_dark_applied"] = True
