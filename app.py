@@ -12,6 +12,31 @@ import streamlit as st
 from core.state import init_session_state
 from core import persist
 
+import os
+import tempfile
+
+@st.cache_resource(show_spinner=False)
+def _ensure_plotly_chrome() -> str:
+    import plotly.io as pio
+
+    # Writabler Ort in Streamlit Cloud (und auch lokal OK)
+    chrome_dir = Path(tempfile.gettempdir()) / "plotly-chrome"
+    chrome_dir.mkdir(parents=True, exist_ok=True)
+
+    # Installiert Chrome (falls nicht vorhanden) genau in dieses Verzeichnis
+    chrome_exe = pio.get_chrome(path=chrome_dir)  # <-- entscheidend :contentReference[oaicite:3]{index=3}
+
+    # Kaleido/Choreographer Browser-Erkennung fixieren
+    os.environ["BROWSER_PATH"] = str(chrome_exe)  # :contentReference[oaicite:4]{index=4}
+    return str(chrome_exe)
+
+# NICHT crashen lassen, falls Download mal hakt:
+try:
+    _ensure_plotly_chrome()
+except Exception as e:
+    st.warning(f"Chrome für Plotly-Export konnte nicht vorbereitet werden: {e}")
+
+
 TU_GREEN = "#639A00"
 TU_ORANGE = "#CA7406"
 
