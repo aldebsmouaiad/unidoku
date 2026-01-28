@@ -977,6 +977,112 @@ def _ensure_aid_sticky() -> str:
     persist.qp_set("aid", aid)
     return aid
 
+def _render_save_resume_panel(aid: str) -> None:
+    """
+    UI: Savefile herunterladen / laden + Hinweis zur Erhebungs-ID.
+    Import: überschreibt immer (exakt fortsetzen) und bleibt auf aktueller Seite (Step).
+    """
+
+    # Expander nach Import einmalig offen anzeigen
+    expanded_once = bool(st.session_state.pop("_rgm_open_save_resume_expander", False))
+
+    with st.expander("Speichern & Fortsetzen", expanded=expanded_once):
+        st.caption(
+            "Tipp: Für späteres Fortsetzen können Sie entweder die Erhebungs-ID/URL merken "
+            "oder ein Savefile (JSON) herunterladen und später wieder hochladen."
+        )
+
+        st.text_input("Erhebungs-ID (aid)", value=aid, disabled=True)
+
+        # --- Download ---
+        meta = st.session_state.get("meta", {}) or {}
+        fn = (
+            f"rgm_save_{_safe_filename(meta.get('org',''))}_"
+            f"{_safe_filename(meta.get('date_str','')) or datetime.now().strftime('%Y-%m-%d')}.json"
+        )
+        data = persist.export_snapshot_bytes(aid, pretty=True)
+
+        st.download_button(
+            "Zwischenspeicher herunterladen (JSON)",
+            data=data,
+            file_name=fn,
+            mime="application/json",
+            use_container_width=True,
+        )
+
+        st.markdown("---")
+
+        # --- Upload / Import (immer overwrite) ---
+        up = st.file_uploader(
+            "Zwischenspeicher laden (JSON):",
+            type=["json"],
+            key="rgm_snapshot_upload",
+        )
+
+        # Fest: "Alles überschreiben (exakt fortsetzen)"
+        mode = "overwrite"
+
+        clicked = st.button(
+            "Zwischenspeicher laden",
+            use_container_width=True,
+            disabled=(up is None),
+            key="rgm_snapshot_load_btn",
+        )
+
+        # ✅ Hinweis NACH dem Button (wird nach rerun hier angezeigt)
+        msg = st.session_state.pop("_rgm_snapshot_msg", None)
+        if isinstance(msg, tuple) and len(msg) == 2:
+            kind, text = msg
+            if kind == "success":
+                st.success(text)
+            elif kind == "warning":
+                st.warning(text)
+            else:
+                st.error(text)
+
+        if clicked:
+            try:
+                # Aktuelle Ansicht merken -> danach wiederherstellen (bleibt auf dieser Seite)
+                cur_step = int(st.session_state.get("erhebung_step", 0))
+                cur_idx = int(st.session_state.get("erhebung_dim_idx", 0))
+                cur_idx_ui = int(st.session_state.get("erhebung_dim_idx_ui", cur_idx))
+
+                raw = up.getvalue() if up is not None else b""
+                snap = persist.parse_snapshot_bytes(raw)
+
+                # Import (überschreibt alles)
+                persist.apply_snapshot_dict(snap, mode=mode, keep_current_aid=True)
+
+                # 🔥 WICHTIG: Alte Widget-States entfernen, sonst überschreiben sie Import!
+                for k in list(st.session_state.keys()):
+                    if k.startswith("q_") or k.startswith("own_target_val_") or k.startswith("target_"):
+                        st.session_state.pop(k, None)
+
+                # WICHTIG: Seite bleibt hier (aktueller Step/Idx)
+                st.session_state["erhebung_step"] = cur_step
+                st.session_state["erhebung_dim_idx"] = cur_idx
+                st.session_state["erhebung_dim_idx_ui"] = cur_idx_ui
+
+                # Meta-Widgets beim nächsten Render hart synchronisieren
+                st.session_state["_rgm_force_meta_sync"] = True
+
+                # Expander nach Import offen
+                st.session_state["_rgm_open_save_resume_expander"] = True
+
+                # ✅ Success-Hinweis setzen
+                st.session_state["_rgm_snapshot_msg"] = (
+                    "success",
+                    "Import erfolgreich: Antworten wurden übernommen.",
+                )
+
+                # speichern
+                persist.save(aid)
+                st.rerun()
+
+            except Exception as e:
+                st.session_state["_rgm_open_save_resume_expander"] = True
+                st.session_state["_rgm_snapshot_msg"] = ("error", str(e))
+                st.rerun()
 
 # -----------------------------
 # Excel-Look Renderer
@@ -1352,9 +1458,19 @@ def _footer_navigation(model: dict, aid: str) -> None:
 # -----------------------------
 def _meta_form_step(aid: str) -> None:
     _render_hero("Erhebung", "Angaben zur Erhebung")
+    _render_save_resume_panel(aid)
     st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
 
     meta = st.session_state.meta
+
+    # ---------------------------------------------------------
+    # IMPORT-SYNC: Widgets nach Import hart befüllen
+    # ---------------------------------------------------------
+    force = bool(st.session_state.pop("_rgm_force_meta_sync", False))
+
+    def _sync_widget(key: str, value: str):
+        if force or key not in st.session_state:
+            st.session_state[key] = value
 
     # Datum beim ersten Aufruf automatisch vorbelegen (aber später frei änderbar lassen)
     if not st.session_state.get("_rgm_meta_date_initialized", False):
@@ -1362,48 +1478,88 @@ def _meta_form_step(aid: str) -> None:
             meta["date_str"] = datetime.now().strftime("%d.%m.%Y")
         st.session_state["_rgm_meta_date_initialized"] = True
 
-    prev_target_label = meta.get("target_label", "")
+    # Widget-Keys initialisieren / nach Import überschreiben
+    _sync_widget("rgm_meta_org", meta.get("org", ""))
+    _sync_widget("rgm_meta_area", meta.get("area", ""))
+    _sync_widget("rgm_meta_assessor", meta.get("assessor", ""))
+    _sync_widget("rgm_meta_date_str", meta.get("date_str", ""))
+    _sync_widget("rgm_meta_assessor_contact", meta.get("assessor_contact", ""))
 
     current_target = meta.get("target_label") or "Quantitativ gemanagt"
     if current_target not in TARGET_OPTIONS:
         current_target = "Quantitativ gemanagt"
+    _sync_widget("rgm_meta_target_label", current_target)
+
+    prev_target_label = meta.get("target_label", "")
 
     open_own_target_clicked = False
     start_clicked = False
+    dirty_own = bool(st.session_state.get("own_target_dirty", False))
 
+    # ---------------------------------------------------------
+    # FORM (nur key=..., kein value=...)
+    # ---------------------------------------------------------
     with st.form("erhebung_meta_form", clear_on_submit=False):
         c1, c2 = st.columns(2, gap="large")
 
         with c1:
-            org = st.text_input("Name der Organisation:", value=meta.get("org", ""), placeholder="Beispiel GmbH")
-            area = st.text_input("Bereich:", value=meta.get("area", ""), placeholder="Bereich A")
+            org = st.text_input(
+                "Name der Organisation:",
+                key="rgm_meta_org",
+                placeholder="Beispiel GmbH",
+            )
+            area = st.text_input(
+                "Bereich:",
+                key="rgm_meta_area",
+                placeholder="Bereich A",
+            )
             assessor = st.text_input(
-                "Erhebung durchgeführt von:", value=meta.get("assessor", ""), placeholder="Herr/Frau Beispiel"
+                "Erhebung durchgeführt von:",
+                key="rgm_meta_assessor",
+                placeholder="Herr/Frau Beispiel",
             )
 
         with c2:
-            date_str = st.text_input("Datum der Durchführung:", value=meta.get("date_str", ""), placeholder="TT.MM.JJJJ")
+            date_str = st.text_input(
+                "Datum der Durchführung:",
+                key="rgm_meta_date_str",
+                placeholder="TT.MM.JJJJ",
+            )
             target_label = st.selectbox(
                 "Angestrebtes Ziel:",
                 TARGET_OPTIONS,
-                index=TARGET_OPTIONS.index(current_target),
+                key="rgm_meta_target_label",
             )
             assessor_contact = st.text_input(
                 "Kontakt:",
-                value=meta.get("assessor_contact", ""),
+                key="rgm_meta_assessor_contact",
                 placeholder="name@organisation.de oder +49 ...",
             )
 
         if target_label == "Eigenes Ziel":
             if not st.session_state.get("erhebung_own_target_defined", False):
                 open_own_target_clicked = st.form_submit_button(
-                    "Eigenes Ziel definieren", type="primary", use_container_width=True
+                    "Eigenes Ziel definieren",
+                    type="primary",
+                    use_container_width=True,
                 )
             else:
-                start_clicked = st.form_submit_button("Erhebung starten", type="primary", use_container_width=True)
+                start_clicked = st.form_submit_button(
+                    "Erhebung starten",
+                    type="primary",
+                    use_container_width=True,
+                    disabled=dirty_own,
+                )
         else:
-            start_clicked = st.form_submit_button("Erhebung starten", type="primary", use_container_width=True)
+            start_clicked = st.form_submit_button(
+                "Erhebung starten",
+                type="primary",
+                use_container_width=True,
+            )
 
+    # ---------------------------------------------------------
+    # Hinweisbox + Button: "Eigenes Ziel ändern"
+    # ---------------------------------------------------------
     if meta.get("target_label") == "Eigenes Ziel" and st.session_state.get("erhebung_own_target_defined", False):
         left, right = st.columns([1, 3])
         with left:
@@ -1412,16 +1568,22 @@ def _meta_form_step(aid: str) -> None:
                 persist.rerun_with_save(aid)
         with right:
             st.success("Eigenes Ziel ist definiert.")
+    
+    if target_label == "Eigenes Ziel" and st.session_state.get("erhebung_own_target_defined", False) and dirty_own:
+        st.warning("Es gibt ungespeicherte Änderungen im Eigenen Ziel. Bitte erst speichern.")
 
     if not open_own_target_clicked and not start_clicked:
         return
 
+    # ---------------------------------------------------------
+    # Validierung
+    # ---------------------------------------------------------
     errors = []
-    if not org.strip():
+    if not (org or "").strip():
         errors.append("Bitte den Namen der Organisation angeben.")
-    if not assessor.strip():
+    if not (assessor or "").strip():
         errors.append("Bitte angeben, wer die Erhebung durchgeführt hat.")
-    if date_str.strip() and not re.match(r"^\d{2}\.\d{2}\.\d{4}$", date_str.strip()):
+    if (date_str or "").strip() and not re.match(r"^\d{2}\.\d{2}\.\d{4}$", (date_str or "").strip()):
         errors.append("Datum bitte im Format TT.MM.JJJJ eingeben (z. B. 03.12.2025).")
 
     if errors:
@@ -1429,13 +1591,17 @@ def _meta_form_step(aid: str) -> None:
             st.error(e)
         return
 
-    meta["org"] = org.strip()
-    meta["area"] = area.strip()
-    meta["assessor"] = assessor.strip()
-    meta["date_str"] = date_str.strip()
+    # ---------------------------------------------------------
+    # Meta schreiben
+    # ---------------------------------------------------------
+    meta["org"] = (org or "").strip()
+    meta["area"] = (area or "").strip()
+    meta["assessor"] = (assessor or "").strip()
+    meta["date_str"] = (date_str or "").strip()
     meta["target_label"] = target_label
-    meta["assessor_contact"] = assessor_contact.strip()
+    meta["assessor_contact"] = (assessor_contact or "").strip()
 
+    # Zielwechsel -> Ziele resetten
     if target_label != prev_target_label:
         st.session_state.dimension_targets = {}
         for k in list(st.session_state.keys()):
@@ -1445,6 +1611,9 @@ def _meta_form_step(aid: str) -> None:
         st.session_state.pop("own_target_dirty", None)
         st.session_state.pop("own_target_saved_msg_bottom", None)
 
+    # ---------------------------------------------------------
+    # Navigation / Start Logik
+    # ---------------------------------------------------------
     if target_label == "Eigenes Ziel":
         if open_own_target_clicked:
             st.session_state.erhebung_step = 1
@@ -1455,12 +1624,19 @@ def _meta_form_step(aid: str) -> None:
             return
 
         if start_clicked:
-            _reset_erhebung_answers()
+            # RESUME-SICHER: importierte Antworten NICHT löschen
+            has_answers = isinstance(st.session_state.get("answers"), dict) and bool(st.session_state.get("answers"))
+            if not has_answers:
+                _reset_erhebung_answers()
+                st.session_state.erhebung_dim_idx = 0
+                st.session_state.erhebung_dim_idx_ui = 0
+            else:
+                st.session_state.erhebung_dim_idx_ui = int(st.session_state.get("erhebung_dim_idx", 0))
+
             st.session_state.erhebung_step = 2
-            st.session_state.erhebung_dim_idx = 0
-            st.session_state.erhebung_dim_idx_ui = 0
             _request_scroll_to_top()
             persist.rerun_with_save(aid)
+
     else:
         st.session_state["erhebung_own_target_defined"] = False
         st.session_state.global_target_level = float(TARGET_TO_LEVEL[target_label])
@@ -1473,13 +1649,18 @@ def _meta_form_step(aid: str) -> None:
                 del st.session_state[k]
 
         if start_clicked:
-            _reset_erhebung_answers()
+            # RESUME-SICHER: importierte Antworten NICHT löschen
+            has_answers = isinstance(st.session_state.get("answers"), dict) and bool(st.session_state.get("answers"))
+            if not has_answers:
+                _reset_erhebung_answers()
+                st.session_state.erhebung_dim_idx = 0
+                st.session_state.erhebung_dim_idx_ui = 0
+            else:
+                st.session_state.erhebung_dim_idx_ui = int(st.session_state.get("erhebung_dim_idx", 0))
+
             st.session_state.erhebung_step = 2
-            st.session_state.erhebung_dim_idx = 0
-            st.session_state.erhebung_dim_idx_ui = 0
             _request_scroll_to_top()
             persist.rerun_with_save(aid)
-
 
 # -----------------------------
 # Step 1: Eigenes Ziel definieren
@@ -1492,6 +1673,7 @@ def _own_target_step(aid: str) -> None:
         "Bitte wählen Sie für jede Subdimension den angestrebten Reifegrad zwischen 1 und 5. "
         "Optional können Sie vorhandene Zielwerte importieren oder exportieren.",
     )
+    _render_save_resume_panel(aid)
     st.markdown("")
     st.markdown('<div id="rgm-own-target-marker"></div>', unsafe_allow_html=True)
 
@@ -1695,17 +1877,25 @@ def _own_target_step(aid: str) -> None:
             "Sie haben Werte geändert, die noch nicht gespeichert wurden. "
             "Bitte „Änderungen speichern“ klicken, damit diese Werte in der Erhebung verwendet werden."
         )
+        
 
-    if st.session_state.get("erhebung_own_target_defined", False):
-        can_start = not dirty
-        if st.button("Erhebung starten", type="primary", use_container_width=True, key="own_target_start_btn", disabled=not can_start):
+    targets_now = st.session_state.get("dimension_targets", {}) or {}
+    defined = bool(st.session_state.get("erhebung_own_target_defined", False))
+    # Start nur erlauben, wenn Ziel gespeichert ist, Werte existieren und keine ungespeicherten Änderungen vorliegen
+    can_start = defined and bool(targets_now) and not dirty
+
+    if st.button("Erhebung starten", type="primary", use_container_width=True, key="own_target_start_btn", disabled=not can_start):
+        has_answers = isinstance(st.session_state.get("answers"), dict) and bool(st.session_state.get("answers"))
+        if not has_answers:
             _reset_erhebung_answers()
-            st.session_state.erhebung_step = 2
             st.session_state.erhebung_dim_idx = 0
             st.session_state.erhebung_dim_idx_ui = 0
-            _request_scroll_to_top()
-            persist.rerun_with_save(aid)
+        else:
+            st.session_state.erhebung_dim_idx_ui = int(st.session_state.get("erhebung_dim_idx", 0))
 
+        st.session_state.erhebung_step = 2
+        _request_scroll_to_top()
+        persist.rerun_with_save(aid)
 
 # -----------------------------
 # Step 2: Fragen
@@ -1860,32 +2050,30 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
             k_widget = f"q_{qid}"
             saved = answers.get(qid)
 
-            if st.session_state.get(k_widget, None) == "":
+            # Session-State säubern (falls irgendwas Ungültiges drinsteht)
+            v_ss = st.session_state.get(k_widget, None)
+            if v_ss not in ANSWER_OPTIONS:
                 st.session_state.pop(k_widget, None)
+                v_ss = None
 
-            if k_widget in st.session_state and st.session_state.get(k_widget) not in ANSWER_OPTIONS:
-                st.session_state.pop(k_widget, None)
-
+            # Nur initialen Default setzen, wenn das Widget noch keinen State hat
             default_index = ANSWER_OPTIONS.index(saved) if saved in ANSWER_OPTIONS else None
+            has_state = (k_widget in st.session_state)
 
             choice = st.radio(
                 "",
                 ANSWER_OPTIONS,
-                index=default_index,
+                index=(None if has_state else default_index),
                 key=k_widget,
                 label_visibility="collapsed",
             )
 
-            # --- Synchronisation: nutze direkt das Rückgabe-Ergebnis (robust) ---
+            # --- Synchronisation: nur schreiben, wenn wirklich eine gültige Auswahl da ist ---
             if choice in ANSWER_OPTIONS:
                 if answers.get(qid) != choice:
                     answers[qid] = choice
                     dirty = True
-            else:
-                if qid in answers:
-                    answers.pop(qid, None)
-                    dirty = True
-
+            
         if li < len(levels) - 1:
             st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
             st.markdown(
@@ -1917,7 +2105,7 @@ def _questions_step(aid: str) -> None:
           <div class="rgm-badge"><b>Bereich:</b>&nbsp;{html.escape(meta.get('area','-') or '-')}</div>
           <div class="rgm-badge"><b>Datum:</b>&nbsp;{html.escape(meta.get('date_str','-') or '-')}</div>
           <div class="rgm-badge"><b>Ziel:</b>&nbsp;{html.escape(target_label or '-')}</div>
-          <div class="rgm-badge"><b>E-Mail:</b>&nbsp;{html.escape(meta.get('assessor_email','-') or '-')}</div>
+          <div class="rgm-badge"><b>E-Mail:</b>&nbsp;{html.escape(meta.get('assessor_contact','-') or '-')}</div>
         </div>
         """
     ).strip()
@@ -1927,6 +2115,8 @@ def _questions_step(aid: str) -> None:
         "Bitte beantworten Sie die Fragen je Subdimension so objektiv wie möglich.",
         extra_html=badges_html,
     )
+    
+    _render_save_resume_panel(aid)
 
     st.markdown("---")
 
@@ -1991,7 +2181,7 @@ def main():
     if st.session_state.get("_rgm_restored_aid") != aid:
         persist.restore(aid)
         st.session_state["_rgm_restored_aid"] = aid
-
+    
     if "erhebung_step" not in st.session_state:
         st.session_state.erhebung_step = 0
     if "erhebung_dim_idx" not in st.session_state:

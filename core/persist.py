@@ -297,6 +297,143 @@ def restore(aid: str | None = None) -> None:
         if key not in st.session_state and key in snap:
             st.session_state[key] = snap.get(key)
 
+# ============================================================
+# Export / Import: Savefile (JSON) für "später fortsetzen" / "jährliche Wiedererhebung"
+# ============================================================
+def export_snapshot_bytes(aid: str | None = None, *, pretty: bool = True) -> bytes:
+    """
+    Savefile (JSON) für Download: enthält den kompletten relevanten Session-State.
+    """
+    aid = str(aid or get_or_create_aid()).strip()
+    if not aid:
+        aid = get_or_create_aid()
+
+    meta = st.session_state.get("meta")
+    if not isinstance(meta, dict):
+        meta = {}
+
+    snap: dict[str, Any] = {
+        "schema": "rgm_export_v1",
+        "updated_at": int(time.time()),
+        "aid": aid,
+        "answers": dict(st.session_state.get("answers", {}) or {}),
+        "meta": dict(meta),
+        "dimension_targets": dict(st.session_state.get("dimension_targets", {}) or {}),
+        "priorities": dict(st.session_state.get("priorities", {}) or {}),
+        "global_target_level": float(st.session_state.get("global_target_level", 3.0) or 3.0),
+        "erhebung_step": int(st.session_state.get("erhebung_step", 0) or 0),
+        "erhebung_dim_idx": int(st.session_state.get("erhebung_dim_idx", 0) or 0),
+        "erhebung_dim_idx_ui": int(st.session_state.get("erhebung_dim_idx_ui", 0) or 0),
+        "erhebung_own_target_defined": bool(st.session_state.get("erhebung_own_target_defined", False)),
+        "nav_page": st.session_state.get("nav_page", None),
+    }
+
+    if pretty:
+        return json.dumps(snap, ensure_ascii=False, indent=2).encode("utf-8")
+    return json.dumps(snap, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+
+
+def parse_snapshot_bytes(raw: bytes) -> dict[str, Any]:
+    """
+    Liest hochgeladenes Savefile.
+    Akzeptiert: rgm_export_v1 (Download) und rgm_snapshot_v2 (interne Datei-Snapshots).
+    """
+    try:
+        data = json.loads((raw or b"").decode("utf-8"))
+    except Exception as e:
+        raise ValueError(f"Ungültige JSON-Datei: {e}")
+
+    if not isinstance(data, dict):
+        raise ValueError("Ungültiges Format: JSON muss ein Objekt (dict) sein.")
+
+    schema = str(data.get("schema") or "").strip()
+    if schema not in ("rgm_export_v1", "rgm_snapshot_v2"):
+        # toleranter Fallback (alte Dateien ohne schema)
+        if "answers" not in data and "meta" not in data:
+            raise ValueError(f"Unbekanntes Snapshot-Format (schema={schema!r}).")
+
+    return data
+
+
+def apply_snapshot_dict(
+    snap: dict[str, Any],
+    *,
+    mode: str = "merge_missing",
+    keep_current_aid: bool = True,
+) -> None:
+    """
+    Übernimmt Snapshot in aktuelle Session.
+
+    mode:
+      - merge_missing: nur fehlende Werte ergänzen (perfekt für Vorjahresdaten)
+      - overwrite: alles überschreiben (exakt fortsetzen)
+
+    keep_current_aid:
+      - True: aktuelle URL/aid bleibt (empfohlen)
+      - False: übernimmt snap['aid']
+    """
+    if not isinstance(snap, dict):
+        raise ValueError("Snapshot ist kein dict.")
+    if mode not in ("merge_missing", "overwrite"):
+        raise ValueError("mode muss 'merge_missing' oder 'overwrite' sein.")
+
+    if not keep_current_aid:
+        aid_in = str(snap.get("aid") or "").strip()
+        if aid_in:
+            st.session_state["_rgm_aid"] = aid_in
+            qp_set("aid", aid_in)
+
+    def _as_dict(v: Any) -> dict:
+        return v if isinstance(v, dict) else {}
+
+    saved_answers = _as_dict(snap.get("answers"))
+    saved_meta = _as_dict(snap.get("meta"))
+    saved_targets = _as_dict(snap.get("dimension_targets"))
+    saved_priorities = _as_dict(snap.get("priorities"))
+
+    # answers
+    if mode == "overwrite":
+        st.session_state["answers"] = dict(saved_answers)
+    else:
+        cur = _as_dict(st.session_state.get("answers"))
+        for k, v in saved_answers.items():
+            if k not in cur:
+                cur[k] = v
+        st.session_state["answers"] = cur
+
+    # meta (merge: nur fehlende/leere Werte)
+    cur_meta = _as_dict(st.session_state.get("meta"))
+    if mode == "overwrite":
+        cur_meta = dict(saved_meta)
+    else:
+        for k, v in saved_meta.items():
+            if k not in cur_meta or cur_meta.get(k) in ("", None):
+                cur_meta[k] = v
+    st.session_state["meta"] = cur_meta
+
+    # targets/priorities
+    if mode == "overwrite":
+        st.session_state["dimension_targets"] = dict(saved_targets)
+        st.session_state["priorities"] = dict(saved_priorities)
+    else:
+        cur_t = _as_dict(st.session_state.get("dimension_targets"))
+        for k, v in saved_targets.items():
+            if k not in cur_t:
+                cur_t[k] = v
+        st.session_state["dimension_targets"] = cur_t
+
+        cur_p = _as_dict(st.session_state.get("priorities"))
+        for k, v in saved_priorities.items():
+            if k not in cur_p:
+                cur_p[k] = v
+        st.session_state["priorities"] = cur_p
+
+    # scalar
+    if mode == "overwrite" and "global_target_level" in snap:
+        try:
+            st.session_state["global_target_level"] = float(snap.get("global_target_level"))
+        except Exception:
+            pass
 
 def rerun_with_save(aid: str | None = None) -> None:
     """

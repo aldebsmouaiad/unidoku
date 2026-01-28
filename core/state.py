@@ -25,6 +25,7 @@ def init_session_state():
             "org": "",
             "area": "",              # neu: Bereich
             "assessor": "",
+            "assessor_contact": "",
             "date_str": "",
             "target_label": "",
         },

@@ -72,6 +72,29 @@ def _to_int_str(x: Any) -> str:
     except Exception:
         return ""
 
+def _to_float_str(x: Any, *, decimals: int = 2, decimal_comma: bool = True) -> str:
+    """Robust: Float-String mit Dezimalstellen (ohne Rundung auf Integer)."""
+    try:
+        if x is None:
+            return ""
+        if isinstance(x, float) and x != x:
+            return ""
+        if pd.isna(x):
+            return ""
+
+        v = float(x)
+
+        # Ganze Zahlen ohne .00 anzeigen
+        if abs(v - round(v)) < 1e-12:
+            s = str(int(round(v)))
+        else:
+            s = f"{v:.{decimals}f}"  # z.B. 0.75 -> "0.75"
+            if decimal_comma:
+                s = s.replace(".", ",")  # z.B. "0,75" (DE)
+
+        return s
+    except Exception:
+        return ""
 
 def _p(text: Any, style: ParagraphStyle, cjk_wrap: bool = False) -> Paragraph:
     """
@@ -328,20 +351,28 @@ def make_csv_bytes(df: pd.DataFrame) -> bytes:
     CSV für Excel (DE) robust:
     - UTF-8 BOM, damit Excel Umlaute korrekt erkennt
     - Semikolon als Separator
+    - Dezimal-Komma, damit Excel 1.75 NICHT als "Jan 75" interpretiert
     """
     if df is None:
         df = pd.DataFrame()
 
+    d = df.copy()
+
+    # Optional: typische Spalten robust numerisch machen (falls irgendwo Strings wie "1.75" drin sind)
+    for col in ["Ist-Reifegrad", "Soll-Reifegrad", "Gap"]:
+        if col in d.columns:
+            d[col] = pd.to_numeric(d[col], errors="coerce")
+
     buf = io.StringIO()
-    df.to_csv(
+    d.to_csv(
         buf,
         index=False,
         sep=";",
+        decimal=",",                 # <<< DAS ist der entscheidende Punkt
         quoting=_csv.QUOTE_MINIMAL,
         lineterminator="\n",
     )
     return ("\ufeff" + buf.getvalue()).encode("utf-8")
-
 
 # ---------------------------------------------------------------------
 # 3) PDF Export (professionell + robust)
@@ -642,9 +673,14 @@ def make_pdf_bytes(
         cols = [c for c in ordered if c in df_measures.columns]
         d = df_measures[cols].copy()
 
-        for c in ["Ist-Reifegrad", "Soll-Reifegrad", "Gap"]:
+        # Ist & Gap als Dezimalwerte ausgeben (nicht runden!)
+        for c in ["Ist-Reifegrad", "Gap"]:
             if c in d.columns:
-                d[c] = d[c].apply(_to_int_str)
+                d[c] = d[c].apply(lambda x: _to_float_str(x, decimals=2, decimal_comma=True))
+
+        # Soll bleibt typischerweise ganzzahlig (z.B. 4)
+        if "Soll-Reifegrad" in d.columns:
+            d["Soll-Reifegrad"] = d["Soll-Reifegrad"].apply(_to_int_str)
 
         # --- Extrem lange Textzellen in mehrere Tabellenzeilen splitten ---
         wrap_cols = {"Maßnahme", "Verantwortlich", "Zeitraum"}
