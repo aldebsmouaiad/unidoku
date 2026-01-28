@@ -9,13 +9,6 @@ from typing import Optional
 
 import streamlit as st
 
-def _ensure_kaleido_chrome():
-    import kaleido
-    kaleido.get_chrome_sync()   # lädt ein kompatibles Chrome, falls nicht vorhanden
-    return True
-
-_ensure_kaleido_chrome()
-
 from core.state import init_session_state
 from core import persist
 
