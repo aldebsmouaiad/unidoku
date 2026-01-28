@@ -30,7 +30,6 @@ def _ensure_plotly_chrome() -> str:
     chrome_dir = Path(tempfile.gettempdir()) / "plotly-chrome"
     chrome_dir.mkdir(parents=True, exist_ok=True)
 
-    # benötigt plotly >= 6.3.0
     chrome_exe = pio.get_chrome(path=chrome_dir)
     os.environ["BROWSER_PATH"] = str(chrome_exe)
     return str(chrome_exe)

@@ -27,11 +27,35 @@ from reportlab.platypus import (
     PageBreak,
 )
 
+import os
+import tempfile
+from pathlib import Path
+
 # Plotly optional (für PNG-Export in PDF)
 try:
     import plotly.io as pio  # noqa: F401
 except Exception:
     pio = None
+
+def _ensure_kaleido_browser() -> Optional[str]:
+    """
+    Stellt sicher, dass ein Chrome/Chromium für Kaleido verfügbar ist.
+    Installiert Chrome in /tmp (Streamlit Cloud: beschreibbar) und setzt BROWSER_PATH.
+    """
+    try:
+        import plotly.io as _pio
+
+        if not hasattr(_pio, "get_chrome"):
+            return None
+
+        chrome_dir = Path(tempfile.gettempdir()) / "plotly-chrome"
+        chrome_dir.mkdir(parents=True, exist_ok=True)
+
+        chrome_exe = _pio.get_chrome(path=chrome_dir)
+        os.environ["BROWSER_PATH"] = str(chrome_exe)
+        return str(chrome_exe)
+    except Exception:
+        return None
 
 
 # ---------------------------------------------------------------------
@@ -112,34 +136,20 @@ def _p(text: Any, style: ParagraphStyle, cjk_wrap: bool = False) -> Paragraph:
 def _plotly_fig_to_png_bytes(
     fig,
     *,
-    width: int = 2000,
-    height: int = 1400,
+    width: int = 1400,
+    height: int = 1000,
     scale: int = 2,
     dark_export: bool = False,
-) -> Optional[bytes]:
-    """
-    Plotly-Export zu PNG (benötigt i.d.R. kaleido).
-    - robust: gibt None zurück (kein Crash), falls nicht verfügbar
-    - tuned: größere Margins + Domain, damit Labels NICHT abgeschnitten werden
-    """
+) -> tuple[Optional[bytes], Optional[str]]:
     if fig is None:
-        return None
+        return None, "fig is None"
 
-    # plotly / kaleido nicht verfügbar => kein Crash, aber None
-    if pio is None:
-        try:
-            # falls fig.to_image intern verfügbar ist (manchmal ohne pio import)
-            return fig.to_image(format="png", width=width, height=height, scale=scale)
-        except Exception:
-            return None
-
-    # Figure nicht mutieren (wichtig: die gleiche Figure wird im UI gezeigt)
+    # Figure nicht mutieren
     try:
         f = fig.full_copy()
     except Exception:
         f = copy.deepcopy(fig)
 
-    # Export-Theme: konsistent mit UI (dark/light), aber PDF-sicher
     bg = "#111827" if dark_export else "#FFFFFF"
     fg = "rgba(255,255,255,0.92)" if dark_export else "#111111"
     grid = "rgba(255,255,255,0.18)" if dark_export else "rgba(0,0,0,0.10)"
@@ -152,49 +162,49 @@ def _plotly_fig_to_png_bytes(
             plot_bgcolor=bg,
             font=dict(color=fg),
             showlegend=False,
-            # Wichtig: genügend Margins für lange Achsenbeschriftungen
-            margin=dict(l=120, r=120, t=70, b=140),
+            margin=dict(l=110, r=110, t=60, b=120),
             title=None,
         )
-    except Exception:
-        pass
-
-    # Polar tuning: Domain leicht einziehen -> mehr Platz für Labels, keine Cuts
-    try:
         f.update_polars(
             domain=dict(x=[0.10, 0.90], y=[0.10, 0.90]),
             bgcolor=bg,
-            radialaxis=dict(
-                gridcolor=grid,
-                linecolor=axis_line,
-                tickfont=dict(color="#d62728", size=20),  # Skala (1..5) gut lesbar
-                tickcolor="#d62728",
-            ),
-            angularaxis=dict(
-                gridcolor=grid,
-                linecolor=axis_line,
-                tickfont=dict(color=fg, size=18),
-            ),
+            radialaxis=dict(gridcolor=grid, linecolor=axis_line, tickfont=dict(color=fg, size=16)),
+            angularaxis=dict(gridcolor=grid, linecolor=axis_line, tickfont=dict(color=fg, size=14)),
         )
     except Exception:
         pass
 
-    # PNG export (kaleido)
-    try:
-        # pio.to_image ist robuster als fig.to_image, wenn engine explizit ist
-        return pio.to_image(f, format="png", width=width, height=height, scale=scale, engine="kaleido")
-    except TypeError:
-        # ältere plotly-Version ohne engine-Parameter
+    def _try() -> tuple[Optional[bytes], Optional[str]]:
+        # plotly / kaleido nicht verfügbar
+        if pio is None:
+            try:
+                return f.to_image(format="png", width=width, height=height, scale=scale), None
+            except Exception as e:
+                return None, f"{type(e).__name__}: {e}"
+
         try:
-            return pio.to_image(f, format="png", width=width, height=height, scale=scale)
-        except Exception:
-            return None
-    except Exception:
-        # Fallback: fig.to_image versuchen
-        try:
-            return f.to_image(format="png", width=width, height=height, scale=scale)
-        except Exception:
-            return None
+            return pio.to_image(f, format="png", width=width, height=height, scale=scale, engine="kaleido"), None
+        except TypeError:
+            try:
+                return pio.to_image(f, format="png", width=width, height=height, scale=scale), None
+            except Exception as e:
+                return None, f"{type(e).__name__}: {e}"
+        except Exception as e:
+            return None, f"{type(e).__name__}: {e}"
+
+    # 1) erster Versuch
+    png, err = _try()
+    if png:
+        return png, None
+
+    # 2) Browser vorbereiten + retry
+    _ensure_kaleido_browser()
+    png2, err2 = _try()
+    if png2:
+        return png2, None
+
+    return None, err2 or err or "unknown export error"
+
 
 
 def _scaled_rl_image(png_bytes: bytes, *, max_width_pt: float) -> Optional[Image]:
@@ -577,8 +587,8 @@ def make_pdf_bytes(
     # --- Charts optional (aber: wenn Figuren übergeben sind, immer Abschnitt anzeigen) ---
     have_figs = (fig_td is not None) or (fig_og is not None)
 
-    td_png = _plotly_fig_to_png_bytes(fig_td, dark_export=dark)
-    og_png = _plotly_fig_to_png_bytes(fig_og, dark_export=dark)
+    td_png, td_err = _plotly_fig_to_png_bytes(fig_td, dark_export=dark)
+    og_png, og_err = _plotly_fig_to_png_bytes(fig_og, dark_export=dark)
 
     if have_figs:
         story.append(Paragraph("Radar – Ist- vs. Soll-Reifegrad", H2))
@@ -622,28 +632,14 @@ def make_pdf_bytes(
             if td_png:
                 _img_block(td_png, "TD-Dimensionen", TD_BLUE)
             else:
-                story.append(
-                    _p(
-                        "TD-Dimensionen: Plot konnte nicht gerendert werden. "
-                        "Hinweis: Für Plotly-Export im PDF wird in der Regel 'kaleido' benötigt "
-                        "(pip install -U kaleido).",
-                        P,
-                    )
-                )
+                story.append(_p(f"TD-Dimensionen: Plot-Export fehlgeschlagen: {_fmt(td_err)}", P))
                 story.append(Spacer(1, 4 * mm))
 
         if fig_og is not None:
             if og_png:
                 _img_block(og_png, "OG-Dimensionen", OG_ORANGE)
             else:
-                story.append(
-                    _p(
-                        "OG-Dimensionen: Plot konnte nicht gerendert werden. "
-                        "Hinweis: Für Plotly-Export im PDF wird in der Regel 'kaleido' benötigt "
-                        "(pip install -U kaleido).",
-                        P,
-                    )
-                )
+                story.append(_p(f"OG-Dimensionen: Plot-Export fehlgeschlagen: {_fmt(og_err)}", P))
                 story.append(Spacer(1, 4 * mm))
 
         # Maßnahmen sauber auf neuer Seite starten, sobald Plots-Abschnitt existiert
