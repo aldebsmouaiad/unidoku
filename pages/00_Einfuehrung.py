@@ -349,7 +349,7 @@ def main() -> None:
             st.rerun()
 
     with c2:
-        if st.button("Weiter zur Ausfüllhinweise", type="primary", use_container_width=True):
+        if st.button("Weiter zu den Ausfüllhinweisen", type="primary", use_container_width=True):
             st.session_state["nav_request"] = "Ausfüllhinweise"
             st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
