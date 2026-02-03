@@ -4,7 +4,9 @@ from __future__ import annotations
 import base64
 import html
 from typing import Optional
-
+import json
+from datetime import datetime
+import re
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
@@ -20,7 +22,12 @@ OG_ORANGE = "#F28C28"
 
 def get_answers() -> dict:
     return st.session_state.get("answers", {}) or {}
-
+  
+def _safe_filename(s: str, default: str = "") -> str:
+    s = (s or "").strip()
+    s = re.sub(r"\s+", "_", s)
+    s = re.sub(r"[^A-Za-z0-9_\-\.]", "", s)
+    return s if s else default
 
 def _pick_first_col(df: pd.DataFrame, candidates: list[str]) -> Optional[str]:
     for c in candidates:
@@ -225,23 +232,36 @@ def _inject_gesamtuebersicht_css() -> None:
     font-weight: 850 !important;
   }}
   
-  /* =========================
-   Export: PDF-Download Button -> TU Grün (ROBUST)
-   Marker steht DIREKT vor dem Download-Widget.
-   ========================= */
+    /* =========================
+     Export: Download Buttons (PDF + JSON) -> TU Grün / Hover TU-Orange (ROBUST)
+     Marker steht DIREKT vor dem Download-Widget.
+     ========================= */
 
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+  /* ----- Base Button (PDF + JSON) ----- */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_pdf)
     + div[data-testid="stElementContainer"]
     div[data-testid="stDownloadButton"] button,
-  div.element-container:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_json)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button,
+  div.element-container:has(div#rgm_overview_export_btn_pdf)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button,
+  div.element-container:has(div#rgm_overview_export_btn_json)
     + div.element-container
     div[data-testid="stDownloadButton"] button,
 
   /* Fallback: manche Versionen nutzen .stDownloadButton */
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_pdf)
     + div[data-testid="stElementContainer"]
     div.stDownloadButton button,
-  div.element-container:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_json)
+    + div[data-testid="stElementContainer"]
+    div.stDownloadButton button,
+  div.element-container:has(div#rgm_overview_export_btn_pdf)
+    + div.element-container
+    div.stDownloadButton button,
+  div.element-container:has(div#rgm_overview_export_btn_json)
     + div.element-container
     div.stDownloadButton button {{
 
@@ -254,83 +274,124 @@ def _inject_gesamtuebersicht_css() -> None:
     font-weight: 850 !important;
 
     box-shadow: 0 10px 22px rgba(0,0,0,0.12) !important;
+    filter: none !important;
   }}
 
   /* Text/Spans im Button auch weiß erzwingen */
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_pdf)
     + div[data-testid="stElementContainer"]
     div[data-testid="stDownloadButton"] button *,
-  div.element-container:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_json)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button *,
+  div.element-container:has(div#rgm_overview_export_btn_pdf)
     + div.element-container
     div[data-testid="stDownloadButton"] button *,
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+  div.element-container:has(div#rgm_overview_export_btn_json)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button *,
+
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_pdf)
     + div[data-testid="stElementContainer"]
     div.stDownloadButton button *,
-  div.element-container:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_json)
+    + div[data-testid="stElementContainer"]
+    div.stDownloadButton button *,
+  div.element-container:has(div#rgm_overview_export_btn_pdf)
+    + div.element-container
+    div.stDownloadButton button *,
+  div.element-container:has(div#rgm_overview_export_btn_json)
     + div.element-container
     div.stDownloadButton button * {{
 
     color: #ffffff !important;
   }}
 
-  /* Hover / Active -> Hover ORANGE */
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+  /* Hover: kräftig TU-Orange (#CA7406) */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_pdf)
     + div[data-testid="stElementContainer"]
     div[data-testid="stDownloadButton"] button:hover,
-  div.element-container:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_json)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button:hover,
+  div.element-container:has(div#rgm_overview_export_btn_pdf)
     + div.element-container
     div[data-testid="stDownloadButton"] button:hover,
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+  div.element-container:has(div#rgm_overview_export_btn_json)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button:hover,
+
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_pdf)
     + div[data-testid="stElementContainer"]
     div.stDownloadButton button:hover,
-  div.element-container:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_json)
+    + div[data-testid="stElementContainer"]
+    div.stDownloadButton button:hover,
+  div.element-container:has(div#rgm_overview_export_btn_pdf)
+    + div.element-container
+    div.stDownloadButton button:hover,
+  div.element-container:has(div#rgm_overview_export_btn_json)
     + div.element-container
     div.stDownloadButton button:hover {{
-    background: var(--rgm-og-orange) !important;
-    background-color: var(--rgm-og-orange) !important;
+
+    background: #CA7406 !important;
+    background-color: #CA7406 !important;
+    border-color: #CA7406 !important;
     color: #ffffff !important;
     filter: none !important;
   }}
 
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+  /* Active: leicht dunkler */
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_pdf)
     + div[data-testid="stElementContainer"]
     div[data-testid="stDownloadButton"] button:active,
-  div.element-container:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_json)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button:active,
+  div.element-container:has(div#rgm_overview_export_btn_pdf)
     + div.element-container
     div[data-testid="stDownloadButton"] button:active,
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+  div.element-container:has(div#rgm_overview_export_btn_json)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button:active,
+
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_pdf)
     + div[data-testid="stElementContainer"]
     div.stDownloadButton button:active,
-  div.element-container:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_json)
+    + div[data-testid="stElementContainer"]
+    div.stDownloadButton button:active,
+  div.element-container:has(div#rgm_overview_export_btn_pdf)
+    + div.element-container
+    div.stDownloadButton button:active,
+  div.element-container:has(div#rgm_overview_export_btn_json)
     + div.element-container
     div.stDownloadButton button:active {{
-    background: var(--rgm-og-orange) !important;
-    background-color: var(--rgm-og-orange) !important;
-    filter: brightness(0.92) !important; /* etwas dunkler beim Klicken */
-  }}
-  
-  /* Hover: kräftig TU-Orange */
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
-    + div[data-testid="stElementContainer"]
-    div[data-testid="stDownloadButton"] button:hover,
-  div.element-container:has(div#rgm_overview_export_btn)
-    + div.element-container
-    div[data-testid="stDownloadButton"] button:hover {{
+
+    background: #CA7406 !important;
     background-color: #CA7406 !important;
     border-color: #CA7406 !important;
-    filter: none !important;
+    filter: brightness(0.92) !important;
   }}
 
   /* Disabled */
-  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_pdf)
     + div[data-testid="stElementContainer"]
     div[data-testid="stDownloadButton"] button:disabled,
-  div.element-container:has(div#rgm_overview_export_btn)
+  div[data-testid="stElementContainer"]:has(div#rgm_overview_export_btn_json)
+    + div[data-testid="stElementContainer"]
+    div[data-testid="stDownloadButton"] button:disabled,
+  div.element-container:has(div#rgm_overview_export_btn_pdf)
+    + div.element-container
+    div[data-testid="stDownloadButton"] button:disabled,
+  div.element-container:has(div#rgm_overview_export_btn_json)
     + div.element-container
     div[data-testid="stDownloadButton"] button:disabled {{
+
     opacity: 0.55 !important;
     cursor: not-allowed !important;
   }}
+
 
   /* =========================
    SECTION-CARDS (Marker -> nächstes Element)
@@ -341,7 +402,8 @@ def _inject_gesamtuebersicht_css() -> None:
   #rgm_overview_kpis,
   #rgm_overview_filters,
   #rgm_overview_export,
-  #rgm_overview_export_btn,
+  #rgm_overview_export_btn_pdf,
+  #rgm_overview_export_btn_json,
   #rgm_overview_empty {{
     height: 0 !important;
     margin: 0 !important;
@@ -2299,35 +2361,63 @@ def main() -> None:
         meta_pdf = dict(meta)
         meta_pdf["global_target"] = f"{float(global_target):.1f}"
         pdf_bytes = make_pdf_bytes(
-          meta=meta_pdf,
-          df_raw=df_raw,
-          df_report=df_report,
-          df_measures=view_for_pdf,
-          fig_td=fig_td,
-          fig_og=fig_og,
-          dark=dark,
+            meta=meta_pdf,
+            df_raw=df_raw,
+            df_report=df_report,
+            df_measures=view_for_pdf,
+            fig_td=fig_td,
+            fig_og=fig_og,
+            dark=dark,
         )
-
     except Exception as e:
         pdf_error = str(e)
+
+    # --- JSON ---
+    session_payload = {
+        "schema": "rgm_td_session_v1",
+        "created_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+        "meta": meta,
+        "global_target_level": float(global_target),
+        "dimension_targets": dim_targets,
+        "answers": answers,
+        "priorities": priorities,
+    }
+    json_bytes = json.dumps(session_payload, ensure_ascii=False, indent=2).encode("utf-8")
 
     st.markdown('<div id="rgm_overview_export"></div>', unsafe_allow_html=True)
     with st.container():
         st.markdown('<div class="rgm-card-title">Export</div>', unsafe_allow_html=True)
-        st.markdown('<div id="rgm_overview_export_btn"></div>', unsafe_allow_html=True)
-        if pdf_bytes is not None:
+
+        col_pdf, col_json = st.columns(2, gap="small")
+
+        with col_pdf:
+            st.markdown('<div id="rgm_overview_export_btn_pdf"></div>', unsafe_allow_html=True)
+            if pdf_bytes is not None:
+                st.download_button(
+                    "PDF-Bericht herunterladen",
+                    data=pdf_bytes,
+                    file_name="reifegrad_gesamtuebersicht.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                )
+            else:
+                st.error(f"PDF-Export nicht verfügbar: {pdf_error}")
+
+        with col_json:
+            st.markdown('<div id="rgm_overview_export_btn_json"></div>', unsafe_allow_html=True)
+            meta = st.session_state.get("meta", {}) or {}
+            org_part = _safe_filename(meta.get("org", ""), default="unbekannte_org")
+            date_part = _safe_filename(meta.get("date_str", ""), default="")
+            if not date_part:
+              date_part = datetime.now().strftime("%Y-%m-%d")
+            fn = f"rgm_save_{org_part}_{date_part}.json"
             st.download_button(
-                "PDF-Bericht herunterladen",
-                data=pdf_bytes,
-                file_name="reifegrad_gesamtuebersicht.pdf",
-                mime="application/pdf",
+                "Sitzung speichern (JSON)",
+                data=json_bytes,
+                file_name=fn,
+                mime="application/json",
                 use_container_width=True,
             )
-        else:
-            st.error(f"PDF-Export nicht verfügbar: {pdf_error}")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
 
 if __name__ == "__main__":
     main()
