@@ -237,37 +237,7 @@ def _inject_erhebung_page_css() -> None:
     box-shadow: 0 0 0 2px rgba(202,116,6,0.28) !important;
   }}
 
-  /* =========================
-     Selectbox Dropdown (Popover) – nur Listbox/Menu
-     (Wichtig: KEIN generisches popover > div Styling, damit Tooltips nicht kaputtgehen)
-     ========================= */
-  div[data-baseweb="popover"] ul[role="listbox"],
-  div[data-baseweb="popover"] div[role="listbox"],
-  div[data-baseweb="menu"] {{
-    background: var(--rgm-pop-bg) !important;
-    color: var(--rgm-pop-fg) !important;
-    border: 1px solid var(--rgm-border) !important;
-    border-radius: 12px !important;
-    overflow: hidden !important;
-  }}
-
-  div[data-baseweb="popover"] li[role="option"],
-  div[data-baseweb="menu"] li {{
-    background: transparent !important;
-    color: var(--rgm-pop-fg) !important;
-  }}
-
-  div[data-baseweb="popover"] li[role="option"]:hover,
-  div[data-baseweb="menu"] li:hover {{
-    background: var(--rgm-pop-hover) !important;
-  }}
-
-  div[data-baseweb="popover"] li[aria-selected="true"],
-  div[data-baseweb="menu"] li[aria-selected="true"] {{
-    background: var(--rgm-pop-sel) !important;
-  }}
-
-  /* =========================
+   /* =========================
      Fragenlayout
      ========================= */
   .rgm-q {{
@@ -509,6 +479,91 @@ def _inject_erhebung_page_css() -> None:
     outline: none !important;
     box-shadow: 0 0 0 3px rgba(99,154,0,0.25) !important;
   }}
+  
+  /* =========================================================
+     FIX: DownloadButton (Speichern) sichtbar & groß (Erhebung)
+     ========================================================= */
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stDownloadButton"] button,
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stDownloadButton"] [data-baseweb="button"] button {{
+    width: 100% !important;
+    min-height: 46px !important;
+    border-radius: 12px !important;
+
+    background: {btn2_bg} !important;
+    border: 1px solid var(--rgm-border) !important;
+
+    color: var(--rgm-text, #111) !important;
+    font-weight: 650 !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+
+    opacity: 1 !important;
+    box-shadow: none !important;
+  }}
+
+  /* Text IM Button erzwingen (falls irgendwo versteckt) */
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stDownloadButton"] button p,
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stDownloadButton"] button span {{
+    display: inline !important;
+    font-size: 15px !important;
+    margin: 0 !important;
+    opacity: 1 !important;
+    color: inherit !important;
+  }}
+
+  /* Hover = TU-Orange */
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stDownloadButton"] button:not(:disabled):hover,
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stDownloadButton"] [data-baseweb="button"] button:not(:disabled):hover {{
+    background: var(--tu-orange, #CA7406) !important;
+    border-color: var(--tu-orange, #CA7406) !important;
+    color: #ffffff !important;
+  }}
+
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stDownloadButton"] button:not(:disabled):hover *,
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stDownloadButton"] [data-baseweb="button"] button:not(:disabled):hover * {{
+    color: #ffffff !important;
+    fill: currentColor !important;
+    stroke: currentColor !important;
+  }}
+  
+  /* =========================================
+   Selectbox Dropdown (Popover): HOVER wie Priorisierung
+   -> Hintergrund TU_ORANGE + Text weiß
+   ========================================= */
+.stApp div[data-baseweb="popover"] li[role="option"]:hover,
+.stApp div[data-baseweb="popover"] div[role="option"]:hover,
+.stApp div[data-baseweb="menu"] li:hover,
+.stApp div[data-baseweb="menu"] div[role="option"]:hover {{
+  background: var(--tu-orange, #CA7406) !important;
+  color: #ffffff !important;
+}}
+/* Text/Labels im Item auch weiß erzwingen */
+.stApp div[data-baseweb="popover"] li[role="option"]:hover *,
+.stApp div[data-baseweb="popover"] div[role="option"]:hover *,
+.stApp div[data-baseweb="menu"] li:hover *,
+.stApp div[data-baseweb="menu"] div[role="option"]:hover * {{
+  color: #ffffff !important;
+}}
+/* Optional: Keyboard-Navigation (Pfeiltasten) ebenfalls wie Hover */
+.stApp div[data-baseweb="popover"] li[role="option"][data-highlighted="true"],
+.stApp div[data-baseweb="popover"] div[role="option"][data-highlighted="true"],
+.stApp div[data-baseweb="menu"] li[data-highlighted="true"] {{
+  background: var(--tu-orange, #CA7406) !important;
+  color: #ffffff !important;
+}}
+
+
 </style>
         """,
         unsafe_allow_html=True,
@@ -988,11 +1043,9 @@ def _render_save_resume_panel(aid: str) -> None:
 
     with st.expander("Speichern & Fortsetzen", expanded=expanded_once):
         st.caption(
-            "Tipp: Für späteres Fortsetzen können Sie entweder die Erhebungs-ID/URL merken "
-            "oder ein Savefile (JSON) herunterladen und später wieder hochladen."
+            "Speichern Sie Ihre Eingaben als JSON und laden Sie sie später wieder – "
+            "zum **Fortsetzen** oder zum **Wiederverwenden** (z. B. Vorjahr laden und anpassen)."
         )
-
-        st.text_input("Erhebungs-ID (aid)", value=aid, disabled=True)
 
         # --- Download ---
         meta = st.session_state.get("meta", {}) or {}
@@ -1009,12 +1062,13 @@ def _render_save_resume_panel(aid: str) -> None:
             mime="application/json",
             use_container_width=True,
         )
+        st.info("Speichert den aktuellen Stand als JSON-Datei auf Ihrem Gerät.")
 
         st.markdown("---")
 
         # --- Upload / Import (immer overwrite) ---
         up = st.file_uploader(
-            "Zwischenspeicher laden (JSON):",
+            "Zwischenspeicher laden (JSON)",
             type=["json"],
             key="rgm_snapshot_upload",
         )
@@ -1028,6 +1082,7 @@ def _render_save_resume_panel(aid: str) -> None:
             disabled=(up is None),
             key="rgm_snapshot_load_btn",
         )
+        st.info("Beim Laden wird der aktuelle Stand durch die Datei ersetzt.")
 
         # ✅ Hinweis NACH dem Button (wird nach rerun hier angezeigt)
         msg = st.session_state.pop("_rgm_snapshot_msg", None)
@@ -1069,10 +1124,10 @@ def _render_save_resume_panel(aid: str) -> None:
                 # Expander nach Import offen
                 st.session_state["_rgm_open_save_resume_expander"] = True
 
-                # ✅ Success-Hinweis setzen
+                # ✅ Success-Hinweis setzen (knackig)
                 st.session_state["_rgm_snapshot_msg"] = (
                     "success",
-                    "Import erfolgreich: Antworten wurden übernommen.",
+                    "Import erfolgreich: Antworten übernommen.",
                 )
 
                 # speichern

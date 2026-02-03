@@ -242,6 +242,7 @@ def _inject_start_css(dark: bool) -> None:
     gap: 14px;
     padding: 8px 0;
     border-bottom: 1px solid __BORDER__;
+    align-items: center;
   }
   .rgm-meta-row:last-child{ border-bottom: none; }
 
@@ -254,6 +255,90 @@ def _inject_start_css(dark: bool) -> None:
   .rgm-v{
     color: __TEXT__;
     font-size: 13.5px;
+  }
+  
+  /* META: 2-Spalten Layout (links: rows, rechts: validiert) */
+  .rgm-meta-grid{
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;   /* beide Hälften gleich breit */
+    gap: 0;                           /* kein Grid-Gap -> Linie kann exakt mittig sein */
+    align-items: stretch;
+  }
+
+  /* mittlerer Trennstrich exakt 50% */
+  .rgm-meta-grid::before{
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 10px;
+    bottom: 10px;
+    width: 1px;
+    background: __BORDER__;
+    transform: translateX(-0.5px);
+    opacity: 0.9;
+    pointer-events: none;
+  }
+
+  /* linke Spalte: nur Padding (kein border-right mehr) */
+  .rgm-meta-left{
+    padding-right: 18px;   /* Abstand zur Mittellinie */
+  }
+
+  /* rechte Spalte: wie normale Rows (nicht Center-Text) */
+  .rgm-meta-right{
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;     /* wichtig: volle Breite */
+    gap: 8px;
+    text-align: left;         /* wichtig: wie links */
+  }
+
+  /* Validiert-Row: gleiche Optik wie rgm-meta-row, aber etwas kleinere Label-Spalte */
+  .rgm-meta-right .rgm-validated-row{
+    grid-template-columns: 150px 1fr;  /* statt 180px -> passt besser rechts */
+    border-bottom: none;               /* keine extra Linie im rechten Block */
+    padding: 8px 0 12px;
+  }
+
+  /* Logo darunter: sauber zentriert */
+  .rgm-validated-logo{
+    display: flex;
+    justify-content: center;
+    margin-top: 0px;
+  }
+
+  /* Logo im rechten Block größer & cleaner */
+  .rgm-meta-right .rgm-footer-logo{
+    box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+    padding: 8px 12px;
+    border-radius: 16px;
+  }
+  .rgm-meta-right .rgm-footer-logo img{
+    height: 70px;           /* <- Größe hier steuern (z.B. 64–76) */
+    width: auto;
+    display: block;
+  }
+
+  /* Responsive: untereinander + Mittellinie ausblenden */
+  @media (max-width: 900px){
+    .rgm-meta-grid{
+      grid-template-columns: 1fr;
+    }
+    .rgm-meta-grid::before{
+      display: none;
+    }
+    .rgm-meta-left{
+      padding-right: 0;
+      border-bottom: 1px solid __BORDER__;
+      padding-bottom: 12px;
+      margin-bottom: 10px;
+    }
+    .rgm-meta-right{
+      padding-left: 0;
+    }
   }
 
   /* Mail mini */
@@ -278,7 +363,7 @@ def _inject_start_css(dark: bool) -> None:
   .rgm-mail svg{ width: 15px; height: 15px; }
 
   .rgm-btn-wrap{ margin-top: 14px; margin-bottom: 10px; }
-
+  
   /* FOOTER (Logos) */
   .rgm-footer{
     position: fixed;
@@ -294,24 +379,33 @@ def _inject_start_css(dark: bool) -> None:
     backdrop-filter: blur(8px);
   }
 
-  .rgm-footer-inner{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 18px;
-    flex-wrap: nowrap;
-
+  /* Scrollfläche */
+  .rgm-footer-scroll{
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
 
-    padding: 0 12px;
+    /* wichtig: genug Rand, damit das 1. Logo nie „klebt“/abgeschnitten wirkt */
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
     box-sizing: border-box;
 
-    scrollbar-width: thin;
+    /* macht das Scrollen bis zum Rand sauber */
+    scroll-padding-left: max(12px, env(safe-area-inset-left));
+    scroll-padding-right: max(12px, env(safe-area-inset-right));
   }
 
-  .rgm-footer-inner.is-overflow{ justify-content: flex-start; }
+  /* Track, der sich bei "passt rein" automatisch zentriert */
+  .rgm-footer-track{
+    display: flex;
+    align-items: center;
+    gap: 18px;
+
+    width: max-content;
+    margin: 0 auto;
+    padding: 0; /* Padding ist im Scroll-Container */
+  }
 
   .rgm-footer-logo{
     flex: 0 0 auto;
@@ -340,16 +434,15 @@ def _inject_start_css(dark: bool) -> None:
   }
 
   @media (max-width: 900px){
-    .rgm-h1{ font-size: 28px; }
     .rgm-footer-logo img{ height: 46px; }
-    .rgm-meta-row{ grid-template-columns: 150px 1fr; }
   }
   @media (max-width: 600px){
     .rgm-footer-logo img{ height: 42px; }
   }
 
-  .rgm-footer-inner::-webkit-scrollbar{ height: 6px; }
-  .rgm-footer-inner::-webkit-scrollbar-thumb{ border-radius: 999px; }
+  .rgm-footer-scroll::-webkit-scrollbar{ height: 6px; }
+  .rgm-footer-scroll::-webkit-scrollbar-thumb{ border-radius: 999px; }
+
 </style>
 """
     css = (
@@ -367,35 +460,6 @@ def _inject_start_css(dark: bool) -> None:
         .replace("__FOOTER_BORDER__", footer_border)
     )
     st.markdown(css, unsafe_allow_html=True)
-
-    # Footer Centering Helper
-    st.markdown(
-        """
-<script>
-(function(){
-  if (window.__rgmFooterCenteringInstalled) return;
-  window.__rgmFooterCenteringInstalled = true;
-
-  function updateFooterOverflow(){
-    const el = document.querySelector(".rgm-footer-inner");
-    if (!el) return;
-    const overflow = el.scrollWidth > el.clientWidth + 1;
-    el.classList.toggle("is-overflow", overflow);
-  }
-
-  window.addEventListener("load", updateFooterOverflow);
-  window.addEventListener("resize", updateFooterOverflow);
-
-  const obs = new MutationObserver(updateFooterOverflow);
-  obs.observe(document.body, { childList: true, subtree: true });
-
-  setTimeout(updateFooterOverflow, 50);
-})();
-</script>
-        """.strip(),
-        unsafe_allow_html=True,
-    )
-
 
 def _feature_card(title: str, text: str, icon_svg: str) -> str:
     return f"""
@@ -457,14 +521,32 @@ def main() -> None:
                 f'target="_blank" rel="noopener noreferrer">{img_html}</a>'
             )
         return f'<span class="rgm-footer-logo">{img_html}</span>'
+      
+    if logo_niro:
+        validated_with_html = (
+            f'<div class="rgm-meta-right">'
+            f'  <div class="rgm-meta-row rgm-validated-row">'
+            f'    <div class="rgm-k">Validiert durch</div>'
+            f'    <div class="rgm-v">Netzwerk Industrie RuhrOst</div>'
+            f'  </div>'
+            f'  <div class="rgm-validated-logo">{img_tag(logo_niro, "NIRO")}</div>'
+            f'</div>'
+        )
+    else:
+        validated_with_html = (
+            f'<div class="rgm-meta-right">'
+            f'  <div class="rgm-meta-row rgm-validated-row">'
+            f'    <div class="rgm-k">Validiert mit</div>'
+            f'    <div class="rgm-v">Netzwerk Industrie RuhrOst</div>'
+            f'  </div>'
+            f'</div>'
+        )
 
     logo_tags: list[str] = []
     if logo_unidoku:
         logo_tags.append(img_tag(logo_unidoku, "UniDoku"))
     if logo_tu:
         logo_tags.append(img_tag(logo_tu, "TU"))
-    if logo_niro:
-        logo_tags.append(img_tag(logo_niro, "NIRO"))
     if logo_igf:
         logo_tags.append(img_tag(logo_igf, "IGF"))
     if logo_bmwe:
@@ -558,16 +640,20 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    st.markdown(
-        f"""
+    meta_html = f"""
 <div class="rgm-meta">
-  <div class="rgm-meta-row"><div class="rgm-k">Erstellt durch</div><div class="rgm-v">{_name_with_mail(created_by, created_by_email)}</div></div>
-  <div class="rgm-meta-row"><div class="rgm-k">Credit</div><div class="rgm-v">{_name_with_mail(credit, credit_email)}</div></div>
-  <div class="rgm-meta-row"><div class="rgm-k">Technischer Support</div><div class="rgm-v">{_name_with_mail(support_name, support_email)}</div></div>
+<div class="rgm-meta-grid">
+<div class="rgm-meta-left">
+<div class="rgm-meta-row"><div class="rgm-k">Erstellt durch</div><div class="rgm-v">{_name_with_mail(created_by, created_by_email)}</div></div>
+<div class="rgm-meta-row"><div class="rgm-k">Credit</div><div class="rgm-v">{_name_with_mail(credit, credit_email)}</div></div>
+<div class="rgm-meta-row"><div class="rgm-k">Technischer Support</div><div class="rgm-v">{_name_with_mail(support_name, support_email)}</div></div>
 </div>
-        """.strip(),
-        unsafe_allow_html=True,
-    )
+{validated_with_html}
+</div>
+</div>
+""".strip()
+
+    st.markdown(meta_html, unsafe_allow_html=True)
 
     st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
 
@@ -580,15 +666,16 @@ def main() -> None:
     # Footer Logos (fixed)
     st.markdown(
         f"""
-<div class="rgm-footer">
-  <div class="rgm-footer-inner">
-    {''.join(logo_tags)}
-  </div>
-</div>
+    <div class="rgm-footer">
+      <div class="rgm-footer-scroll">
+        <div class="rgm-footer-track">
+          {''.join(logo_tags)}
+        </div>
+      </div>
+    </div>
         """.strip(),
         unsafe_allow_html=True,
     )
-
 
 if __name__ == "__main__":
     main()
