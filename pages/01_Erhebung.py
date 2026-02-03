@@ -51,22 +51,12 @@ def _inject_erhebung_page_css() -> None:
     """Einheitliches Design für Erhebung (Cards/Typografie/Abstände) – kompatibel mit globalem Theme."""
     dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
-    # Core tokens
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
     header_bg = "rgba(255,255,255,0.08)" if dark else "rgba(127,127,127,0.10)"
     shadow = "0 12px 28px rgba(0,0,0,0.40)" if dark else "0 10px 24px rgba(0,0,0,0.06)"
 
-    # Selectbox dropdown hover/selected
-    pop_hover = "rgba(202,116,6,0.22)" if dark else "rgba(202,116,6,0.14)"
-    pop_sel = "rgba(255,255,255,0.08)" if dark else "rgba(0,0,0,0.04)"
-
-    pop_bg = "rgba(17,24,39,0.98)" if dark else "#ffffff"
-    pop_fg = "rgba(250,250,250,0.92)" if dark else "rgba(17,24,39,0.92)"
-
-    # File uploader
     uploader_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.02)"
-    uploader_hover = "rgba(255,255,255,0.10)" if dark else "rgba(0,0,0,0.05)"
 
     # Tooltip (help=...)
     if dark:
@@ -86,7 +76,7 @@ def _inject_erhebung_page_css() -> None:
         tip_pop_border = "rgba(0,0,0,0.12)"
         tip_pop_shadow = "0 10px 24px rgba(0,0,0,0.10)"
 
-    # Secondary-Button Grundzustand (für Erhebung-seitig genutzte Secondary Buttons)
+    # Secondary-Button Grundzustand (Erhebung)
     btn2_bg = "rgba(255,255,255,0.06)" if dark else "#ffffff"
     btn2_text = "rgba(250,250,250,0.92)" if dark else "#111111"
 
@@ -97,6 +87,8 @@ def _inject_erhebung_page_css() -> None:
      Tokens (nur für diese Seite)
      ========================= */
   div[data-testid="stAppViewContainer"] {{
+    --tu-orange: #CA7406;
+
     --rgm-td-blue: {TD_BLUE};
     --rgm-og-orange: {OG_ORANGE};
     --rgm-border: {border};
@@ -104,13 +96,7 @@ def _inject_erhebung_page_css() -> None:
     --rgm-header-bg: {header_bg};
     --rgm-shadow: {shadow};
 
-    --rgm-pop-hover: {pop_hover};
-    --rgm-pop-sel: {pop_sel};
-    --rgm-pop-bg: {pop_bg};
-    --rgm-pop-fg: {pop_fg};
-
     --rgm-uploader-bg: {uploader_bg};
-    --rgm-uploader-hover: {uploader_hover};
 
     --rgm-tip-icon-bg: {tip_icon_bg};
     --rgm-tip-icon-hover: {tip_icon_hover};
@@ -127,7 +113,7 @@ def _inject_erhebung_page_css() -> None:
     max-width: 1200px;
     margin: 0 auto;
     padding-top: 1.0rem;
-    padding-bottom: 6.0rem; /* Footer + Luft */
+    padding-bottom: 6.0rem;
   }}
 
   /* Anchor-Icon neben Überschriften ausblenden */
@@ -177,7 +163,6 @@ def _inject_erhebung_page_css() -> None:
     background: linear-gradient(90deg, var(--rgm-td-blue), var(--rgm-og-orange));
   }}
 
-  /* Badges unter Hero */
   .rgm-badges {{
     display: flex;
     flex-wrap: wrap;
@@ -200,50 +185,44 @@ def _inject_erhebung_page_css() -> None:
   .rgm-badge b {{ font-weight: 850; }}
 
   /* =========================
-     Step 0: Form-Card (volle Breite)
+     Step 0: Meta-Card
      ========================= */
-  div.stForm,
-  div[data-testid="stForm"],
-  form[data-testid="stForm"] {{
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stVerticalBlock"]:has(#rgm-erhebung-meta-card):has(.rgm-hero) {{
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
   }}
 
-  div.stForm,
-  div[data-testid="stForm"] {{
-    border: 1px solid var(--rgm-border) !important;
-    border-radius: 14px !important;
-    background: var(--rgm-card-bg, #fff) !important;
-    box-shadow: var(--rgm-shadow) !important;
-    padding: 14px 16px 12px 16px !important;
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stVerticalBlock"]:has(#rgm-erhebung-meta-card):not(:has(.rgm-hero)) {{
+      border: 1px solid var(--rgm-border) !important;
+      border-radius: 14px !important;
+      background: var(--rgm-card-bg, #fff) !important;
+      box-shadow: var(--rgm-shadow) !important;
+      padding: 14px 16px 12px 16px !important;
+      margin: 0 !important;
   }}
 
-  div.stForm label,
-  div[data-testid="stForm"] label {{
-    font-weight: 750 !important;
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-testid="stVerticalBlock"]:has(#rgm-erhebung-meta-card):not(:has(.rgm-hero)) label {{
+      font-weight: 750 !important;
   }}
 
-  /* =========================
-     Focus: Inputs/Select (TU-Orange)
-     ========================= */
+  /* Focus: Inputs/Select (TU-Orange) */
   div[data-testid="stTextInput"] input:focus {{
-    border-color: var(--tu-orange, #CA7406) !important;
+    border-color: var(--tu-orange) !important;
     box-shadow: 0 0 0 2px rgba(202,116,6,0.28) !important;
   }}
-
   div[data-baseweb="select"]:focus-within > div {{
-    border-color: var(--tu-orange, #CA7406) !important;
+    border-color: var(--tu-orange) !important;
     box-shadow: 0 0 0 2px rgba(202,116,6,0.28) !important;
   }}
 
-   /* =========================
-     Fragenlayout
-     ========================= */
-  .rgm-q {{
-    margin: 6px 0;
-    line-height: 1.40;
-  }}
+  /* Fragenlayout */
+  .rgm-q {{ margin: 6px 0; line-height: 1.40; }}
   .rgm-qno {{
     display: inline-flex;
     align-items: center;
@@ -293,15 +272,12 @@ def _inject_erhebung_page_css() -> None:
     color: var(--rgm-text, #111);
   }}
 
-  /* Mobile */
   @media (max-width: 900px) {{
     .rgm-h1 {{ font-size: 26px; }}
     .rgm-hero {{ padding: 16px; }}
   }}
 
-  /* =========================
-     File Uploader (Import)
-     ========================= */
+  /* File Uploader */
   div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"],
   div[data-testid="stFileUploader"] section[aria-label="File uploader"] {{
     background: var(--rgm-uploader-bg) !important;
@@ -309,36 +285,7 @@ def _inject_erhebung_page_css() -> None:
     border-radius: 12px !important;
   }}
 
-  div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"] *,
-  div[data-testid="stFileUploader"] section[aria-label="File uploader"] * {{
-    color: var(--rgm-text, #111) !important;
-  }}
-
-  div[data-testid="stFileUploader"] small {{
-    color: var(--rgm-text, #111) !important;
-    opacity: 0.78 !important;
-  }}
-
-  div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"] svg,
-  div[data-testid="stFileUploader"] section[aria-label="File uploader"] svg {{
-    color: var(--rgm-text, #111) !important;
-    opacity: 0.92 !important;
-  }}
-
-  div[data-testid="stFileUploader"] [data-baseweb="button"] button {{
-    background: transparent !important;
-    border: 1px solid var(--rgm-border) !important;
-    color: var(--rgm-text, #111) !important;
-    border-radius: 10px !important;
-  }}
-
-  div[data-testid="stFileUploader"] > div {{
-    background: transparent !important;
-  }}
-
-  /* =========================
-     Tooltip Icon (help=...)
-     ========================= */
+  /* Tooltip Icon */
   div[data-testid="stTooltipIcon"] button {{
     background: var(--rgm-tip-icon-bg) !important;
     border: 1px solid var(--rgm-tip-pop-border) !important;
@@ -361,9 +308,7 @@ def _inject_erhebung_page_css() -> None:
     opacity: 1 !important;
   }}
 
-  /* =========================
-     Tooltip Popup (help=...)
-     ========================= */
+  /* Tooltip Popup */
   *[data-baseweb="tooltip"],
   *[role="tooltip"] {{
     background: var(--rgm-tip-pop-bg) !important;
@@ -374,68 +319,12 @@ def _inject_erhebung_page_css() -> None:
     max-width: 560px !important;
     padding: 10px 12px !important;
   }}
-
-  *[data-baseweb="tooltip"] *,
+  *[data-baseweb="tooltip"] * ,
   *[role="tooltip"] * {{
     color: var(--rgm-tip-pop-fg) !important;
   }}
 
-  *[data-baseweb="tooltip"] > *,
-  *[role="tooltip"] > * {{
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }}
-
-  *[data-baseweb="tooltip"] *[role="tooltip"] {{
-    background: transparent !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-  }}
-
-  /* =========================================================
-     FIX: FileUploader "Browse files" + DownloadButton Hover
-     -> FULL ORANGE + Text/Icons weiß (nur Own-Target)
-     ========================================================= */
-  div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
-    div[data-testid="stFileUploader"] [data-baseweb="button"] button,
-  div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
-    div[data-testid="stDownloadButton"] button,
-  div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
-    div[data-testid="stDownloadButton"] [data-baseweb="button"] button {{
-    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
-  }}
-
-  div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
-    div[data-testid="stFileUploader"] [data-baseweb="button"] button:not(:disabled):hover,
-  div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
-    div[data-testid="stDownloadButton"] button:not(:disabled):hover,
-  div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
-    div[data-testid="stDownloadButton"] [data-baseweb="button"] button:not(:disabled):hover {{
-    background: var(--tu-orange, #CA7406) !important;
-    background-color: var(--tu-orange, #CA7406) !important;
-    background-image: none !important;
-    border-color: var(--tu-orange, #CA7406) !important;
-    box-shadow: none !important;
-    color: #ffffff !important;
-    opacity: 1 !important;
-  }}
-
-  div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
-    div[data-testid="stFileUploader"] [data-baseweb="button"] button:not(:disabled):hover *,
-  div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
-    div[data-testid="stDownloadButton"] button:not(:disabled):hover *,
-  div[data-testid="stAppViewContainer"]:has(#rgm-own-target-marker)
-    div[data-testid="stDownloadButton"] [data-baseweb="button"] button:not(:disabled):hover * {{
-    color: #ffffff !important;
-    fill: currentColor !important;
-    stroke: currentColor !important;
-  }}
-
-  /* =========================================
-     Secondary Buttons – NUR Erhebung (Marker)
-     ========================================= */
+  /* Secondary Buttons – NUR Erhebung (Marker) */
   div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
     button[data-testid="baseButton-secondary"],
   div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
@@ -448,121 +337,37 @@ def _inject_erhebung_page_css() -> None:
     opacity: 1 !important;
     transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
   }}
-
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    button[data-testid="baseButton-secondary"] *,
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]) * {{
-    color: inherit !important;
-  }}
-
   div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
     button[data-testid="baseButton-secondary"]:not(:disabled):hover,
   div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
     div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover {{
-    background: var(--tu-orange, #CA7406) !important;
-    border-color: var(--tu-orange, #CA7406) !important;
+    background: var(--tu-orange) !important;
+    border-color: var(--tu-orange) !important;
     color: #ffffff !important;
   }}
 
+  /* Selectbox Dropdown Hover – scoped auf Erhebung */
   div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    button[data-testid="baseButton-secondary"]:not(:disabled):hover *,
+    div[data-baseweb="popover"] li[role="option"]:hover,
   div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):not(:disabled):hover * {{
-    color: #ffffff !important;
+    div[data-baseweb="popover"] div[role="option"]:hover,
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-baseweb="menu"] li:hover,
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-baseweb="menu"] div[role="option"]:hover {{
+      background: var(--tu-orange) !important;
+      color: #ffffff !important;
   }}
-
   div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    button[data-testid="baseButton-secondary"]:focus,
+    div[data-baseweb="popover"] li[role="option"]:hover *,
   div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div.stButton > button:not([data-testid="baseButton-primary"]):not([kind="primary"]):focus {{
-    outline: none !important;
-    box-shadow: 0 0 0 3px rgba(99,154,0,0.25) !important;
+    div[data-baseweb="popover"] div[role="option"]:hover *,
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-baseweb="menu"] li:hover *,
+  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
+    div[data-baseweb="menu"] div[role="option"]:hover * {{
+      color: #ffffff !important;
   }}
-  
-  /* =========================================================
-     FIX: DownloadButton (Speichern) sichtbar & groß (Erhebung)
-     ========================================================= */
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div[data-testid="stDownloadButton"] button,
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div[data-testid="stDownloadButton"] [data-baseweb="button"] button {{
-    width: 100% !important;
-    min-height: 46px !important;
-    border-radius: 12px !important;
-
-    background: {btn2_bg} !important;
-    border: 1px solid var(--rgm-border) !important;
-
-    color: var(--rgm-text, #111) !important;
-    font-weight: 650 !important;
-
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 10px !important;
-
-    opacity: 1 !important;
-    box-shadow: none !important;
-  }}
-
-  /* Text IM Button erzwingen (falls irgendwo versteckt) */
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div[data-testid="stDownloadButton"] button p,
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div[data-testid="stDownloadButton"] button span {{
-    display: inline !important;
-    font-size: 15px !important;
-    margin: 0 !important;
-    opacity: 1 !important;
-    color: inherit !important;
-  }}
-
-  /* Hover = TU-Orange */
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div[data-testid="stDownloadButton"] button:not(:disabled):hover,
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div[data-testid="stDownloadButton"] [data-baseweb="button"] button:not(:disabled):hover {{
-    background: var(--tu-orange, #CA7406) !important;
-    border-color: var(--tu-orange, #CA7406) !important;
-    color: #ffffff !important;
-  }}
-
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div[data-testid="stDownloadButton"] button:not(:disabled):hover *,
-  div[data-testid="stAppViewContainer"]:has(#rgm-erhebung-page-marker)
-    div[data-testid="stDownloadButton"] [data-baseweb="button"] button:not(:disabled):hover * {{
-    color: #ffffff !important;
-    fill: currentColor !important;
-    stroke: currentColor !important;
-  }}
-  
-  /* =========================================
-   Selectbox Dropdown (Popover): HOVER wie Priorisierung
-   -> Hintergrund TU_ORANGE + Text weiß
-   ========================================= */
-.stApp div[data-baseweb="popover"] li[role="option"]:hover,
-.stApp div[data-baseweb="popover"] div[role="option"]:hover,
-.stApp div[data-baseweb="menu"] li:hover,
-.stApp div[data-baseweb="menu"] div[role="option"]:hover {{
-  background: var(--tu-orange, #CA7406) !important;
-  color: #ffffff !important;
-}}
-/* Text/Labels im Item auch weiß erzwingen */
-.stApp div[data-baseweb="popover"] li[role="option"]:hover *,
-.stApp div[data-baseweb="popover"] div[role="option"]:hover *,
-.stApp div[data-baseweb="menu"] li:hover *,
-.stApp div[data-baseweb="menu"] div[role="option"]:hover * {{
-  color: #ffffff !important;
-}}
-/* Optional: Keyboard-Navigation (Pfeiltasten) ebenfalls wie Hover */
-.stApp div[data-baseweb="popover"] li[role="option"][data-highlighted="true"],
-.stApp div[data-baseweb="popover"] div[role="option"][data-highlighted="true"],
-.stApp div[data-baseweb="menu"] li[data-highlighted="true"] {{
-  background: var(--tu-orange, #CA7406) !important;
-  color: #ffffff !important;
-}}
-
 
 </style>
         """,
@@ -1547,14 +1352,13 @@ def _meta_form_step(aid: str) -> None:
 
     prev_target_label = meta.get("target_label", "")
 
-    open_own_target_clicked = False
-    start_clicked = False
-    dirty_own = bool(st.session_state.get("own_target_dirty", False))
-
     # ---------------------------------------------------------
-    # FORM (nur key=..., kein value=...)
+    # CARD (optisch wie st.form, aber REAKTIV)
+    # -> Button-Text wechselt sofort beim Selectbox-Change
     # ---------------------------------------------------------
-    with st.form("erhebung_meta_form", clear_on_submit=False):
+    with st.container():
+        st.markdown('<div id="rgm-erhebung-meta-card"></div>', unsafe_allow_html=True)
+        
         c1, c2 = st.columns(2, gap="large")
 
         with c1:
@@ -1580,42 +1384,55 @@ def _meta_form_step(aid: str) -> None:
                 key="rgm_meta_date_str",
                 placeholder="TT.MM.JJJJ",
             )
+
+            # ✅ Wichtig: Selectbox NICHT im Form -> reagiert sofort
             target_label = st.selectbox(
                 "Angestrebtes Ziel:",
                 TARGET_OPTIONS,
                 key="rgm_meta_target_label",
             )
+
             assessor_contact = st.text_input(
                 "Kontakt:",
                 key="rgm_meta_assessor_contact",
                 placeholder="name@organisation.de oder +49 ...",
             )
 
+        # Button-Logik (sofort sichtbar je nach Auswahl)
+        open_own_target_clicked = False
+        start_clicked = False
+
+        own_defined = bool(st.session_state.get("erhebung_own_target_defined", False))
+        dirty_own = bool(st.session_state.get("own_target_dirty", False))
+
         if target_label == "Eigenes Ziel":
-            if not st.session_state.get("erhebung_own_target_defined", False):
-                open_own_target_clicked = st.form_submit_button(
+            if not own_defined:
+                open_own_target_clicked = st.button(
                     "Eigenes Ziel definieren",
                     type="primary",
                     use_container_width=True,
+                    key="meta_open_own_target_btn",
                 )
             else:
-                start_clicked = st.form_submit_button(
+                start_clicked = st.button(
                     "Erhebung starten",
                     type="primary",
                     use_container_width=True,
                     disabled=dirty_own,
+                    key="meta_start_btn",
                 )
         else:
-            start_clicked = st.form_submit_button(
+            start_clicked = st.button(
                 "Erhebung starten",
                 type="primary",
                 use_container_width=True,
+                key="meta_start_btn",
             )
 
     # ---------------------------------------------------------
     # Hinweisbox + Button: "Eigenes Ziel ändern"
     # ---------------------------------------------------------
-    if meta.get("target_label") == "Eigenes Ziel" and st.session_state.get("erhebung_own_target_defined", False):
+    if st.session_state.get("rgm_meta_target_label") == "Eigenes Ziel" and st.session_state.get("erhebung_own_target_defined", False):
         left, right = st.columns([1, 3])
         with left:
             if st.button("Eigenes Ziel ändern", use_container_width=True, key="own_target_change_btn"):
@@ -1871,19 +1688,27 @@ def _own_target_step(aid: str) -> None:
     stored = st.session_state.get("dimension_targets", {}) or {}
     defined = bool(st.session_state.get("erhebung_own_target_defined", False))
 
+    # Dirty auch VOR dem ersten Speichern erkennen
     dirty = False
-    if defined and stored:
-        for dd in dims_sorted:
-            c = str(dd.get("code", "")).strip()
-            if not c:
-                continue
-            k_all = f"own_target_val_{c}"
-            cur = st.session_state.get(k_all, None)
-            if cur not in options:
-                continue
-            if float(stored.get(c, -999.0)) != float(cur):
-                dirty = True
-                break
+    for dd in dims_sorted:
+        c = str(dd.get("code", "")).strip()
+        if not c:
+            continue
+
+        k_all = f"own_target_val_{c}"
+        cur = st.session_state.get(k_all, None)
+        if cur not in options:
+            continue
+
+        base = stored.get(c, base_default) if isinstance(stored, dict) and stored else base_default
+        try:
+            base_i = int(round(float(base)))
+        except Exception:
+            base_i = base_default
+
+        if int(cur) != int(base_i):
+            dirty = True
+            break
 
     st.session_state["own_target_dirty"] = dirty
 
