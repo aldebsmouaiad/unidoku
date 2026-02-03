@@ -238,7 +238,7 @@ def _inject_start_css(dark: bool) -> None:
   }
   .rgm-meta-row{
     display: grid;
-    grid-template-columns: 180px 1fr;
+    grid-template-columns: minmax(140px, 180px) minmax(0, 1fr);
     gap: 14px;
     padding: 8px 0;
     border-bottom: 1px solid __BORDER__;
@@ -253,6 +253,7 @@ def _inject_start_css(dark: bool) -> None:
     font-size: 13.5px;
   }
   .rgm-v{
+    min-width: 0;
     color: __TEXT__;
     font-size: 13.5px;
   }
@@ -261,7 +262,7 @@ def _inject_start_css(dark: bool) -> None:
   .rgm-meta-grid{
     position: relative;
     display: grid;
-    grid-template-columns: 1fr 1fr;   /* beide Hälften gleich breit */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0;                           /* kein Grid-Gap -> Linie kann exakt mittig sein */
     align-items: stretch;
   }
@@ -287,6 +288,7 @@ def _inject_start_css(dark: bool) -> None:
 
   /* rechte Spalte: wie normale Rows (nicht Center-Text) */
   .rgm-meta-right{
+    min-width: 0;
     padding-left: 18px;
     display: flex;
     flex-direction: column;
@@ -298,8 +300,8 @@ def _inject_start_css(dark: bool) -> None:
 
   /* Validiert-Row: gleiche Optik wie rgm-meta-row, aber etwas kleinere Label-Spalte */
   .rgm-meta-right .rgm-validated-row{
-    grid-template-columns: 150px 1fr;  /* statt 180px -> passt besser rechts */
-    border-bottom: none;               /* keine extra Linie im rechten Block */
+    grid-template-columns: minmax(130px, 150px) minmax(0, 1fr);
+    border-bottom: none;
     padding: 8px 0 12px;
   }
 
@@ -323,7 +325,7 @@ def _inject_start_css(dark: bool) -> None:
   }
 
   /* Responsive: untereinander + Mittellinie ausblenden */
-  @media (max-width: 900px){
+  @media (max-width: 1100px){
     .rgm-meta-grid{
       grid-template-columns: 1fr;
     }
@@ -342,7 +344,13 @@ def _inject_start_css(dark: bool) -> None:
   }
 
   /* Mail mini */
-  .rgm-mail{ display: inline-flex; align-items: center; gap: 8px; }
+  .rgm-mail{ display: inline-flex; align-items: center; gap: 8px; max-width: 100%; }
+  .rgm-mail > span{
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .rgm-mail a{
     display: inline-flex;
     align-items: center;
@@ -354,6 +362,7 @@ def _inject_start_css(dark: bool) -> None:
     text-decoration: none;
     color: inherit;
     opacity: 0.95;
+    flex: 0 0 auto;
   }
   .rgm-mail a:hover{
     opacity: 1;
@@ -491,7 +500,7 @@ def main() -> None:
     created_by = meta.get("created_by", "Christian Koch")
     created_by_email = meta.get("created_by_email", "christian4.koch@tu-dortmund.de")
     version = meta.get("version", "2.0")
-    last_change = meta.get("last_change", "03.12.2025")
+    last_change = meta.get("last_change", "03.02.2026")
     credit = meta.get("credit", "Victor Wolf")
     credit_email = meta.get("credit_email")  # optional
 
@@ -593,7 +602,7 @@ def main() -> None:
           <div class="rgm-accent-line"></div>
           <p class="rgm-lead">
             Fragebasiertes Tool zur Bewertung und Weiterentwicklung der technischen Dokumentation – mit Auswertung,
-            Priorisierung und Exportfunktionen (PDF/CSV).
+            Priorisierung und Export (PDF/CSV/PNG/JSON).
           </p>
         </div>
         <div class="rgm-pill"><span class="rgm-dot"></span>Version {_html.escape(str(version))} • Stand {_html.escape(str(last_change))}</div>
@@ -606,25 +615,25 @@ def main() -> None:
     # Reihenfolge: Erhebung → Ergebnis → Priorisierung → Export
     CARD1 = _feature_card(
         "Erhebung",
-        "Beantworten Sie die Fragen je Subdimension und ermitteln Sie den Reifegrad stufenweise.",
+        "Beantworten Sie die Fragen je Subdimension und ermitteln Sie den Reifegrad stufenweise. Optional können Sie ein Zielniveau festlegen.",
         ICON_LIST,
     )
 
     CARD2 = _feature_card(
         "Ergebnis",
-        "Transparente Ist-/Soll-Sicht mit visueller Auswertung und strukturierter Maßnahmenübersicht.",
+        "Transparente Auswertung und Visualisierung des Reifegrads mit zentralen Kennzahlen und strukturierter Maßnahmenübersicht.",
         ICON_CHART,
     )
 
     CARD3 = _feature_card(
         "Priorisierung",
-        "Bewerten Sie Maßnahmen nach Wirkung und Umsetzbarkeit – Fokus auf die wichtigsten Hebel.",
+        "Planen und bewerten Sie Maßnahmen nach Wirkung und Umsetzbarkeit – Fokus auf die wichtigsten Hebel.",
         ICON_TARGET,
     )
 
     CARD4 = _feature_card(
         "Export",
-        "Exportieren Sie Ergebnisse zur Dokumentation und Weitergabe (PDF/CSV).",
+        "Exportieren Sie Ergebnisse als PDF-Bericht, CSV, PNG oder als wiederverwendbare JSON-Datei zum späteren Laden und Bearbeiten.",
         ICON_FILE,
     )
 

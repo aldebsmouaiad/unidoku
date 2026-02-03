@@ -26,6 +26,97 @@ IMAGES_DIR = BASE_DIR / "images"
 # Interner Widget-Key (Pages sollen KEIN Widget mit diesem Key erzeugen)
 _DARK_TOGGLE_KEY = "_rgm_dark_toggle"
 
+# Datenschutz-Hinweis (1x pro Session)
+_PRIVACY_ACK_KEY = "_rgm_privacy_ack"
+
+def show_privacy_notice_modal() -> None:
+    if st.session_state.get(_PRIVACY_ACK_KEY, False):
+        return
+
+    # ✅ Nur die zwei gewünschten Absätze
+    text = """
+**Keine Speicherung:** Alle Eingaben bleiben nur während dieser Sitzung erhalten und werden nicht dauerhaft gespeichert.
+
+Für eine spätere Bearbeitung können Sie Ihren Zwischenspeicher als **JSON-Datei** herunterladen und später wieder hochladen.
+""".strip()
+
+    if hasattr(st, "dialog"):
+      @st.dialog("Datenschutz-Hinweis", width="large")
+      def _dlg():
+          st.markdown(
+              """
+              <style>
+              /* ===== Datenschutz-Dialog: exakt mittig + feste Breite/Höhe ===== */
+          
+              /* Close (X) ausblenden */
+              div[data-baseweb="modal"] button[aria-label="Close"],
+              div[data-baseweb="modal"] button[title="Close"],
+              div[data-testid="stDialog"] button[aria-label="Close"],
+              div[data-testid="stDialog"] button[title="Close"],
+              div[data-testid="stModal"] button[aria-label="Close"],
+              div[data-testid="stModal"] button[title="Close"]{
+                display: none !important;
+              }
+          
+              /* Konfig: Breite / max. Höhe */
+              :root{
+                --rgm-dlg-w: min(860px, 92vw);   /* <-- Breite hier anpassen */
+                --rgm-dlg-maxh: 88vh;           /* <-- max Höhe hier anpassen */
+              }
+          
+              /* Modal-Root sicher über den ganzen Viewport */
+              div[data-baseweb="modal"],
+              div[data-testid="stModal"],
+              div[data-testid="stDialog"]{
+                position: fixed !important;
+                inset: 0 !important;
+              }
+          
+              /* Der eigentliche Dialog: fixed auf 50/50 */
+              div[data-baseweb="modal"] [role="dialog"],
+              div[data-testid="stDialog"] [role="dialog"],
+              div[data-testid="stModal"] [role="dialog"]{
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                margin: 0 !important;
+          
+                width: var(--rgm-dlg-w) !important;
+                max-height: var(--rgm-dlg-maxh) !important;
+              }
+          
+              /* Inneres Panel scrollt, falls zu hoch */
+              div[data-baseweb="modal"] [role="dialog"] > div,
+              div[data-testid="stDialog"] [role="dialog"] > div,
+              div[data-testid="stModal"] [role="dialog"] > div{
+                max-height: var(--rgm-dlg-maxh) !important;
+                overflow: auto !important;
+                border-radius: 18px !important; /* optional */
+              }
+              </style>
+              """,
+              unsafe_allow_html=True,
+          )
+
+          st.markdown(text)
+
+          # Button mittig
+          c_l, c_m, c_r = st.columns([1, 2, 1])
+          with c_m:
+              if st.button("Verstanden", type="primary", use_container_width=True):
+                  st.session_state[_PRIVACY_ACK_KEY] = True
+                  st.rerun()
+
+      _dlg()
+      return
+
+
+    # Fallback ohne st.dialog
+    st.info(text)
+    if st.button("Verstanden", type="primary"):
+        st.session_state[_PRIVACY_ACK_KEY] = True
+        st.rerun()
 
 @st.cache_data(show_spinner=False)
 def _img_b64(path: Path) -> Optional[str]:
@@ -542,7 +633,7 @@ def main() -> None:
         # Toggle ist ab jetzt Chef (Query-Param darf nicht mehr überschreiben)
         st.session_state["_rgm_ui_dark_applied"] = True
         _sync_theme_aliases_from_toggle()
-        _clear_query_params_keep_aid(aid)
+        #_clear_query_params_keep_aid(aid)
 
     if hasattr(st, "toggle"):
         st.sidebar.toggle("Darkmodus", key=_DARK_TOGGLE_KEY, on_change=_on_dark_toggle)
@@ -553,6 +644,8 @@ def main() -> None:
 
     # CSS aus DIREKTEM Toggle-State (damit es IMMER sofort klappt)
     apply_global_theme_css(_theme_from_toggle())
+    
+    show_privacy_notice_modal()
 
     # ---- Programmatic Navigation VOR dem Radio ----
     nav_req = st.session_state.get("nav_request")
