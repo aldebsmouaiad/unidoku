@@ -5,6 +5,11 @@ import copy
 import json
 
 import streamlit as st
+import streamlit.components.v1 as components
+
+from pathlib import Path
+import urllib.request
+import urllib.error
 
 from core.model_loader import load_model_config
 from core.overview import build_overview_table
@@ -15,6 +20,136 @@ TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
 
 PRIORITY_OPTIONS = ["", "A (hoch)", "B (mittel)", "C (niedrig)"]
+
+MEASURES_FILE = Path(__file__).resolve().parents[1] / "data" / "measures.json"
+
+@st.cache_data(ttl=60)
+def load_measures_map() -> dict:
+    if MEASURES_FILE.exists():
+        try:
+            data = json.loads(MEASURES_FILE.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+    return {}
+
+def normalize_measure_text(text: str) -> str:
+    return " ".join((text or "").split()).strip()
+
+MEASURE_PICK_PLACEHOLDER = "— bitte auswählen —"
+
+@st.dialog("Maßnahmen-Vorschläge")
+def measure_dialog(code: str, suggestions: list[str]) -> None:
+    # Optional: kleine Infozeile, kann auch weg
+    st.caption(f"Dimension: {code}")
+
+    if not suggestions:
+        st.info("Keine Vorschläge vorhanden.")
+        return
+
+    box = st.container(height=620)  # passt gut zu 92vh Dialog
+    with box:
+        # Duplikate case-insensitive entfernen
+        seen = set()
+        uniq = []
+        for s in suggestions:
+            s = (s or "").strip()
+            k = s.lower()
+            if s and k not in seen:
+                seen.add(k)
+                uniq.append(s)
+        suggestions = uniq
+        
+        choice = st.radio(
+            label="",
+            options=[MEASURE_PICK_PLACEHOLDER] + suggestions,
+            index=0,
+            key=f"dlg_pick_{code}",
+            label_visibility="collapsed",
+        )
+
+    # Sobald Nutzer etwas auswählt -> übernehmen + Dialog schließen (ohne Button)
+    if choice != MEASURE_PICK_PLACEHOLDER:
+        st.session_state[f"action_{code}"] = choice
+        st.rerun()  # schließt den Dialog
+
+def render_measure_sharing_consent() -> None:
+    """
+    Opt-In am Anfang der Seite:
+    Nutzer entscheidet, ob Maßnahmen als Vorschläge für andere gespeichert werden dürfen.
+    """
+    st.info(
+        "**Hinweis (Maßnahmen-Pool):**\n\n"
+        "Sie können optional Ihre eingegebenen Maßnahmen **als Vorschläge für andere Nutzer** bereitstellen.\n"
+        "Wenn Sie zustimmen, wird **ausschließlich der Text im Feld „Maßnahme“** gespeichert.\n\n"
+        "Bitte tragen Sie dort **keine sensiblen Daten** ein."
+    )
+
+    if "share_measures_opt_in" not in st.session_state:
+        st.session_state["share_measures_opt_in"] = False
+    if "share_measures_radio" not in st.session_state:
+        st.session_state["share_measures_radio"] = "Nein"
+
+    c1, c2 = st.columns([3, 1], gap="small")
+    with c1:
+        st.radio(
+            "Möchten Sie Ihre Maßnahmen speichern und als Vorschläge für andere Nutzer zur Verfügung stellen?",
+            options=["Nein", "Ja"],
+            horizontal=True,
+            key="share_measures_radio",
+        )
+    with c2:
+        if st.button("Übernehmen", use_container_width=True):
+            st.session_state["share_measures_opt_in"] = (st.session_state["share_measures_radio"] == "Ja")
+            st.toast("Einstellung gespeichert.", icon="✅")
+            st.rerun()
+            
+def github_create_measure_issue(measure_text: str, dimension_code: str) -> int:
+    """
+    Erstellt ein GitHub Issue (Label: measure:pending).
+    Benötigt secrets:
+      GITHUB_OWNER, GITHUB_REPO, GITHUB_TOKEN
+    """
+    owner = st.secrets["GITHUB_OWNER"]
+    repo = st.secrets["GITHUB_REPO"]
+    token = st.secrets["GITHUB_TOKEN"]
+
+    txt = normalize_measure_text(measure_text)
+    if len(txt) < 3:
+        raise ValueError("Maßnahme zu kurz.")
+    if len(txt) > 240:
+        raise ValueError("Maßnahme zu lang (max. 240 Zeichen).")
+
+    title = f"[Measure Pool] {dimension_code}: {txt[:80]}"
+    body = (
+        "### measure_text\n"
+        f"{txt}\n\n"
+        "### dimension_code\n"
+        f"{dimension_code}\n"
+    )
+
+    url = f"https://api.github.com/repos/{owner}/{repo}/issues"
+    payload = {"title": title, "body": body, "labels": ["measure:pending"]}
+    data = json.dumps(payload).encode("utf-8")
+
+    req = urllib.request.Request(
+        url,
+        data=data,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "Content-Type": "application/json",
+        },
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            out = json.loads(resp.read().decode("utf-8"))
+            return int(out["number"])
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"GitHub Issue fehlgeschlagen: {e.code} {e.read().decode('utf-8')}")
 
 
 def get_answers() -> dict:
@@ -248,10 +383,120 @@ def _inject_priorisierung_css() -> None:
     .rgm-hero {{ padding: 16px; }}
     .rgm-card {{ padding: 12px 12px; }}
   }}
+  
+  /* ==========================
+   DIALOG (st.dialog) – fast fullscreen
+   ========================== */
+
+/* Streamlit nutzt je nach Version stDialog oder stModal */
+div[data-testid="stDialog"] > div[role="dialog"],
+div[data-testid="stModal"] > div[role="dialog"],
+div[data-testid="stDialog"] div[role="dialog"],
+div[data-testid="stModal"] div[role="dialog"]{{
+  width: 96vw !important;
+  max-width: 96vw !important;
+  height: 92vh !important;
+  max-height: 92vh !important;
+}}
+
+/* Innenbereich scrollbar (falls Inhalt länger ist) */
+div[data-testid="stDialog"] div[role="dialog"] section,
+div[data-testid="stModal"] div[role="dialog"] section{{
+  max-height: 92vh !important;
+  overflow: auto !important;
+}}
+
+/* Mobile etwas mehr Rand */
+@media (max-width: 700px){{
+  div[data-testid="stDialog"] div[role="dialog"],
+  div[data-testid="stModal"] div[role="dialog"]{{
+    width: 98vw !important;
+    max-width: 98vw !important;
+    height: 94vh !important;
+    max-height: 94vh !important;
+  }}
+}}
 </style>
         """,
         unsafe_allow_html=True,
     )
+    
+
+
+def attach_datalist_to_measure_input(marker_id: str, datalist_id: str, options: list[str]) -> None:
+    """
+    Baut im Parent-DOM eine <datalist> und hängt sie an das Textfeld,
+    das im selben Container wie der marker_id liegt.
+    """
+    # JSON sicher in JS einbetten
+    marker_js = json.dumps(marker_id)
+    list_js = json.dumps(datalist_id)
+    opts_js = json.dumps(options or [], ensure_ascii=False)
+
+    components.html(
+    f"""
+<script>
+(() => {{
+  const markerId = {marker_js};
+  const listId = {list_js};
+  const options = {opts_js};
+
+  function findInput(doc, marker) {{
+    // 1) Scope möglichst eng: Expander-Body / Container
+    const scope =
+      marker.closest('div[data-testid="stExpanderDetails"]') ||
+      marker.closest('div[data-testid="stVerticalBlock"]') ||
+      doc;
+
+    // 2) Versuche: erstes Text-Input nach dem Marker innerhalb des Scopes
+    const inputs = Array.from(scope.querySelectorAll('input[type="text"], input'));
+    for (const inp of inputs) {{
+      const rel = marker.compareDocumentPosition(inp);
+      // inp liegt nach marker
+      if (rel & Node.DOCUMENT_POSITION_FOLLOWING) return inp;
+    }}
+
+    // 3) Fallback: irgendein Input im Scope
+    return inputs[0] || null;
+  }}
+
+  function upsert() {{
+    const doc = window.parent.document;
+    const marker = doc.getElementById(markerId);
+    if (!marker) return false;
+
+    const input = findInput(doc, marker);
+    if (!input) return false;
+
+    let dl = doc.getElementById(listId);
+    if (!dl) {{
+      dl = doc.createElement("datalist");
+      dl.id = listId;
+      doc.body.appendChild(dl);
+    }}
+
+    dl.innerHTML = "";
+    for (const v of options) {{
+      const opt = doc.createElement("option");
+      opt.value = v;
+      dl.appendChild(opt);
+    }}
+
+    input.setAttribute("list", listId);
+    return true;
+  }}
+
+  let tries = 0;
+  const t = setInterval(() => {{
+    tries++;
+    if (upsert() || tries >= 30) clearInterval(t);
+  }}, 120);
+}})();
+</script>
+""",
+    height=0,
+    width=0,
+)
 
 
 def main() -> None:
@@ -273,6 +518,9 @@ def main() -> None:
         """,
         unsafe_allow_html=True,
     )
+    
+    render_measure_sharing_consent()
+    st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
 
     model = load_model_config()
 
@@ -369,12 +617,40 @@ def main() -> None:
                         key=f"prio_{code}",
                     )
                 with r1c2:
-                    st.text_input(
-                        "Maßnahme",
-                        value=prev_action,
-                        key=f"action_{code}",
-                        placeholder="z. B. Redaktionsleitfaden erstellen",
-                    )
+                    measures_map = load_measures_map()
+                    suggestions = measures_map.get(code, []) or []
+
+                    # Eine Zeile: links das einzige Maßnahme-Feld, rechts das Icon
+                    mcol, icol = st.columns([12, 1], gap="small")
+
+                    with mcol:
+                        st.text_input(
+                            "Maßnahme",
+                            value=prev_action,
+                            key=f"action_{code}",
+                            placeholder="z. B. Redaktionsleitfaden erstellen",
+                        )
+
+                    with icol:
+                        if st.button(
+                            "📋",
+                            key=f"open_measures_{code}",
+                            use_container_width=True,
+                            disabled=not suggestions,
+                            help="Vorschläge anzeigen",
+                        ):
+                            measure_dialog(code, suggestions)
+
+                    # Speichern in Pool (dein bestehender Teil)
+                    if st.session_state.get("share_measures_opt_in", False):
+                        if st.button("➕ In Pool speichern…", key=f"save_pool_{code}"):
+                            st.session_state["pending_pool_save"] = {
+                                "code": code,
+                                "text": normalize_measure_text(st.session_state.get(f"action_{code}", "")),
+                            }
+                    else:
+                        st.caption("Speichern in den Vorschlags-Pool ist deaktiviert (oben „Nein“).")
+        
 
                 st.markdown("<div style='height: 6px;'></div>", unsafe_allow_html=True)
 
@@ -400,6 +676,28 @@ def main() -> None:
             codes=rendered_codes,
             keep_existing=st.session_state.get("priorities_draft", {}),
         )
+    
+    pending = st.session_state.get("pending_pool_save")
+    if pending:
+        st.warning(
+            f"Möchten Sie diese Maßnahme als Vorschlag für **{pending['code']}** speichern?\n\n"
+            f"**{pending['text'] or '(leer)'}**\n\n"
+            "⚠️ Es wird nur der Text aus „Maßnahme“ gespeichert. Bitte keine sensiblen Daten."
+        )
+        y, n = st.columns(2, gap="small")
+        with y:
+            if st.button("Ja, speichern", type="primary", use_container_width=True):
+                try:
+                    issue_no = github_create_measure_issue(pending["text"], pending["code"])
+                    st.success(f"Gesendet (Issue #{issue_no}). Nach Verarbeitung erscheint es als Vorschlag.")
+                except Exception as e:
+                    st.error(f"Speichern fehlgeschlagen: {e}")
+                st.session_state.pop("pending_pool_save", None)
+                st.rerun()
+        with n:
+            if st.button("Abbrechen", use_container_width=True):
+                st.session_state.pop("pending_pool_save", None)
+                st.rerun()
 
     # Dirty-Check
     draft_now = st.session_state.get("priorities_draft", {}) or {}
