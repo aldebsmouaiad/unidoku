@@ -32,7 +32,7 @@ jobs:
       - name: Process issue into data/measures.json
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
-        run: python scripts/process_measure_issue.py
+        run: python .github\workflows\process-measure-issues.yml
 
       - name: Check whether data/measures.json changed
         id: changes
