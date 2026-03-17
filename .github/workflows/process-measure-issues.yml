@@ -14,8 +14,6 @@ jobs:
     name: Process new measure issue
     runs-on: ubuntu-latest
 
-    # Nur echte Issues, keine PRs
-    # und nur Issues, die von der App mit measure:pending erstellt wurden
     if: >
       github.event.issue.pull_request == null &&
       contains(github.event.issue.labels.*.name, 'measure:pending')
@@ -32,7 +30,7 @@ jobs:
       - name: Process issue into data/measures.json
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
-        run: python .github\workflows\process-measure-issues.yml
+        run: python scripts/process_measure_issue.py
 
       - name: Check whether data/measures.json changed
         id: changes
