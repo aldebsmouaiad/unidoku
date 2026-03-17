@@ -27,9 +27,17 @@
   "OG2.2": [],
   "OG2.3": [],
   "OG3.1": [],
-  "OG3.2": ["Schnittstellen etablieren"],
-  "OG4.1": ["Cloud Umzug"],
-  "OG4.2": ["IT Performance verbessern"],
+  "OG3.2": [
+    "Schnittstellen etablieren"
+  ],
+  "OG4.1": [
+    "Cloud Umzug"
+  ],
+  "OG4.2": [
+    "IT Performance verbessern"
+  ],
   "OG4.3": [],
-  "OG4.4": ["Anbindung ans MES"]
+  "OG4.4": [
+    "Anbindung ans MES"
+  ]
 }
