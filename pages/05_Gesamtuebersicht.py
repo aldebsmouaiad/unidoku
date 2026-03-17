@@ -2388,6 +2388,15 @@ def main() -> None:
     with st.container():
         st.markdown('<div class="rgm-card-title">Export</div>', unsafe_allow_html=True)
 
+        meta = st.session_state.get("meta", {}) or {}
+        org_part = _safe_filename(meta.get("org", ""), default="unbekannte_org")
+        date_part = _safe_filename(meta.get("date_str", ""), default="")
+        if not date_part:
+            date_part = datetime.now().strftime("%Y-%m-%d")
+
+        pdf_fn = f"rgm_gesamtuebersicht_{org_part}_{date_part}.pdf"
+        json_fn = f"rgm_save_{org_part}_{date_part}.json"
+
         col_pdf, col_json = st.columns(2, gap="small")
 
         with col_pdf:
@@ -2396,7 +2405,7 @@ def main() -> None:
                 st.download_button(
                     "PDF-Bericht herunterladen",
                     data=pdf_bytes,
-                    file_name="reifegrad_gesamtuebersicht.pdf",
+                    file_name=pdf_fn,
                     mime="application/pdf",
                     use_container_width=True,
                 )
@@ -2405,16 +2414,10 @@ def main() -> None:
 
         with col_json:
             st.markdown('<div id="rgm_overview_export_btn_json"></div>', unsafe_allow_html=True)
-            meta = st.session_state.get("meta", {}) or {}
-            org_part = _safe_filename(meta.get("org", ""), default="unbekannte_org")
-            date_part = _safe_filename(meta.get("date_str", ""), default="")
-            if not date_part:
-              date_part = datetime.now().strftime("%Y-%m-%d")
-            fn = f"rgm_save_{org_part}_{date_part}.json"
             st.download_button(
                 "Sitzung speichern (JSON)",
                 data=json_bytes,
-                file_name=fn,
+                file_name=json_fn,
                 mime="application/json",
                 use_container_width=True,
             )
