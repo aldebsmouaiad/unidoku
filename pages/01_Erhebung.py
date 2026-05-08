@@ -184,6 +184,39 @@ def _inject_erhebung_page_css() -> None:
   }}
   .rgm-badge b {{ font-weight: 850; }}
 
+  .rgm-time-notice {{
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 12px 0 14px 0;
+    padding: 12px 14px;
+    border: 1px solid var(--rgm-border);
+    border-left: 4px solid var(--tu-orange);
+    border-radius: 12px;
+    background: var(--rgm-soft);
+    color: var(--rgm-text, #111);
+    box-shadow: var(--rgm-shadow);
+  }}
+  .rgm-time-notice-icon {{
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(202,116,6,0.12);
+    color: var(--tu-orange);
+    font-size: 16px;
+    line-height: 1;
+  }}
+  .rgm-time-notice-text {{
+    font-size: 14px;
+    line-height: 1.55;
+    margin: 0;
+  }}
+  .rgm-time-notice-text b {{ font-weight: 850; }}
+
   /* =========================
      Step 0: Meta-Card
      ========================= */
@@ -393,6 +426,21 @@ def _render_hero(title: str, lead: str = "", body: str = "", extra_html: str = "
   {extra_html}
 </div>
         """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_time_notice() -> None:
+    st.markdown(
+        """
+<div class="rgm-time-notice" role="note">
+  <div class="rgm-time-notice-icon" aria-hidden="true">&#9201;</div>
+  <div class="rgm-time-notice-text">
+    <b>Hinweis:</b> F&uuml;r die vollst&auml;ndige Erhebung sollten Sie ca. 60 Minuten einplanen.<br>
+    Der tats&auml;chliche Aufwand kann je nach Organisation und vorhandenen Informationen variieren.
+  </div>
+</div>
+        """.strip(),
         unsafe_allow_html=True,
     )
 
@@ -1318,6 +1366,7 @@ def _footer_navigation(model: dict, aid: str) -> None:
 # -----------------------------
 def _meta_form_step(aid: str) -> None:
     _render_hero("Erhebung", "Angaben zur Erhebung")
+    _render_time_notice()
     _render_save_resume_panel(aid)
     st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
 
@@ -1995,7 +2044,8 @@ def _questions_step(aid: str) -> None:
         "Bitte beantworten Sie die Fragen je Subdimension so objektiv wie möglich.",
         extra_html=badges_html,
     )
-    
+    _render_time_notice()
+
     _render_save_resume_panel(aid)
 
     st.markdown("---")

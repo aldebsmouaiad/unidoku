@@ -143,6 +143,14 @@ def _inject_start_css(dark: bool) -> None:
     max-width: 880px;
   }
 
+  .rgm-pill-group{
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
   .rgm-pill{
     display: inline-flex;
     align-items: center;
@@ -155,6 +163,9 @@ def _inject_start_css(dark: bool) -> None:
     font-size: 13px;
     font-weight: 750;
     white-space: nowrap;
+  }
+  .rgm-time-pill{
+    font-weight: 700;
   }
   .rgm-dot{
     width: 10px;
@@ -501,6 +512,7 @@ def main() -> None:
     created_by_email = meta.get("created_by_email", "christian4.koch@tu-dortmund.de")
     version = meta.get("version", "2.0")
     last_change = meta.get("last_change", "03.02.2026")
+    time_required = meta.get("time_required", "ca. 60 Minuten")
     credit = meta.get("credit", "Victor Wolf")
     credit_email = meta.get("credit_email")  # optional
 
@@ -605,7 +617,10 @@ def main() -> None:
             Priorisierung und Export (PDF/CSV/PNG/JSON).
           </p>
         </div>
-        <div class="rgm-pill"><span class="rgm-dot"></span>Version {_html.escape(str(version))} • Stand {_html.escape(str(last_change))}</div>
+        <div class="rgm-pill-group">
+          <div class="rgm-pill"><span class="rgm-dot"></span>Version {_html.escape(str(version))} &middot; Stand {_html.escape(str(last_change))}</div>
+          <div class="rgm-pill rgm-time-pill"><span aria-hidden="true">&#9201;</span>Zeitbedarf: {_html.escape(str(time_required))}</div>
+        </div>
       </div>
     </div>
         """.strip(),
