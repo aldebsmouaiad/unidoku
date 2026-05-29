@@ -186,10 +186,11 @@ def _split_long_axis_word(word: str, max_chars: int) -> list[str]:
     word = str(word or "").strip()
     if not word:
         return []
-    if len(word) <= max_chars:
+    lower = word.lower()
+    force_split_words = {"zusammenarbeit"}
+    if len(word) <= max_chars and lower not in force_split_words:
         return [word]
 
-    lower = word.lower()
     for suffix in (
         "infrastruktur",
         "strukturierung",
@@ -202,6 +203,10 @@ def _split_long_axis_word(word: str, max_chars: int) -> list[str]:
         "verwaltung",
         "archivierung",
         "beschaffung",
+        "initiierung",
+        "konformität",
+        "zusammenarbeit",
+        "arbeit",
     ):
         if lower.endswith(suffix):
             prefix = word[: -len(suffix)].strip("- ")
@@ -301,7 +306,7 @@ def _plotly_fig_to_png_bytes(
     except Exception:
         f = copy.deepcopy(fig)
 
-    _rewrap_radar_theta_labels_for_pdf(f, max_chars=17)
+    _rewrap_radar_theta_labels_for_pdf(f, max_chars=14)
 
     # 1) Styling für Export: möglichst wie Download (großes Radar, klare Labels)
     bg = "#111827" if dark_export else "#FFFFFF"
@@ -317,11 +322,11 @@ def _plotly_fig_to_png_bytes(
             plot_bgcolor=bg,
             font=dict(color=fg),
             showlegend=False,
-            margin=dict(l=145, r=145, t=55, b=75),
+            margin=dict(l=160, r=160, t=65, b=90),
             title=None,
         )
         f.update_polars(
-            domain=dict(x=[0.10, 0.90], y=[0.06, 0.94]),
+            domain=dict(x=[0.12, 0.88], y=[0.08, 0.92]),
             bgcolor=bg,
             radialaxis=dict(
                 gridcolor=grid,
@@ -332,7 +337,7 @@ def _plotly_fig_to_png_bytes(
             angularaxis=dict(
                 gridcolor=grid,
                 linecolor=axis_line,
-                tickfont=dict(color=fg, size=22),
+                tickfont=dict(color=fg, size=19),
             ),
         )
     except Exception:
