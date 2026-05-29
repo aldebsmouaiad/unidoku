@@ -281,7 +281,7 @@ def _plotly_fig_to_png_bytes(
     fig,
     *,
     width: int = 2200,
-    height: int = 1500,
+    height: int = 1700,
     scale: int = 2,
     dark_export: bool = False,
 ) -> tuple[Optional[bytes], Optional[str]]:
@@ -316,11 +316,11 @@ def _plotly_fig_to_png_bytes(
             plot_bgcolor=bg,
             font=dict(color=fg),
             showlegend=False,
-            margin=dict(l=360, r=360, t=80, b=130),
+            margin=dict(l=240, r=240, t=70, b=100),
             title=None,
         )
         f.update_polars(
-            domain=dict(x=[0.22, 0.78], y=[0.14, 0.86]),
+            domain=dict(x=[0.08, 0.92], y=[0.05, 0.95]),
             bgcolor=bg,
             radialaxis=dict(
                 gridcolor=grid,
@@ -331,7 +331,7 @@ def _plotly_fig_to_png_bytes(
             angularaxis=dict(
                 gridcolor=grid,
                 linecolor=axis_line,
-                tickfont=dict(color=fg, size=16),
+                tickfont=dict(color=fg, size=15),
             ),
         )
     except Exception:
