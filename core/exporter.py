@@ -201,6 +201,7 @@ def _split_long_axis_word(word: str, max_chars: int) -> list[str]:
         "kenntnis",
         "verwaltung",
         "archivierung",
+        "beschaffung",
     ):
         if lower.endswith(suffix):
             prefix = word[: -len(suffix)].strip("- ")
@@ -280,8 +281,8 @@ def _rewrap_radar_theta_labels_for_pdf(fig, *, max_chars: int = 18) -> None:
 def _plotly_fig_to_png_bytes(
     fig,
     *,
-    width: int = 2200,
-    height: int = 1700,
+    width: int = 1250,
+    height: int = 1050,
     scale: int = 2,
     dark_export: bool = False,
 ) -> tuple[Optional[bytes], Optional[str]]:
@@ -300,7 +301,7 @@ def _plotly_fig_to_png_bytes(
     except Exception:
         f = copy.deepcopy(fig)
 
-    _rewrap_radar_theta_labels_for_pdf(f)
+    _rewrap_radar_theta_labels_for_pdf(f, max_chars=17)
 
     # 1) Styling für Export: möglichst wie Download (großes Radar, klare Labels)
     bg = "#111827" if dark_export else "#FFFFFF"
@@ -316,11 +317,11 @@ def _plotly_fig_to_png_bytes(
             plot_bgcolor=bg,
             font=dict(color=fg),
             showlegend=False,
-            margin=dict(l=240, r=240, t=70, b=100),
+            margin=dict(l=145, r=145, t=55, b=75),
             title=None,
         )
         f.update_polars(
-            domain=dict(x=[0.08, 0.92], y=[0.05, 0.95]),
+            domain=dict(x=[0.10, 0.90], y=[0.06, 0.94]),
             bgcolor=bg,
             radialaxis=dict(
                 gridcolor=grid,
@@ -331,7 +332,7 @@ def _plotly_fig_to_png_bytes(
             angularaxis=dict(
                 gridcolor=grid,
                 linecolor=axis_line,
-                tickfont=dict(color=fg, size=15),
+                tickfont=dict(color=fg, size=22),
             ),
         )
     except Exception:
