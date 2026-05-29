@@ -334,7 +334,7 @@ def _plotly_fig_to_png_bytes(
             angularaxis=dict(
                 gridcolor=grid,
                 linecolor=axis_line,
-                tickfont=dict(color=fg, size=19),
+                tickfont=dict(color=fg, size=18),
             ),
         )
     except Exception:
