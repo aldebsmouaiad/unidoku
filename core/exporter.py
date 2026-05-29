@@ -5,6 +5,8 @@ import csv as _csv
 import io
 import html as _html
 import copy
+import re
+import textwrap
 from datetime import datetime
 from typing import Optional, Any
 
@@ -174,11 +176,112 @@ def _get_trace_color(fig, idx: int, fallback_hex: str) -> str:
     return fallback_hex
 
 
+_RADAR_CODE_RE = re.compile(r"^[A-Z]{2}\d+(?:\.\d+)*$")
+_HTML_BR_RE = re.compile(r"<br\s*/?>", flags=re.IGNORECASE)
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _split_long_axis_word(word: str, max_chars: int) -> list[str]:
+    """Split very long German axis-label words so Plotly cannot clip them."""
+    word = str(word or "").strip()
+    if not word:
+        return []
+    if len(word) <= max_chars:
+        return [word]
+
+    lower = word.lower()
+    for suffix in (
+        "infrastruktur",
+        "strukturierung",
+        "management",
+        "sicherung",
+        "speicherung",
+        "zentrierung",
+        "freundlichkeit",
+        "kenntnis",
+        "verwaltung",
+        "archivierung",
+    ):
+        if lower.endswith(suffix):
+            prefix = word[: -len(suffix)].strip("- ")
+            tail = word[-len(suffix):]
+            if prefix and len(prefix) <= max_chars and len(tail) <= max_chars:
+                return [prefix, tail]
+
+    if "-" in word:
+        parts = textwrap.wrap(
+            word,
+            width=max_chars,
+            break_long_words=False,
+            break_on_hyphens=True,
+        )
+        if parts and all(len(part) <= max_chars for part in parts):
+            return parts
+
+    return textwrap.wrap(
+        word,
+        width=max_chars,
+        break_long_words=True,
+        break_on_hyphens=True,
+    ) or [word]
+
+
+def _wrap_radar_axis_text_for_pdf(text: str, *, max_chars: int = 18) -> str:
+    words: list[str] = []
+    for raw_word in str(text or "").split():
+        words.extend(_split_long_axis_word(raw_word, max_chars))
+
+    if not words:
+        return ""
+
+    lines: list[str] = []
+    current = ""
+    for word in words:
+        candidate = f"{current} {word}".strip()
+        if current and len(candidate) > max_chars:
+            lines.append(current)
+            current = word
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+
+    return "<br>".join(lines)
+
+
+def _rewrap_radar_theta_labels_for_pdf(fig, *, max_chars: int = 18) -> None:
+    """Make polar labels PDF-safe without mutating the caller's original figure."""
+    if fig is None:
+        return
+
+    def _rewrite_label(label: object) -> str:
+        raw = str(label or "")
+        raw = _HTML_BR_RE.sub("\n", raw)
+        raw = _HTML_TAG_RE.sub("", raw)
+        parts = [p.strip() for p in raw.splitlines() if p.strip()]
+        if not parts:
+            return ""
+
+        code = parts[0] if _RADAR_CODE_RE.match(parts[0]) else ""
+        label_text = " ".join(parts[1:] if code else parts)
+        wrapped = _wrap_radar_axis_text_for_pdf(label_text, max_chars=max_chars)
+        return f"{code}<br>{wrapped}" if code and wrapped else (code or wrapped)
+
+    for trace in getattr(fig, "data", []) or []:
+        theta = getattr(trace, "theta", None)
+        if theta is None:
+            continue
+        try:
+            trace.theta = [_rewrite_label(label) for label in theta]
+        except Exception:
+            continue
+
+
 def _plotly_fig_to_png_bytes(
     fig,
     *,
-    width: int = 1800,
-    height: int = 1250,
+    width: int = 2200,
+    height: int = 1500,
     scale: int = 2,
     dark_export: bool = False,
 ) -> tuple[Optional[bytes], Optional[str]]:
@@ -197,6 +300,8 @@ def _plotly_fig_to_png_bytes(
     except Exception:
         f = copy.deepcopy(fig)
 
+    _rewrap_radar_theta_labels_for_pdf(f)
+
     # 1) Styling für Export: möglichst wie Download (großes Radar, klare Labels)
     bg = "#111827" if dark_export else "#FFFFFF"
     fg = "rgba(255,255,255,0.92)" if dark_export else "#111111"
@@ -211,22 +316,22 @@ def _plotly_fig_to_png_bytes(
             plot_bgcolor=bg,
             font=dict(color=fg),
             showlegend=False,
-            margin=dict(l=240, r=240, t=70, b=120),
+            margin=dict(l=360, r=360, t=80, b=130),
             title=None,
         )
         f.update_polars(
-            domain=dict(x=[0.16, 0.84], y=[0.10, 0.90]),
+            domain=dict(x=[0.22, 0.78], y=[0.14, 0.86]),
             bgcolor=bg,
             radialaxis=dict(
                 gridcolor=grid,
                 linecolor=axis_line,
-                tickfont=dict(color=red_ticks, size=20),
+                tickfont=dict(color=red_ticks, size=18),
                 tickcolor=red_ticks,
             ),
             angularaxis=dict(
                 gridcolor=grid,
                 linecolor=axis_line,
-                tickfont=dict(color=fg, size=18),
+                tickfont=dict(color=fg, size=16),
             ),
         )
     except Exception:
