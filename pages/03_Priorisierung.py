@@ -11,6 +11,7 @@ import streamlit as st
 from core.model_loader import load_model_config
 from core.overview import build_overview_table
 from core.state import init_session_state
+from core.i18n import get_language, priority_option_label, priority_value_label, t
 
 TU_ORANGE = "#CA7406"
 TD_BLUE = "#2F3DB8"
@@ -18,15 +19,59 @@ OG_ORANGE = "#F28C28"
 
 PRIORITY_OPTIONS = ["", "A (hoch)", "B (mittel)", "C (niedrig)"]
 
-PRIORITY_DISPLAY = {
-    "": "— auswählen —",
-    "A (hoch)": "A · hoch",
-    "B (mittel)": "B · mittel",
-    "C (niedrig)": "C · niedrig",
+MEASURES_FILE = Path(__file__).resolve().parents[1] / "data" / "measures.json"
+MEASURE_SUGGESTION_TRANSLATIONS_EN = {
+    "Schnittstellen etablieren": "Establish interfaces",
+    "Cloud Umzug": "Cloud migration",
+    "IT Performance verbessern": "Improve IT performance",
+    "Anbindung ans MES": "Connect to MES",
 }
 
-MEASURES_FILE = Path(__file__).resolve().parents[1] / "data" / "measures.json"
-MEASURE_PICK_PLACEHOLDER = "— bitte auswählen —"
+
+def normalize_measure_language(language: str | None = None) -> str:
+    return "en" if str(language or get_language()).strip().lower().startswith("en") else "de"
+
+
+def _unique_measure_list(values: object) -> list[str]:
+    if not isinstance(values, list):
+        return []
+
+    seen: set[str] = set()
+    out: list[str] = []
+    for value in values:
+        text = normalize_measure_text(str(value))
+        key = text.lower()
+        if text and key not in seen:
+            seen.add(key)
+            out.append(text)
+    return out
+
+
+def normalize_measures_pool(data: object) -> dict[str, dict[str, list[str]]]:
+    if not isinstance(data, dict):
+        return {}
+
+    cleaned: dict[str, dict[str, list[str]]] = {}
+    for code, value in data.items():
+        code_str = normalize_measure_text(str(code))
+        if not code_str:
+            continue
+
+        if isinstance(value, dict):
+            cleaned[code_str] = {
+                "de": _unique_measure_list(value.get("de")),
+                "en": _unique_measure_list(value.get("en")),
+            }
+        elif isinstance(value, list):
+            de_values = _unique_measure_list(value)
+            cleaned[code_str] = {
+                "de": de_values,
+                "en": _unique_measure_list([MEASURE_SUGGESTION_TRANSLATIONS_EN.get(v, v) for v in de_values]),
+            }
+        else:
+            cleaned[code_str] = {"de": [], "en": []}
+
+    return cleaned
 
 
 @st.cache_data(ttl=60)
@@ -34,7 +79,7 @@ def load_measures_map() -> dict:
     if MEASURES_FILE.exists():
         try:
             data = json.loads(MEASURES_FILE.read_text(encoding="utf-8"))
-            return data if isinstance(data, dict) else {}
+            return normalize_measures_pool(data)
         except Exception:
             return {}
     return {}
@@ -42,6 +87,13 @@ def load_measures_map() -> dict:
 
 def normalize_measure_text(text: str) -> str:
     return " ".join((text or "").split()).strip()
+
+
+def get_measure_suggestions(measures_map: dict, code: str, language: str | None = None) -> list[str]:
+    entry = measures_map.get(code, {})
+    if isinstance(entry, dict):
+        return _unique_measure_list(entry.get(normalize_measure_language(language)))
+    return _unique_measure_list(entry)
 
 def validate_dimension_code(code: str) -> str:
     """
@@ -53,67 +105,72 @@ def validate_dimension_code(code: str) -> str:
     normalized = normalize_measure_text(code)
 
     if not normalized:
-        raise ValueError("Dimensionscode fehlt.")
+        raise ValueError("Dimension code is missing." if get_language() == "en" else "Dimensionscode fehlt.")
     if len(normalized) > 20:
-        raise ValueError("Dimensionscode ist zu lang.")
+        raise ValueError("Dimension code is too long." if get_language() == "en" else "Dimensionscode ist zu lang.")
     if not re.fullmatch(r"[A-Za-z]{1,5}\d+(?:[.\-_]\d+)*", normalized):
-        raise ValueError(f"Ungültiger Dimensionscode: {normalized}")
+        msg = "Invalid dimension code" if get_language() == "en" else "Ungültiger Dimensionscode"
+        raise ValueError(f"{msg}: {normalized}")
 
     return normalized
 
-@st.dialog("Maßnahmen-Vorschläge")
 def measure_dialog(code: str, suggestions: list[str]) -> None:
-    st.markdown(
-        f"<div class='rgm-dialog-meta'>Dimension: <strong>{code}</strong></div>",
-        unsafe_allow_html=True,
-    )
+    @st.dialog(t("prioritization.dialog_title"))
+    def _dialog() -> None:
+        st.markdown(
+            f"<div class='rgm-dialog-meta'>{t('prioritization.dialog_meta')}: <strong>{code}</strong></div>",
+            unsafe_allow_html=True,
+        )
 
-    if not suggestions:
-        st.info("Keine Vorschläge vorhanden.")
-        return
+        if not suggestions:
+            st.info(t("prioritization.no_suggestions"))
+            return
 
-    seen = set()
-    uniq: list[str] = []
-    for s in suggestions:
-        s = (s or "").strip()
-        key = s.lower()
-        if s and key not in seen:
-            seen.add(key)
-            uniq.append(s)
+        seen = set()
+        uniq: list[str] = []
+        for s in suggestions:
+            s = (s or "").strip()
+            key = s.lower()
+            if s and key not in seen:
+                seen.add(key)
+                uniq.append(s)
 
-    pick_key = f"dlg_pick_{code}"
+        pick_key = f"dlg_pick_{code}"
+        placeholder = "— please select —" if get_language() == "en" else "— bitte auswählen —"
 
-    choice = st.radio(
-        "Vorschläge",
-        options=[MEASURE_PICK_PLACEHOLDER] + uniq,
-        index=0,
-        key=pick_key,
-        label_visibility="collapsed",
-    )
+        choice = st.radio(
+            t("prioritization.suggestions"),
+            options=[placeholder] + uniq,
+            index=0,
+            key=pick_key,
+            label_visibility="collapsed",
+        )
 
-    if choice != MEASURE_PICK_PLACEHOLDER:
-        st.session_state[f"action_{code}"] = choice
-        st.rerun()
+        if choice != placeholder:
+            st.session_state[f"action_{code}"] = choice
+            st.rerun()
+
+    _dialog()
         
 def render_measure_sharing_consent() -> None:
-    st.info(
-        "**Hinweis (Maßnahmen-Pool):**\n\n"
-        "Sie können optional Ihre eingegebenen Maßnahmen **als Vorschläge für andere Nutzer** bereitstellen.\n"
-        "Wenn Sie zustimmen, wird **ausschließlich der Text im Feld „Maßnahme“** gespeichert.\n\n"
-        "Bitte tragen Sie dort **keine sensiblen Daten** ein."
-    )
+    st.info(t("prioritization.pool_notice"))
+    if st.session_state.get("share_measures_radio") in ("Ja", "yes"):
+        st.session_state["share_measures_radio"] = "yes"
+    elif st.session_state.get("share_measures_radio") in ("Nein", "no"):
+        st.session_state["share_measures_radio"] = "no"
 
     choice = st.radio(
-        "Möchten Sie Ihre Maßnahmen speichern und als Vorschläge für andere Nutzer zur Verfügung stellen?",
-        options=["Nein", "Ja"],
+        t("prioritization.share_question"),
+        options=["no", "yes"],
         horizontal=True,
         key="share_measures_radio",
+        format_func=lambda x: t("prioritization.yes") if x == "yes" else t("prioritization.no"),
     )
 
-    st.session_state["share_measures_opt_in"] = choice == "Ja"
+    st.session_state["share_measures_opt_in"] = choice == "yes"
 
 
-def github_create_measure_issue(measure_text: str, dimension_code: str) -> int:
+def github_create_measure_issue(measure_text: str, dimension_code: str, language: str | None = None) -> int:
     """
     Erstellt ein GitHub-Issue mit Label 'measure:pending'.
 
@@ -128,11 +185,12 @@ def github_create_measure_issue(measure_text: str, dimension_code: str) -> int:
 
     txt = normalize_measure_text(measure_text)
     code = validate_dimension_code(dimension_code)
+    lang = normalize_measure_language(language)
 
     if len(txt) < 3:
-        raise ValueError("Maßnahme zu kurz (min. 3 Zeichen).")
+        raise ValueError("Measure too short (min. 3 characters)." if get_language() == "en" else "Maßnahme zu kurz (min. 3 Zeichen).")
     if len(txt) > 240:
-        raise ValueError("Maßnahme zu lang (max. 240 Zeichen).")
+        raise ValueError("Measure too long (max. 240 characters)." if get_language() == "en" else "Maßnahme zu lang (max. 240 Zeichen).")
 
     # Titel bewusst kurz halten
     title = f"[Measure Pool] {code}: {txt[:80]}"
@@ -142,7 +200,9 @@ def github_create_measure_issue(measure_text: str, dimension_code: str) -> int:
         "### measure_text\n"
         f"{txt}\n\n"
         "### dimension_code\n"
-        f"{code}\n"
+        f"{code}\n\n"
+        "### language\n"
+        f"{lang}\n"
     )
 
     url = f"https://api.github.com/repos/{owner}/{repo}/issues"
@@ -1000,6 +1060,7 @@ def submit_measures_from_priorities(priorities: dict) -> tuple[int, int]:
 
     created = 0
     skipped = 0
+    language = normalize_measure_language()
 
     for code, item in (priorities or {}).items():
         txt = normalize_measure_text((item or {}).get("action", ""))
@@ -1007,12 +1068,12 @@ def submit_measures_from_priorities(priorities: dict) -> tuple[int, int]:
             skipped += 1
             continue
 
-        key = f"{code}||{txt.lower()}"
+        key = f"{language}||{code}||{txt.lower()}"
         if key in submitted_set:
             skipped += 1
             continue
 
-        github_create_measure_issue(txt, code)
+        github_create_measure_issue(txt, code, language=language)
 
         submitted.append(key)
         submitted_set.add(key)
@@ -1024,29 +1085,34 @@ def submit_measures_from_priorities(priorities: dict) -> tuple[int, int]:
 def main() -> None:
     init_session_state()
     _inject_priorisierung_css()
+    en = get_language() == "en"
 
     st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
 
     st.markdown(
-        """
+        f"""
 <div class="rgm-hero">
-  <div class="rgm-h1">Priorisierung &amp; Maßnahmenplanung</div>
+  <div class="rgm-h1">{t("prioritization.title")}</div>
   <div class="rgm-accent-line"></div>
-  <p class="rgm-lead">
-    Legen Sie für jede Dimension fest, wie wichtig sie ist und welche konkreten Maßnahmen Sie angehen möchten.
-  </p>
+  <p class="rgm-lead">{t("prioritization.lead")}</p>
 </div>
         """,
         unsafe_allow_html=True,
     )
 
-    render_measure_sharing_consent()
-    st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
-
     model = load_model_config()
     answers = get_answers()
     global_target = float(st.session_state.get("global_target_level", 3.0))
     dim_targets = st.session_state.get("dimension_targets", {}) or {}
+
+    if not answers:
+        st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
+        st.info(t("common.no_results_assessment"))
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
+    render_measure_sharing_consent()
+    st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
 
     priorities_committed = st.session_state.get("priorities", {}) or {}
 
@@ -1065,10 +1131,10 @@ def main() -> None:
 
     if df is None or df.empty:
         st.markdown(
-            """
+            f"""
 <div class="rgm-card">
-  <div class="rgm-card-title">Hinweis</div>
-  <p class="rgm-subtle">Noch keine Ergebnisse vorhanden – bitte zuerst die Erhebung durchführen.</p>
+  <div class="rgm-card-title">{"Note" if en else "Hinweis"}</div>
+  <p class="rgm-subtle">{t("common.no_results_assessment")}</p>
 </div>
             """,
             unsafe_allow_html=True,
@@ -1081,12 +1147,17 @@ def main() -> None:
 
     c1, c2 = st.columns([1, 1], gap="large")
     with c1:
-        cat = st.selectbox("Kategorie", options=["Alle", "TD", "OG"], index=0)
+        cat = st.selectbox(
+            t("prioritization.category"),
+            options=["ALL", "TD", "OG"],
+            index=0,
+            format_func=lambda x: t("prioritization.all") if x == "ALL" else x,
+        )
     with c2:
-        show_all = st.checkbox("Alle Dimensionen anzeigen (auch Gap ≤ 0)", value=False)
+        show_all = st.checkbox(t("prioritization.show_all"), value=False)
 
     df_view = df.copy()
-    if cat != "Alle":
+    if cat != "ALL":
         df_view = df_view[df_view["category"] == cat]
     if not show_all:
         df_view = df_view[df_view["gap"] > 0]
@@ -1098,7 +1169,7 @@ def main() -> None:
     measures_map = load_measures_map()
 
     if df_view.empty:
-        st.info("Keine Dimensionen mit Handlungsbedarf (Gap > 0) in der aktuellen Filterauswahl.")
+        st.info(t("prioritization.no_action_dims"))
     else:
         for _, row in df_view.iterrows():
             code = str(row["code"])
@@ -1120,18 +1191,18 @@ def main() -> None:
             label = f"{code} – {name_short} · Gap {gap:.2f}"
             with st.expander(label, expanded=(gap >= 1.0)):
                 st.markdown(
-                    f"<div class='rgm-pill'>Gap (Soll–Ist): <b>{gap:.2f}</b> Reifegradstufen</div>",
+                    f"<div class='rgm-pill'>{t('prioritization.gap_pill')}: <b>{gap:.2f}</b> {t('prioritization.level_units')}</div>",
                     unsafe_allow_html=True,
                 )
 
-                suggestions = measures_map.get(code, []) or []
+                suggestions = get_measure_suggestions(measures_map, code)
 
                 # Zeile 1: Labels
                 l1c1, l1c2, l1c3 = st.columns([2.35, 6.35, 0.50], gap="small")
                 with l1c1:
-                    st.markdown("<div class='rgm-field-label'>Priorität</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='rgm-field-label'>{t('column.priority')}</div>", unsafe_allow_html=True)
                 with l1c2:
-                    st.markdown("<div class='rgm-field-label'>Maßnahme</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='rgm-field-label'>{t('column.measure')}</div>", unsafe_allow_html=True)
                 with l1c3:
                     st.markdown("<div class='rgm-field-label'>&nbsp;</div>", unsafe_allow_html=True)
 
@@ -1139,21 +1210,21 @@ def main() -> None:
                 r1c1, r1c2, r1c3 = st.columns([2.35, 6.35, 0.50], gap="small")
                 with r1c1:
                     st.selectbox(
-                        "Priorität",
+                        t("column.priority"),
                         options=PRIORITY_OPTIONS,
                         index=default_index,
                         key=f"prio_{code}",
                         label_visibility="collapsed",
-                        format_func=lambda x: PRIORITY_DISPLAY.get(x, x),
-                        help="A = hoch, B = mittel, C = niedrig",
+                        format_func=priority_option_label,
+                        help=t("prioritization.priority_help"),
                     )
 
                 with r1c2:
                     st.text_input(
-                        "Maßnahme",
+                        t("column.measure"),
                         value=prev_action,
                         key=f"action_{code}",
-                        placeholder="z. B. Redaktionsleitfaden erstellen",
+                        placeholder=t("prioritization.measure_placeholder"),
                         label_visibility="collapsed",
                     )
 
@@ -1162,7 +1233,7 @@ def main() -> None:
                         "📋",
                         key=f"open_measures_{code}",
                         disabled=not suggestions,
-                        help="Vorschläge anzeigen",
+                        help=t("prioritization.suggestions_help"),
                         use_container_width=False,
                     ):
                         st.session_state.pop(f"dlg_pick_{code}", None)
@@ -1173,26 +1244,26 @@ def main() -> None:
                 # Zeile 2: Labels
                 l2c1, l2c2 = st.columns([1, 1], gap="medium")
                 with l2c1:
-                    st.markdown("<div class='rgm-field-label'>Verantwortlich</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='rgm-field-label'>{t('column.responsible')}</div>", unsafe_allow_html=True)
                 with l2c2:
-                    st.markdown("<div class='rgm-field-label'>Zeitraum</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='rgm-field-label'>{t('column.timeframe')}</div>", unsafe_allow_html=True)
 
                 # Zeile 2: Felder
                 r2c1, r2c2 = st.columns([1, 1], gap="medium")
                 with r2c1:
                     st.text_input(
-                        "Verantwortlich",
+                        t("column.responsible"),
                         value=prev_resp,
                         key=f"resp_{code}",
-                        placeholder="z. B. Christian Koch",
+                        placeholder=t("prioritization.responsible_placeholder"),
                         label_visibility="collapsed",
                     )
                 with r2c2:
                     st.text_input(
-                        "Zeitraum",
+                        t("column.timeframe"),
                         value=prev_time,
                         key=f"timeframe_{code}",
-                        placeholder="z. B. Q1/2026",
+                        placeholder=t("prioritization.timeframe_placeholder"),
                         label_visibility="collapsed",
                     )
 
@@ -1206,7 +1277,7 @@ def main() -> None:
     dirty = _stable_json(draft_now) != _stable_json(committed_now)
 
     if st.button(
-        "Priorisierungen übernehmen",
+        t("prioritization.apply"),
         type="primary",
         use_container_width=True,
         disabled=not dirty,
@@ -1218,35 +1289,31 @@ def main() -> None:
             try:
                 created, skipped = submit_measures_from_priorities(draft_now)
                 st.success(
-                    f"Priorisierungen übernommen. {created} Vorschlag/Vorschläge automatisch übermittelt "
-                    f"({skipped} übersprungen)."
+                    t("prioritization.apply_success_submitted").format(created=created, skipped=skipped)
                 )
             except Exception as e:
                 st.warning(
-                    f"Priorisierungen übernommen, aber die Übermittlung der Vorschläge ist fehlgeschlagen: {e}"
+                    t("prioritization.apply_warning_submit").format(error=e)
                 )
         else:
-            st.success("Priorisierungen wurden übernommen.")
+            st.success(t("prioritization.apply_success"))
 
         st.rerun()
 
     if dirty:
-        st.warning(
-            "Sie haben Priorisierungen geändert, die noch nicht übernommen wurden. "
-            "Bitte zuerst „Priorisierungen übernehmen“ klicken, damit diese Werte verwendet werden."
-        )
+        st.warning(t("prioritization.unsaved"))
 
     st.markdown("---")
 
     left, right = st.columns([1, 1], gap="large")
     with left:
-        if st.button("Zurück", use_container_width=True):
+        if st.button(t("common.back"), use_container_width=True):
             st.session_state["nav_request"] = "Dashboard"
             st.rerun()
 
     with right:
         if st.button(
-            "Weiter zur Gesamtübersicht",
+            t("prioritization.next_overview"),
             type="primary",
             use_container_width=True,
             disabled=dirty,

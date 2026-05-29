@@ -14,6 +14,7 @@ from core.overview import build_overview_table
 from core.charts import radar_ist_soll
 from core.state import init_session_state
 from core.exporter import make_csv_bytes
+from core.i18n import get_language, t
 
 TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
@@ -482,10 +483,10 @@ def after_dash(text: str) -> str:
 
 def _scale_legend_centered() -> None:
     st.markdown(
-        """
+        f"""
 <style>
-  .rgm-legend-wrap { display:flex; justify-content:center; margin-top: 10px; }
-  .rgm-legend-box {
+  .rgm-legend-wrap {{ display:flex; justify-content:center; margin-top: 10px; }}
+  .rgm-legend-box {{
     padding: 8px 14px;
     border: 1px solid var(--rgm-border);
     border-radius: 10px;
@@ -497,18 +498,18 @@ def _scale_legend_centered() -> None:
     flex-wrap: wrap;
     gap: 14px;
     align-items: center;
-  }
-  .rgm-legend-box .rgm-num { color: #d62728 !important; font-weight: 700 !important; }
+  }}
+  .rgm-legend-box .rgm-num {{ color: #d62728 !important; font-weight: 700 !important; }}
 </style>
 
 <div class="rgm-legend-wrap">
   <div class="rgm-legend-box">
-    <span style="font-weight:600;">Legende:</span>
-    <span><span class="rgm-num">1</span> - Initial</span>
-    <span><span class="rgm-num">2</span> - Gemanagt</span>
-    <span><span class="rgm-num">3</span> - Definiert</span>
-    <span><span class="rgm-num">4</span> - Quantitativ gemanagt</span>
-    <span><span class="rgm-num">5</span> - Optimiert</span>
+    <span style="font-weight:600;">{t("common.legend")}</span>
+    <span><span class="rgm-num">1</span> - {t("common.initial")}</span>
+    <span><span class="rgm-num">2</span> - {t("common.managed")}</span>
+    <span><span class="rgm-num">3</span> - {t("common.defined")}</span>
+    <span><span class="rgm-num">4</span> - {t("common.quant_managed")}</span>
+    <span><span class="rgm-num">5</span> - {t("common.optimized")}</span>
   </div>
 </div>
         """,
@@ -558,23 +559,27 @@ def _icons_svg() -> tuple[str, str, str]:
 # ---------------------------------------------------------------------
 def _build_dashboard_result_table_html(df_view: pd.DataFrame, compact: bool) -> str:
     cols = list(df_view.columns)
+    code_col = t("column.code")
+    topic_col = t("column.topic")
+    current_col = t("column.current_level")
+    target_col = t("column.target_level")
 
     width_map = {
-        "Kürzel": 90,
-        "Themenbereich": 300,
-        "Ist-Reifegrad": 120,
-        "Soll-Reifegrad": 120,
+        code_col: 90,
+        topic_col: 300,
+        current_col: 120,
+        target_col: 120,
     }
 
     colgroup = "".join(f'<col style="width:{int(width_map.get(c, 180))}px;">' for c in cols)
     thead = "".join(f"<th>{_escape(c)}</th>" for c in cols)
 
-    nowrap_cols = {"Kürzel"}
-    wrap_cols = {"Themenbereich"}
-    num_cols = {"Ist-Reifegrad", "Soll-Reifegrad"}
+    nowrap_cols = {code_col}
+    wrap_cols = {topic_col}
+    num_cols = {current_col, target_col}
 
-    clamp_map_compact = {"Themenbereich": "rgm-clamp-3"}
-    clamp_map_modal = {"Themenbereich": "rgm-clamp-8"}
+    clamp_map_compact = {topic_col: "rgm-clamp-3"}
+    clamp_map_modal = {topic_col: "rgm-clamp-8"}
     clamp_map = clamp_map_compact if compact else clamp_map_modal
 
     rows_html: list[str] = []
@@ -638,17 +643,17 @@ def _render_dashboard_result_table(df_view: pd.DataFrame, csv_filename: str = "e
         f'<div class="rgm-measures-card">'
         f'  <div class="rgm-measures-toolbar">'
         f'    <a class="rgm-tool-btn" href="{csv_href}" download="{_escape(csv_filename)}" '
-        f'       title="CSV herunterladen" aria-label="CSV herunterladen">{download_svg}</a>'
-        f'    <a class="rgm-tool-btn" href="#{modal_id}" title="Vollbild" aria-label="Vollbild">{fullscreen_svg}</a>'
+        f'       title="CSV {t("common.download")}" aria-label="CSV {t("common.download")}">{download_svg}</a>'
+        f'    <a class="rgm-tool-btn" href="#{modal_id}" title="{t("common.fullscreen")}" aria-label="{t("common.fullscreen")}">{fullscreen_svg}</a>'
         f"  </div>"
         f'  <div class="rgm-measures-scroll">{table_normal}</div>'
         f"</div>"
         f'<div id="{modal_id}" class="rgm-modal">'
-        f'  <a href="#rgm-close" class="rgm-modal-backdrop" aria-label="Schließen"></a>'
+        f'  <a href="#rgm-close" class="rgm-modal-backdrop" aria-label="{t("common.close")}"></a>'
         f'  <div class="rgm-modal-content" role="dialog" aria-modal="true">'
         f'    <div class="rgm-modal-header">'
-        f'      <div class="rgm-modal-title">Ergebnis in Tabellenform</div>'
-        f'      <a class="rgm-modal-close" href="#rgm-close" title="Schließen" aria-label="Schließen">{close_svg}</a>'
+        f'      <div class="rgm-modal-title">{t("dashboard.table")}</div>'
+        f'      <a class="rgm-modal-close" href="#rgm-close" title="{t("common.close")}" aria-label="{t("common.close")}">{close_svg}</a>'
         f"    </div>"
         f'    <div class="rgm-modal-body">{table_modal}</div>'
         f"  </div>"
@@ -670,7 +675,7 @@ def _render_dual_plot_cards(
 ) -> None:
     """Zwei Plotly-Radar-Cards in EINEM components.html (Download wie Gesamtübersicht: Plot + Legenden)."""
     if fig_left is None and fig_right is None:
-        st.info("Keine Daten vorhanden.")
+        st.info(t("common.no_data"))
         return
 
     dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
@@ -686,6 +691,13 @@ def _render_dual_plot_cards(
     icon_green = "#639A00"
 
     download_svg, fullscreen_svg, _ = _icons_svg()
+    current_label = t("chart.current_level")
+    target_label = t("chart.target_level")
+    toggle_current = t("chart.toggle_current")
+    toggle_target = t("chart.toggle_target")
+    download_label = t("common.download")
+    fullscreen_label = t("common.fullscreen")
+    no_data_label = t("common.no_data")
 
     def _trace_color(fig, i: int, fallback: str) -> str:
         if fig is None:
@@ -849,19 +861,19 @@ def _render_dual_plot_cards(
           <div class="rgm-mini-legend">
             <span class="rgm-item">
               <span class="rgm-swatch rgm-swatch-toggle" data-trace="0" role="button" tabindex="0"
-                    aria-label="Ist-Reifegrad ein-/ausblenden" style="background:{l_ist};"></span>
-              Ist-Reifegrad
+                    aria-label="{html.escape(toggle_current)}" style="background:{l_ist};"></span>
+              {html.escape(current_label)}
             </span>
             <span class="rgm-item">
               <span class="rgm-swatch rgm-swatch-toggle" data-trace="1" role="button" tabindex="0"
-                    aria-label="Soll-Reifegrad ein-/ausblenden" style="background:{l_soll};"></span>
-              Soll-Reifegrad
+                    aria-label="{html.escape(toggle_target)}" style="background:{l_soll};"></span>
+              {html.escape(target_label)}
             </span>
           </div>
         </div>
         <div class="rgm-toolbar">
-          <button id="dlL" class="rgm-btn" title="Herunterladen" aria-label="Herunterladen">{download_svg}</button>
-          <button id="fsL" class="rgm-btn" title="Vollbild" aria-label="Vollbild">{fullscreen_svg}</button>
+          <button id="dlL" class="rgm-btn" title="{html.escape(download_label)}" aria-label="{html.escape(download_label)}">{download_svg}</button>
+          <button id="fsL" class="rgm-btn" title="{html.escape(fullscreen_label)}" aria-label="{html.escape(fullscreen_label)}">{fullscreen_svg}</button>
         </div>
       </div>
       <div id="plotL" class="rgm-plot"></div>
@@ -874,19 +886,19 @@ def _render_dual_plot_cards(
           <div class="rgm-mini-legend">
             <span class="rgm-item">
               <span class="rgm-swatch rgm-swatch-toggle" data-trace="0" role="button" tabindex="0"
-                    aria-label="Ist-Reifegrad ein-/ausblenden" style="background:{r_ist};"></span>
-              Ist-Reifegrad
+                    aria-label="{html.escape(toggle_current)}" style="background:{r_ist};"></span>
+              {html.escape(current_label)}
             </span>
             <span class="rgm-item">
               <span class="rgm-swatch rgm-swatch-toggle" data-trace="1" role="button" tabindex="0"
-                    aria-label="Soll-Reifegrad ein-/ausblenden" style="background:{r_soll};"></span>
-              Soll-Reifegrad
+                    aria-label="{html.escape(toggle_target)}" style="background:{r_soll};"></span>
+              {html.escape(target_label)}
             </span>
           </div>
         </div>
         <div class="rgm-toolbar">
-          <button id="dlR" class="rgm-btn" title="Herunterladen" aria-label="Herunterladen">{download_svg}</button>
-          <button id="fsR" class="rgm-btn" title="Vollbild" aria-label="Vollbild">{fullscreen_svg}</button>
+          <button id="dlR" class="rgm-btn" title="{html.escape(download_label)}" aria-label="{html.escape(download_label)}">{download_svg}</button>
+          <button id="fsR" class="rgm-btn" title="{html.escape(fullscreen_label)}" aria-label="{html.escape(fullscreen_label)}">{fullscreen_svg}</button>
         </div>
       </div>
       <div id="plotR" class="rgm-plot"></div>
@@ -936,11 +948,11 @@ def _render_dual_plot_cards(
       const lineStep = 22 * scale;
 
       const items = [
-        ["1", "Initial"],
-        ["2", "Gemanagt"],
-        ["3", "Definiert"],
-        ["4", "Quantitativ gemanagt"],
-        ["5", "Optimiert"],
+        ["1", {t("common.initial")!r}],
+        ["2", {t("common.managed")!r}],
+        ["3", {t("common.defined")!r}],
+        ["4", {t("common.quant_managed")!r}],
+        ["5", {t("common.optimized")!r}],
       ];
 
       const fontLabel = "700 " + (18 * scale) + "px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif";
@@ -948,7 +960,7 @@ def _render_dual_plot_cards(
       const fontTail  = "600 " + (17 * scale) + "px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif";
 
       ctx.font = fontLabel;
-      const label = "Legende:";
+      const label = {t("common.legend")!r};
       const labelW = ctx.measureText(label).width;
 
       let contentW = labelW + 14 * scale;
@@ -1020,11 +1032,11 @@ def _render_dual_plot_cards(
       ctx.stroke();
 
       const items = [
-        ["1", "Initial"],
-        ["2", "Gemanagt"],
-        ["3", "Definiert"],
-        ["4", "Quantitativ gemanagt"],
-        ["5", "Optimiert"],
+        ["1", {t("common.initial")!r}],
+        ["2", {t("common.managed")!r}],
+        ["3", {t("common.defined")!r}],
+        ["4", {t("common.quant_managed")!r}],
+        ["5", {t("common.optimized")!r}],
       ];
 
       let cx = x + pad;
@@ -1032,7 +1044,7 @@ def _render_dual_plot_cards(
 
       ctx.font = m.fonts.fontLabel;
       ctx.fillStyle = EXPORT_TEXT;
-      const label = "Legende:";
+      const label = {t("common.legend")!r};
       ctx.fillText(label, cx, cy);
       cx += ctx.measureText(label).width + 14 * scale;
 
@@ -1099,8 +1111,8 @@ def _render_dual_plot_cards(
       let cx = x;
 
       const items = [
-        {{ label: "Ist-Reifegrad", color: istColor }},
-        {{ label: "Soll-Reifegrad", color: sollColor }},
+        {{ label: {current_label!r}, color: istColor }},
+        {{ label: {target_label!r}, color: sollColor }},
       ];
 
       for (const it of items) {{
@@ -1239,7 +1251,7 @@ def _render_dual_plot_cards(
       if (!card || !head || !plotDiv || !btnDL || !btnFS) return;
 
       if (!FIG) {{
-        plotDiv.innerHTML = "<div style='color:{muted}; padding: 12px;'>Keine Daten</div>";
+        plotDiv.innerHTML = "<div style='color:{muted}; padding: 12px;'>{html.escape(no_data_label)}</div>";
         setTimeout(setFrameHeight, 60);
         return;
       }}
@@ -1414,14 +1426,21 @@ def _render_dual_plot_cards(
 def main() -> None:
     init_session_state()
     _inject_dashboard_css()
+    en = get_language() == "en"
+    td_dimensions = "TD Dimensions" if en else "TD-Dimensionen"
+    og_dimensions = "OG Dimensions" if en else "OG-Dimensionen"
+    code_col = t("column.code")
+    topic_col = t("column.topic")
+    current_col = t("column.current_level")
+    target_col = t("column.target_level")
 
     st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
     st.markdown(
-        """
+        f"""
         <div class="rgm-hero">
-          <div class="rgm-h1">Dashboard</div>
+          <div class="rgm-h1">{t("page.Dashboard")}</div>
           <div class="rgm-accent-line"></div>
-          <p class="rgm-lead">Visualisiertes Ergebnis der Reifegraderhebung.</p>
+          <p class="rgm-lead">{t("dashboard.lead")}</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1430,17 +1449,20 @@ def main() -> None:
     model = load_model_config()
 
     answers = get_answers()
+    has_answers = bool(answers)
     global_target = float(st.session_state.get("global_target_level", 3.0))
     dim_targets = st.session_state.get("dimension_targets", {}) or {}
     priorities = st.session_state.get("priorities", {}) or {}
 
-    df = build_overview_table(
-        model=model,
-        answers=answers,
-        global_target_level=global_target,
-        per_dimension_targets=dim_targets,
-        priorities=priorities,
-    )
+    df = None
+    if has_answers:
+        df = build_overview_table(
+            model=model,
+            answers=answers,
+            global_target_level=global_target,
+            per_dimension_targets=dim_targets,
+            priorities=priorities,
+        )
 
     dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
@@ -1482,55 +1504,55 @@ def main() -> None:
 
     # ---------- Radar-Diagramme (exakt wie Gesamtübersicht) ----------
     st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="rgm-section-title">Visualisiertes Ergebnis der Reifegraderhebung</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="rgm-section-title">{t("dashboard.visualized")}</div>', unsafe_allow_html=True)
 
     if df is None or df.empty:
-        st.info("Noch keine Ergebnisse vorhanden – bitte zuerst die Erhebung durchführen.")
+        st.info(t("common.no_results_assessment"))
     else:
-        fig_td = tune_plotly(radar_ist_soll(df, "TD", "TD-Dimensionen", dark=dark))
-        fig_og = tune_plotly(radar_ist_soll(df, "OG", "OG-Dimensionen", dark=dark))
+        fig_td = tune_plotly(radar_ist_soll(df, "TD", td_dimensions, dark=dark))
+        fig_og = tune_plotly(radar_ist_soll(df, "OG", og_dimensions, dark=dark))
 
         _render_dual_plot_cards(
             fig_left=fig_td,
-            title_left="TD-Dimensionen",
-            filename_left="reifegrad_radar_td",
+            title_left=td_dimensions,
+            filename_left="maturity_radar_td" if en else "reifegrad_radar_td",
             fig_right=fig_og,
-            title_right="OG-Dimensionen",
-            filename_right="reifegrad_radar_og",
+            title_right=og_dimensions,
+            filename_right="maturity_radar_og" if en else "reifegrad_radar_og",
         )
         _scale_legend_centered()
 
     # ---------- Ergebnis in Tabellenform (exakt Measures-Style) ----------
     st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="rgm-section-title">Ergebnis in Tabellenform</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="rgm-section-title">{t("dashboard.table")}</div>', unsafe_allow_html=True)
 
     if df is None or df.empty:
-        st.info("Noch keine Ergebnisse vorhanden.")
+        st.info(t("common.no_results"))
         can_proceed = False
     else:
         df_view = df[["code", "name", "ist_level", "target_level"]].copy()
         df_view["name"] = df_view["name"].apply(after_dash)
         df_view = df_view.rename(
             columns={
-                "code": "Kürzel",
-                "name": "Themenbereich",
-                "ist_level": "Ist-Reifegrad",
-                "target_level": "Soll-Reifegrad",
+                "code": code_col,
+                "name": topic_col,
+                "ist_level": current_col,
+                "target_level": target_col,
             }
         )
 
-        for c in ["Ist-Reifegrad", "Soll-Reifegrad"]:
+        for c in [current_col, target_col]:
             df_view[c] = pd.to_numeric(df_view[c], errors="coerce").apply(
                 lambda x: "" if x != x else f"{float(x):.2f}".rstrip("0").rstrip(".")
             )
 
-        _render_dashboard_result_table(df_view, csv_filename="ergebnis_tabelle.csv")
+        _render_dashboard_result_table(df_view, csv_filename="results_table.csv" if en else "ergebnis_tabelle.csv")
         can_proceed = True
 
     # Navigation
     st.markdown("---")
     if st.button(
-        "Weiter zur Priorisierung",
+        t("dashboard.next_prioritization"),
         type="primary",
         use_container_width=True,
         disabled=not can_proceed,

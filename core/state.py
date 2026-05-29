@@ -14,6 +14,7 @@ def init_session_state():
         "global_target_level": 3.0,  # globales Soll-Niveau
         "dimension_targets": {},     # optionale Soll-Overrides je Dimension
         "priorities": {},            # Maßnahmen / Kommentare je Dimension
+        "language": "de",            # UI-/Modellsprache ("de" oder "en")
         "nav_page": "Start",
         "erhebung_step": 0,          # 0 = Eingabemaske, 1 = Eigenes Ziel (Tabelle), 2 = Fragen
         "erhebung_dim_idx": 0,       # aktuelle Dimension (Index)

@@ -15,6 +15,8 @@ import tempfile
 
 import pandas as pd
 
+from core.i18n import get_language, priority_value_label, t as i18n_t, target_option_label
+
 # ReportLab (PDF)
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -175,8 +177,8 @@ def _get_trace_color(fig, idx: int, fallback_hex: str) -> str:
 def _plotly_fig_to_png_bytes(
     fig,
     *,
-    width: int = 1500,
-    height: int = 1100,
+    width: int = 1800,
+    height: int = 1250,
     scale: int = 2,
     dark_export: bool = False,
 ) -> tuple[Optional[bytes], Optional[str]]:
@@ -209,11 +211,11 @@ def _plotly_fig_to_png_bytes(
             plot_bgcolor=bg,
             font=dict(color=fg),
             showlegend=False,
-            margin=dict(l=90, r=90, t=50, b=90),
+            margin=dict(l=240, r=240, t=70, b=120),
             title=None,
         )
         f.update_polars(
-            domain=dict(x=[0.04, 0.96], y=[0.04, 0.96]),
+            domain=dict(x=[0.16, 0.84], y=[0.10, 0.90]),
             bgcolor=bg,
             radialaxis=dict(
                 gridcolor=grid,
@@ -224,7 +226,7 @@ def _plotly_fig_to_png_bytes(
             angularaxis=dict(
                 gridcolor=grid,
                 linecolor=axis_line,
-                tickfont=dict(color=fg, size=20),
+                tickfont=dict(color=fg, size=18),
             ),
         )
     except Exception:
@@ -653,7 +655,7 @@ def _page_footer(canvas, doc, *, org_right: str = "") -> None:
     # 1) Titel (wrap-sicher)
     y = _draw_text_wrapped(
         canvas,
-        "Reifegradmodell für die Technische Dokumentation",
+        i18n_t("start.title"),
         tx,
         y,
         max_left_w,
@@ -667,7 +669,7 @@ def _page_footer(canvas, doc, *, org_right: str = "") -> None:
         x=tx,
         y=y,
         max_w=max_left_w,
-        prefix="Erstellt durch: Christian Koch",
+        prefix=("Created by: Christian Koch" if get_language() == "en" else "Erstellt durch: Christian Koch"),
         email="christian4.koch@tu-dortmund.de",
         font=font,
         size=size,
@@ -680,7 +682,7 @@ def _page_footer(canvas, doc, *, org_right: str = "") -> None:
         x=tx,
         y=y,
         max_w=max_left_w,
-        prefix="Technischer Support: Mouaiad Aldebs",
+        prefix=("Technical support: Mouaiad Aldebs" if get_language() == "en" else "Technischer Support: Mouaiad Aldebs"),
         email="mouaiad.aldebs@tu-dortmund.de",
         font=font,
         size=size,
@@ -690,7 +692,8 @@ def _page_footer(canvas, doc, *, org_right: str = "") -> None:
 
     # Rechte Seite: Org + Seite
     page = canvas.getPageNumber()
-    right_txt = f"{org_right}   Seite {page}".strip() if org_right else f"Seite {page}"
+    page_label = "Page" if get_language() == "en" else "Seite"
+    right_txt = f"{org_right}   {page_label} {page}".strip() if org_right else f"{page_label} {page}"
     canvas.setFont(font, size)
     canvas.drawRightString(w - doc.rightMargin, y0 + 1.2 * mm, right_txt)
 
@@ -809,9 +812,9 @@ def _mini_legend_table(ist_color_hex: str, soll_color_hex: str, *, P_STYLE: Para
 
     row = [
         sw_ist,
-        Paragraph("Ist-Reifegrad", P_STYLE),
+        Paragraph(i18n_t("chart.current_level"), P_STYLE),
         sw_soll,
-        Paragraph("Soll-Reifegrad", P_STYLE),
+        Paragraph(i18n_t("chart.target_level"), P_STYLE),
     ]
     t = Table([row], colWidths=[sw_w, 120, sw_w, 120])
     t.setStyle(
@@ -832,12 +835,12 @@ def _scale_legend_box(*, width_pt: float, BORDER, BG, TEXT, SMALL: ParagraphStyl
     """Skalen-Legende unten (Box) wie in Download."""
     red = "#d62728"
     html = (
-        "<b>Legende:</b> "
-        f'<font color="{red}"><b>1</b></font> - Initial&nbsp;&nbsp;&nbsp;'
-        f'<font color="{red}"><b>2</b></font> - Gemanagt&nbsp;&nbsp;&nbsp;'
-        f'<font color="{red}"><b>3</b></font> - Definiert&nbsp;&nbsp;&nbsp;'
-        f'<font color="{red}"><b>4</b></font> - Quantitativ gemanagt&nbsp;&nbsp;&nbsp;'
-        f'<font color="{red}"><b>5</b></font> - Optimiert'
+        f"<b>{i18n_t('common.legend')}</b> "
+        f'<font color="{red}"><b>1</b></font> - {i18n_t("common.initial")}&nbsp;&nbsp;&nbsp;'
+        f'<font color="{red}"><b>2</b></font> - {i18n_t("common.managed")}&nbsp;&nbsp;&nbsp;'
+        f'<font color="{red}"><b>3</b></font> - {i18n_t("common.defined")}&nbsp;&nbsp;&nbsp;'
+        f'<font color="{red}"><b>4</b></font> - {i18n_t("common.quant_managed")}&nbsp;&nbsp;&nbsp;'
+        f'<font color="{red}"><b>5</b></font> - {i18n_t("common.optimized")}'
     )
     p = Paragraph(html, SMALL)
     t = Table([[p]], colWidths=[width_pt])
@@ -957,6 +960,9 @@ def make_pdf_bytes(
     - Maßnahmen als LongTable
     - Footer: IPS Logo + Kontakte auf jeder Seite (Mail-Icon korrekt + aligned)
     """
+    en = get_language() == "en"
+    td_dimensions = "TD Dimensions" if en else "TD-Dimensionen"
+    og_dimensions = "OG Dimensions" if en else "OG-Dimensionen"
 
     # Farben
     TD_BLUE = colors.HexColor("#2F3DB8")
@@ -979,7 +985,7 @@ def make_pdf_bytes(
         rightMargin=16 * mm,
         topMargin=14 * mm,
         bottomMargin=26 * mm,
-        title="Reifegrad – Gesamtübersicht",
+        title=("Maturity Assessment - Overview" if en else "Reifegrad – Gesamtübersicht"),
         author="UniDoku",
     )
 
@@ -1199,7 +1205,7 @@ def make_pdf_bytes(
     story: list[Any] = []
 
     # --- Titel ---
-    story.append(Paragraph("Gesamtübersicht – Reifegraderhebung", H1))
+    story.append(Paragraph("Overview - Maturity Assessment" if en else "Gesamtübersicht – Reifegraderhebung", H1))
 
     # Accent-Line (TD/OG)
     accent = Table(
@@ -1219,17 +1225,17 @@ def make_pdf_bytes(
     story.append(Spacer(1, 4 * mm))
 
     # --- Angaben zur Erhebung ---
-    story.append(Paragraph("Angaben zur Erhebung", H2))
+    story.append(Paragraph(i18n_t("overview.meta_title"), H2))
 
     left = [
-        ("Name der Organisation", _fmt(meta.get("org", ""))),
-        ("Bereich", _fmt(meta.get("area", ""))),
-        ("Erhebung durchgeführt von", _fmt(meta.get("assessor", ""))),
+        (i18n_t("assessment.field.org").rstrip(":"), _fmt(meta.get("org", ""))),
+        (i18n_t("assessment.field.area").rstrip(":"), _fmt(meta.get("area", ""))),
+        (i18n_t("assessment.field.assessor").rstrip(":"), _fmt(meta.get("assessor", ""))),
     ]
     right = [
-        ("Datum der Durchführung", _fmt(meta.get("date_str", ""))),
-        ("Angestrebtes Ziel", _fmt(meta.get("target_label", ""))),
-        ("Kontakt", _fmt(meta.get("assessor_contact", ""))),
+        (i18n_t("assessment.field.date").rstrip(":"), _fmt(meta.get("date_str", ""))),
+        (i18n_t("assessment.field.target").rstrip(":"), target_option_label(meta.get("target_label", "")) if meta.get("target_label") else _fmt("")),
+        (i18n_t("assessment.field.contact").rstrip(":"), _fmt(meta.get("assessor_contact", ""))),
     ]
 
     def _meta_table(left_pairs: list[tuple[str, str]], right_pairs: list[tuple[str, str]]) -> Table:
@@ -1307,14 +1313,14 @@ def make_pdf_bytes(
 
 
     # --- Einführung: Bereiche (TD/OG) ---
-    td_left_title = Paragraph("Technische Dokumentation (TD)", P_SEC_TITLE_TD)
-    td_left_desc = Paragraph("Relevante Themenbereiche der technischen Dokumentation.", P_SEC_DESC)
+    td_left_title = Paragraph("Technical Documentation (TD)" if en else "Technische Dokumentation (TD)", P_SEC_TITLE_TD)
+    td_left_desc = Paragraph("Relevant topic areas of technical documentation." if en else "Relevante Themenbereiche der technischen Dokumentation.", P_SEC_DESC)
     td_card = _intro_card(
-        "Technische Dokumentation",
-        [("TD1", "Redaktionsprozess"),
-         ("TD2", "Content Management"),
-         ("TD3", "Content Delivery"),
-         ("TD4", "Zielgruppenorientierung")],
+        "Technical Documentation" if en else "Technische Dokumentation",
+        [("TD1", "Editorial process" if en else "Redaktionsprozess"),
+         ("TD2", "Content management" if en else "Content Management"),
+         ("TD3", "Content delivery" if en else "Content Delivery"),
+         ("TD4", "Target group orientation" if en else "Zielgruppenorientierung")],
         border_color=TD_BLUE,
         card_w_pt=float(INTRO_RIGHT_W),
     )
@@ -1323,17 +1329,19 @@ def make_pdf_bytes(
     story.append(_divider_line())
     story.append(Spacer(1, 3 * mm))
 
-    og_left_title = Paragraph("Organisation (OG)", P_SEC_TITLE_OG)
+    og_left_title = Paragraph("Organization (OG)" if en else "Organisation (OG)", P_SEC_TITLE_OG)
     og_left_desc = Paragraph(
+        "Relevant topic areas of the organization that are related to or influence technical documentation."
+        if en else
         "Relevante Themenbereiche der Organisation, die mit der technischen Dokumentation in Verbindung stehen bzw. diese beeinflussen.",
         P_SEC_DESC,
     )
     og_card = _intro_card(
-        "Organisation",
-        [("OG1", "Wissensmanagement"),
-         ("OG2", "Organisationale Verankerung der technischen Dokumentation"),
-         ("OG3", "Schnittstellen"),
-         ("OG4", "Technologische Infrastruktur")],
+        "Organization" if en else "Organisation",
+        [("OG1", "Knowledge management" if en else "Wissensmanagement"),
+         ("OG2", "Organizational anchoring of technical documentation" if en else "Organisationale Verankerung der technischen Dokumentation"),
+         ("OG3", "Interfaces" if en else "Schnittstellen"),
+         ("OG4", "Technological infrastructure" if en else "Technologische Infrastruktur")],
         border_color=OG_ORANGE,
         card_w_pt=float(INTRO_RIGHT_W),
     )
@@ -1346,7 +1354,7 @@ def make_pdf_bytes(
     story.append(Spacer(1, 2.2 * mm))
     
     # --- Kennzahlen (wie Gesamtübersicht: 2 Cards) ---
-    story.append(Paragraph("Kennzahlen", H2))
+    story.append(Paragraph(i18n_t("overview.kpis"), H2))
 
     drep = df_report if (df_report is not None and not df_report.empty) else (df_raw.copy() if df_raw is not None else pd.DataFrame())
 
@@ -1359,8 +1367,8 @@ def make_pdf_bytes(
 
         rows = [
             [Paragraph(f"<b>{_html.escape(title)}</b>", P_CARD), ""],
-            [Paragraph("Bewertet", P_LBL), Paragraph(f"<b>{na} / {nt}</b>", P_LBL)],
-            [Paragraph("Handlungsbedarf (Gap &gt; 0)", P_LBL), Paragraph(f"<b>{nn}</b>", P_LBL)],
+            [Paragraph(i18n_t("overview.assessed"), P_LBL), Paragraph(f"<b>{na} / {nt}</b>", P_LBL)],
+            [Paragraph(i18n_t("overview.need_action").replace(">", "&gt;"), P_LBL), Paragraph(f"<b>{nn}</b>", P_LBL)],
         ]
         t = Table(rows, colWidths=[(doc.width * 0.48) * 0.72, (doc.width * 0.48) * 0.28])
         t.setStyle(
@@ -1385,8 +1393,8 @@ def make_pdf_bytes(
     gap_w = doc.width * 0.04
     card_w = (doc.width - gap_w) / 2
 
-    card_td = _kpi_card("TD-Dimensionen", td_nt, td_na, td_nn, TD_BLUE)
-    card_og = _kpi_card("OG-Dimensionen", og_nt, og_na, og_nn, OG_ORANGE)
+    card_td = _kpi_card(td_dimensions, td_nt, td_na, td_nn, TD_BLUE)
+    card_og = _kpi_card(og_dimensions, og_nt, og_na, og_nn, OG_ORANGE)
 
     kpi_grid = Table([[card_td, "", card_og]], colWidths=[card_w, gap_w, card_w])
     kpi_grid.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
@@ -1444,36 +1452,36 @@ def make_pdf_bytes(
 
     if have_figs:
         story.append(PageBreak())
-        story.append(Paragraph("Visualisiertes Ergebnis der Reifegraderhebung", H2))
+        story.append(Paragraph(i18n_t("dashboard.visualized"), H2))
         story.append(Spacer(1, 3 * mm))
 
         # TD (eigene Seite, groß)
         if fig_td is not None:
             if td_png:
-                story.append(KeepTogether([_radar_card(td_png, "TD-Dimensionen", TD_BLUE, fig_td), Spacer(1, 4 * mm)]))
+                story.append(KeepTogether([_radar_card(td_png, td_dimensions, TD_BLUE, fig_td), Spacer(1, 4 * mm)]))
                 story.append(PageBreak())
             else:
-                story.append(_p(f"TD-Dimensionen: Plot-Export fehlgeschlagen: {_fmt(td_err)}", P))
+                story.append(_p(f"{td_dimensions}: Plot export failed: {_fmt(td_err)}" if en else f"TD-Dimensionen: Plot-Export fehlgeschlagen: {_fmt(td_err)}", P))
                 story.append(Spacer(1, 4 * mm))
 
         # OG
         if fig_og is not None:
             if og_png:
-                story.append(KeepTogether([_radar_card(og_png, "OG-Dimensionen", OG_ORANGE, fig_og), Spacer(1, 4 * mm)]))
+                story.append(KeepTogether([_radar_card(og_png, og_dimensions, OG_ORANGE, fig_og), Spacer(1, 4 * mm)]))
                 story.append(PageBreak())
             else:
-                story.append(_p(f"OG-Dimensionen: Plot-Export fehlgeschlagen: {_fmt(og_err)}", P))
+                story.append(_p(f"{og_dimensions}: Plot export failed: {_fmt(og_err)}" if en else f"OG-Dimensionen: Plot-Export fehlgeschlagen: {_fmt(og_err)}", P))
                 story.append(Spacer(1, 4 * mm))
 
     # --- Maßnahmen ---
-    story.append(Paragraph("Geplante Maßnahmen", H2))
+    story.append(Paragraph(i18n_t("overview.measures"), H2))
 
     if df_measures is None or df_measures.empty:
         base = drep if (drep is not None and not drep.empty) else df_raw
         df_measures = df_results_for_export(base) if (base is not None and not base.empty) else pd.DataFrame()
 
     if df_measures.empty:
-        story.append(_p("Keine Einträge vorhanden.", P))
+        story.append(_p(i18n_t("common.no_entries_available"), P))
     else:
         ordered = [
             "Priorität",
@@ -1492,7 +1500,7 @@ def make_pdf_bytes(
         # Ist & Gap als Dezimalwerte ausgeben
         for c in ["Ist-Reifegrad", "Gap"]:
             if c in d.columns:
-                d[c] = d[c].apply(lambda x: _to_float_str(x, decimals=2, decimal_comma=True))
+                d[c] = d[c].apply(lambda x: _to_float_str(x, decimals=2, decimal_comma=not en))
 
         # Soll bleibt typischerweise ganzzahlig
         if "Soll-Reifegrad" in d.columns:
@@ -1525,7 +1533,18 @@ def make_pdf_bytes(
 
         d2 = pd.DataFrame(expanded_rows, columns=cols)
 
-        header = [Paragraph(f"<b>{_html.escape(c)}</b>", SMALL) for c in cols]
+        display_col = {
+            "Priorität": i18n_t("column.priority"),
+            "Kürzel": i18n_t("column.code"),
+            "Themenbereich": i18n_t("column.topic"),
+            "Ist-Reifegrad": i18n_t("column.current_level"),
+            "Soll-Reifegrad": i18n_t("column.target_level"),
+            "Gap": i18n_t("column.gap"),
+            "Maßnahme": i18n_t("column.measure"),
+            "Verantwortlich": i18n_t("column.responsible"),
+            "Zeitraum": i18n_t("column.timeframe"),
+        }
+        header = [Paragraph(f"<b>{_html.escape(display_col.get(c, c))}</b>", SMALL) for c in cols]
         rows: list[list[Any]] = [header]
 
         P_TAB = ParagraphStyle("P_TAB", parent=P, fontSize=9.2, leading=12, textColor=TEXT)
@@ -1534,6 +1553,8 @@ def make_pdf_bytes(
             row: list[Any] = []
             for c in cols:
                 v = "" if pd.isna(r[c]) else r[c]
+                if c == "Priorität":
+                    v = priority_value_label(v)
                 if c in wrap_cols:
                     row.append(_p(v, P_TAB, cjk_wrap=True))
                 else:

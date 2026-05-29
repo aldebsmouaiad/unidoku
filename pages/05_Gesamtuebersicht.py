@@ -16,6 +16,7 @@ from core.model_loader import load_model_config
 from core.overview import build_overview_table
 from core.charts import radar_ist_soll
 from core.exporter import df_results_for_export, make_csv_bytes, make_pdf_bytes
+from core.i18n import get_language, priority_value_label, t, target_option_label
 
 TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
@@ -948,7 +949,7 @@ def _clean_overview_df(df: pd.DataFrame) -> pd.DataFrame:
 
 def _kpi_block(df: pd.DataFrame) -> tuple[int, str]:
     if df is None or df.empty:
-        return 0, "<div class='rgm-muted'>Keine Kennzahlen verfügbar.</div>"
+        return 0, f"<div class='rgm-muted'>{t('common.no_data')}</div>"
 
     d = df.copy()
     n_answered_global = int(d["answered"].sum()) if "answered" in d.columns else 0
@@ -986,12 +987,12 @@ def _kpi_block(df: pd.DataFrame) -> tuple[int, str]:
       <div class="rgm-kpi-mini-title">{html.escape(title)}</div>
 
       <div class="rgm-kpi-line">
-        <span class="k">Bewertet</span>
+        <span class="k">{t("overview.assessed")}</span>
         <span class="v">{na} / {nt}</span>
       </div>
 
       <div class="rgm-kpi-line">
-        <span class="k">Handlungsbedarf (Gap &gt; 0)</span>
+        <span class="k">{t("overview.need_action")}</span>
         <span class="v">{nn}</span>
       </div>
     </div>
@@ -1002,8 +1003,8 @@ def _kpi_block(df: pd.DataFrame) -> tuple[int, str]:
 
     html_block = f"""
     <div class="rgm-kpi-grid">
-      {mini_card("TD-Dimensionen", td_nt, td_na, td_nn, "rgm-card-td")}
-      {mini_card("OG-Dimensionen", og_nt, og_na, og_nn, "rgm-card-og")}
+      {mini_card("TD Dimensions" if get_language() == "en" else "TD-Dimensionen", td_nt, td_na, td_nn, "rgm-card-td")}
+      {mini_card("OG Dimensions" if get_language() == "en" else "OG-Dimensionen", og_nt, og_na, og_nn, "rgm-card-og")}
     </div>
     """.strip()
 
@@ -1011,10 +1012,10 @@ def _kpi_block(df: pd.DataFrame) -> tuple[int, str]:
 
 def _scale_legend_centered() -> None:
     st.markdown(
-        """
+        f"""
 <style>
-  .rgm-legend-wrap { display:flex; justify-content:center; margin-top: 10px; }
-  .rgm-legend-box {
+  .rgm-legend-wrap {{ display:flex; justify-content:center; margin-top: 10px; }}
+  .rgm-legend-box {{
     padding: 8px 14px;
     border: 1px solid var(--rgm-border);
     border-radius: 10px;
@@ -1026,18 +1027,18 @@ def _scale_legend_centered() -> None:
     flex-wrap: wrap;
     gap: 14px;
     align-items: center;
-  }
-  .rgm-legend-box .rgm-num { color: #d62728 !important; font-weight: 700 !important; }
+  }}
+  .rgm-legend-box .rgm-num {{ color: #d62728 !important; font-weight: 700 !important; }}
 </style>
 
 <div class="rgm-legend-wrap">
   <div class="rgm-legend-box">
-    <span style="font-weight:600;">Legende:</span>
-    <span><span class="rgm-num">1</span> - Initial</span>
-    <span><span class="rgm-num">2</span> - Gemanagt</span>
-    <span><span class="rgm-num">3</span> - Definiert</span>
-    <span><span class="rgm-num">4</span> - Quantitativ gemanagt</span>
-    <span><span class="rgm-num">5</span> - Optimiert</span>
+    <span style="font-weight:600;">{t("common.legend")}</span>
+    <span><span class="rgm-num">1</span> - {t("common.initial")}</span>
+    <span><span class="rgm-num">2</span> - {t("common.managed")}</span>
+    <span><span class="rgm-num">3</span> - {t("common.defined")}</span>
+    <span><span class="rgm-num">4</span> - {t("common.quant_managed")}</span>
+    <span><span class="rgm-num">5</span> - {t("common.optimized")}</span>
   </div>
 </div>
         """,
@@ -1083,17 +1084,26 @@ def _icons_svg() -> tuple[str, str, str]:
 
 def _build_measures_table_html(df_view: pd.DataFrame, compact: bool) -> str:
     cols = list(df_view.columns)
+    priority_col = t("column.priority")
+    code_col = t("column.code")
+    topic_col = t("column.topic")
+    current_col = t("column.current_level")
+    target_col = t("column.target_level")
+    gap_col = t("column.gap")
+    measure_col = t("column.measure")
+    responsible_col = t("column.responsible")
+    timeframe_col = t("column.timeframe")
 
     width_map = {
-        "Priorität": 110,
-        "Kürzel": 90,
-        "Themenbereich": 300,
-        "Ist-Reifegrad": 80,
-        "Soll-Reifegrad": 80,
-        "Gap": 80,
-        "Maßnahme": 460,
-        "Verantwortlich": 280,
-        "Zeitraum": 160,
+        priority_col: 110,
+        code_col: 90,
+        topic_col: 300,
+        current_col: 80,
+        target_col: 80,
+        gap_col: 80,
+        measure_col: 460,
+        responsible_col: 280,
+        timeframe_col: 160,
     }
 
     colgroup = "".join(
@@ -1101,25 +1111,25 @@ def _build_measures_table_html(df_view: pd.DataFrame, compact: bool) -> str:
     )
     thead = "".join(f"<th>{_escape(c)}</th>" for c in cols)
 
-    nowrap_cols = {"Themenbereich"}
-    wrap_cols = {"Maßnahme", "Verantwortlich", "Zeitraum"}
-    num_cols = {"Ist-Reifegrad", "Soll-Reifegrad", "Gap"}
+    nowrap_cols = {topic_col}
+    wrap_cols = {measure_col, responsible_col, timeframe_col}
+    num_cols = {current_col, target_col, gap_col}
     
 
     # Kompaktansicht: sehr knapp
     clamp_map_compact = {
-        "Themenbereich": "rgm-clamp-2",
-        "Maßnahme": "rgm-clamp-3",
-        "Verantwortlich": "rgm-clamp-2",
-        "Zeitraum": "rgm-clamp-1",
+        topic_col: "rgm-clamp-2",
+        measure_col: "rgm-clamp-3",
+        responsible_col: "rgm-clamp-2",
+        timeframe_col: "rgm-clamp-1",
     }
 
     # Vollbild/Modal: deutlich mehr, aber nicht unendlich (professionell, keine Riesenzellen)
     clamp_map_modal = {
-        "Themenbereich": "rgm-clamp-4",
-        "Maßnahme": "",
-        "Verantwortlich": "rgm-clamp-6",
-        "Zeitraum": "rgm-clamp-2",
+        topic_col: "rgm-clamp-4",
+        measure_col: "",
+        responsible_col: "rgm-clamp-6",
+        timeframe_col: "rgm-clamp-2",
     }
 
     clamp_map = clamp_map_compact if compact else clamp_map_modal
@@ -1192,17 +1202,17 @@ def _render_measures_block(
         f'<div id="rgm-close"></div>'
         f'<div class="rgm-measures-card">'
         f'  <div class="rgm-measures-toolbar">'
-        f'    <a class="rgm-tool-btn" href="{csv_href}" download="{_escape(csv_filename)}" title="CSV herunterladen" aria-label="CSV herunterladen">{download_svg}</a>'
-        f'    <a class="rgm-tool-btn" href="#{modal_id}" title="Vollbild" aria-label="Vollbild">{fullscreen_svg}</a>'
+        f'    <a class="rgm-tool-btn" href="{csv_href}" download="{_escape(csv_filename)}" title="CSV {t("common.download")}" aria-label="CSV {t("common.download")}">{download_svg}</a>'
+        f'    <a class="rgm-tool-btn" href="#{modal_id}" title="{t("common.fullscreen")}" aria-label="{t("common.fullscreen")}">{fullscreen_svg}</a>'
         f"  </div>"
         f'  <div class="rgm-measures-scroll">{table_normal}</div>'
         f"</div>"
         f'<div id="{modal_id}" class="rgm-modal">'
-        f'  <a href="#rgm-close" class="rgm-modal-backdrop" aria-label="Schließen"></a>'
+        f'  <a href="#rgm-close" class="rgm-modal-backdrop" aria-label="{t("common.close")}"></a>'
         f'  <div class="rgm-modal-content" role="dialog" aria-modal="true">'
         f'    <div class="rgm-modal-header">'
-        f'      <div class="rgm-modal-title">Geplante Maßnahmen</div>'
-        f'      <a class="rgm-modal-close" href="#rgm-close" title="Schließen" aria-label="Schließen">{close_svg}</a>'
+        f'      <div class="rgm-modal-title">{t("overview.measures")}</div>'
+        f'      <a class="rgm-modal-close" href="#rgm-close" title="{t("common.close")}" aria-label="{t("common.close")}">{close_svg}</a>'
         f"    </div>"
         f'    <div class="rgm-modal-body">{table_modal}</div>'
         f"  </div>"
@@ -1220,7 +1230,7 @@ def _render_dual_plot_cards(
 ) -> None:
     """Zwei Plotly-Radar-Cards in EINEM components.html (stabil volle Breite, sauber responsiv)."""
     if fig_left is None and fig_right is None:
-        st.info("Keine Daten vorhanden.")
+        st.info(t("common.no_data"))
         return
 
     dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
@@ -1236,6 +1246,13 @@ def _render_dual_plot_cards(
     icon_green = "#639A00"
 
     download_svg, fullscreen_svg, _ = _icons_svg()
+    current_label = t("chart.current_level")
+    target_label = t("chart.target_level")
+    toggle_current = t("chart.toggle_current")
+    toggle_target = t("chart.toggle_target")
+    download_label = t("common.download")
+    fullscreen_label = t("common.fullscreen")
+    no_data_label = t("common.no_data")
 
     def _trace_color(fig, i: int, fallback: str) -> str:
         if fig is None:
@@ -1431,20 +1448,20 @@ def _render_dual_plot_cards(
           <div class="rgm-mini-legend">
             <span class="rgm-item">
               <span class="rgm-swatch rgm-swatch-toggle" data-trace="0" role="button" tabindex="0"
-                    aria-label="Ist-Reifegrad ein-/ausblenden" style="background:{l_ist};"></span>
-              Ist-Reifegrad
+                    aria-label="{html.escape(toggle_current)}" style="background:{l_ist};"></span>
+              {html.escape(current_label)}
             </span>
             
             <span class="rgm-item">
               <span class="rgm-swatch rgm-swatch-toggle" data-trace="1" role="button" tabindex="0"
-                    aria-label="Soll-Reifegrad ein-/ausblenden" style="background:{l_soll};"></span>
-              Soll-Reifegrad
+                    aria-label="{html.escape(toggle_target)}" style="background:{l_soll};"></span>
+              {html.escape(target_label)}
             </span>
           </div>
         </div>
         <div class="rgm-toolbar">
-          <button id="dlL" class="rgm-btn" title="Herunterladen" aria-label="Herunterladen">{download_svg}</button>
-          <button id="fsL" class="rgm-btn" title="Vollbild" aria-label="Vollbild">{fullscreen_svg}</button>
+          <button id="dlL" class="rgm-btn" title="{html.escape(download_label)}" aria-label="{html.escape(download_label)}">{download_svg}</button>
+          <button id="fsL" class="rgm-btn" title="{html.escape(fullscreen_label)}" aria-label="{html.escape(fullscreen_label)}">{fullscreen_svg}</button>
         </div>
       </div>
       <div id="plotL" class="rgm-plot"></div>
@@ -1457,21 +1474,21 @@ def _render_dual_plot_cards(
           <div class="rgm-mini-legend">
             <span class="rgm-item">
               <span class="rgm-swatch rgm-swatch-toggle" data-trace="0" role="button" tabindex="0"
-                    aria-label="Ist-Reifegrad ein-/ausblenden" style="background:{r_ist};"></span>
-              Ist-Reifegrad
+                    aria-label="{html.escape(toggle_current)}" style="background:{r_ist};"></span>
+              {html.escape(current_label)}
             </span>
 
             <span class="rgm-item">
               <span class="rgm-swatch rgm-swatch-toggle" data-trace="1" role="button" tabindex="0"
-                    aria-label="Soll-Reifegrad ein-/ausblenden" style="background:{r_soll};"></span>
-              Soll-Reifegrad
+                    aria-label="{html.escape(toggle_target)}" style="background:{r_soll};"></span>
+              {html.escape(target_label)}
             </span>
           </div>
 
         </div>
         <div class="rgm-toolbar">
-          <button id="dlR" class="rgm-btn" title="Herunterladen" aria-label="Herunterladen">{download_svg}</button>
-          <button id="fsR" class="rgm-btn" title="Vollbild" aria-label="Vollbild">{fullscreen_svg}</button>
+          <button id="dlR" class="rgm-btn" title="{html.escape(download_label)}" aria-label="{html.escape(download_label)}">{download_svg}</button>
+          <button id="fsR" class="rgm-btn" title="{html.escape(fullscreen_label)}" aria-label="{html.escape(fullscreen_label)}">{fullscreen_svg}</button>
         </div>
       </div>
       <div id="plotR" class="rgm-plot"></div>
@@ -1521,11 +1538,11 @@ def _render_dual_plot_cards(
       const lineStep = 22 * scale;
 
       const items = [
-        ["1", "Initial"],
-        ["2", "Gemanagt"],
-        ["3", "Definiert"],
-        ["4", "Quantitativ gemanagt"],
-        ["5", "Optimiert"],
+        ["1", {t("common.initial")!r}],
+        ["2", {t("common.managed")!r}],
+        ["3", {t("common.defined")!r}],
+        ["4", {t("common.quant_managed")!r}],
+        ["5", {t("common.optimized")!r}],
       ];
 
       const fontLabel = "700 " + (18 * scale) + "px system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif";
@@ -1534,7 +1551,7 @@ def _render_dual_plot_cards(
 
       // 1) Wunschbreite: Textbreite + Padding (damit Box "an Text" passt)
       ctx.font = fontLabel;
-      const label = "Legende:";
+      const label = {t("common.legend")!r};
       const labelW = ctx.measureText(label).width;
 
       let contentW = labelW + 14 * scale;
@@ -1611,11 +1628,11 @@ def _render_dual_plot_cards(
       ctx.stroke();
 
       const items = [
-        ["1", "Initial"],
-        ["2", "Gemanagt"],
-        ["3", "Definiert"],
-        ["4", "Quantitativ gemanagt"],
-        ["5", "Optimiert"],
+        ["1", {t("common.initial")!r}],
+        ["2", {t("common.managed")!r}],
+        ["3", {t("common.defined")!r}],
+        ["4", {t("common.quant_managed")!r}],
+        ["5", {t("common.optimized")!r}],
       ];
 
       let cx = x + pad;
@@ -1624,7 +1641,7 @@ def _render_dual_plot_cards(
       // "Legende:"
       ctx.font = m.fonts.fontLabel;
       ctx.fillStyle = EXPORT_TEXT;
-      const label = "Legende:";
+      const label = {t("common.legend")!r};
       ctx.fillText(label, cx, cy);
       cx += ctx.measureText(label).width + 14 * scale;
 
@@ -1695,8 +1712,8 @@ def _render_dual_plot_cards(
       let cx = x;
 
       const items = [
-        {{ label: "Ist-Reifegrad", color: istColor }},
-        {{ label: "Soll-Reifegrad", color: sollColor }},
+        {{ label: {current_label!r}, color: istColor }},
+        {{ label: {target_label!r}, color: sollColor }},
       ];
 
       for (const it of items) {{
@@ -1855,7 +1872,7 @@ def _render_dual_plot_cards(
       }}
 
       if (!FIG) {{
-        plotDiv.innerHTML = "<div style='color:{muted}; padding: 12px;'>Keine Daten</div>";
+        plotDiv.innerHTML = "<div style='color:{muted}; padding: 12px;'>{html.escape(no_data_label)}</div>";
         setTimeout(setFrameHeight, 60);
         return;
       }}
@@ -2077,16 +2094,17 @@ def _render_dual_plot_cards(
 def main() -> None:
     init_session_state()
     _inject_gesamtuebersicht_css()
+    en = get_language() == "en"
+    td_dimensions = "TD Dimensions" if en else "TD-Dimensionen"
+    og_dimensions = "OG Dimensions" if en else "OG-Dimensionen"
 
     st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
     st.markdown(
-        """
+        f"""
         <div class="rgm-hero">
-        <div class="rgm-h1">Gesamtübersicht</div>
+        <div class="rgm-h1">{t("overview.title")}</div>
         <div class="rgm-accent-line"></div>
-        <p class="rgm-lead">
-        Zusammenfassung der Angaben zur Erhebung, visualisierte Ergebnisse und geplante Maßnahmen.
-        </p>
+        <p class="rgm-lead">{t("overview.lead")}</p>
         </div>
         """,
         unsafe_allow_html=True,
@@ -2096,6 +2114,11 @@ def main() -> None:
 
     model = load_model_config()
     answers = get_answers()
+    if not answers:
+        st.info(t("common.no_results_assessment"))
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
+
     global_target = float(st.session_state.get("global_target_level", 3.0))
     dim_targets = st.session_state.get("dimension_targets", {}) or {}
     priorities = st.session_state.get("priorities", {}) or {}
@@ -2110,9 +2133,9 @@ def main() -> None:
     )
 
     if df_raw is None or df_raw.empty:
-      st.info("Noch keine Ergebnisse vorhanden – bitte zuerst die Erhebung durchführen.")
-      st.markdown("</div>", unsafe_allow_html=True)
-      return
+        st.info(t("common.no_results_assessment"))
+        st.markdown("</div>", unsafe_allow_html=True)
+        return
 
     df_report = _clean_overview_df(df_raw)
             
@@ -2131,21 +2154,21 @@ def main() -> None:
         )
 
     left = [
-        ("Name der Organisation", fmt(meta.get("org", ""))),
-        ("Bereich", fmt(meta.get("area", ""))),
-        ("Erhebung durchgeführt von", fmt(meta.get("assessor", ""))),
+        (t("assessment.field.org").rstrip(":"), fmt(meta.get("org", ""))),
+        (t("assessment.field.area").rstrip(":"), fmt(meta.get("area", ""))),
+        (t("assessment.field.assessor").rstrip(":"), fmt(meta.get("assessor", ""))),
     ]
     right = [
-        ("Datum der Durchführung", fmt(meta.get("date_str", ""))),
-        ("Angestrebtes Ziel", fmt(meta.get("target_label", ""))),
-        ("Kontakt", fmt(meta.get("assessor_contact", ""))),
+        (t("assessment.field.date").rstrip(":"), fmt(meta.get("date_str", ""))),
+        (t("assessment.field.target").rstrip(":"), target_option_label(meta.get("target_label", "")) if meta.get("target_label") else fmt("")),
+        (t("assessment.field.contact").rstrip(":"), fmt(meta.get("assessor_contact", ""))),
     ]
 
     st.markdown('<div id="rgm_overview_meta"></div>', unsafe_allow_html=True)
 
     st.markdown(
         f"""
-    <div class="rgm-card-title">Angaben zur Erhebung</div>
+    <div class="rgm-card-title">{t("overview.meta_title")}</div>
     <div class="rgm-kv">
       <div class="rgm-kv-col">{kv_col(left)}</div>
       <div class="rgm-kv-col">{kv_col(right)}</div>
@@ -2161,7 +2184,7 @@ def main() -> None:
 
     st.markdown(
         f"""
-    <div class="rgm-card-title">Kennzahlen</div>
+    <div class="rgm-card-title">{t("overview.kpis")}</div>
     {kpi_html}
         """,
         unsafe_allow_html=True,
@@ -2170,7 +2193,7 @@ def main() -> None:
     # 2) Graphen
     st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="rgm-section-title">Visualisiertes Ergebnis der Reifegraderhebung</div>',
+        f'<div class="rgm-section-title">{t("dashboard.visualized")}</div>',
         unsafe_allow_html=True,
     )
 
@@ -2216,23 +2239,23 @@ def main() -> None:
     
 
     # --- Radar-Plots ---
-    fig_td = tune_plotly(radar_ist_soll(df_raw, "TD", "TD-Dimensionen", dark=dark))
-    fig_og = tune_plotly(radar_ist_soll(df_raw, "OG", "OG-Dimensionen", dark=dark))
+    fig_td = tune_plotly(radar_ist_soll(df_raw, "TD", td_dimensions, dark=dark))
+    fig_og = tune_plotly(radar_ist_soll(df_raw, "OG", og_dimensions, dark=dark))
 
     _render_dual_plot_cards(
         fig_left=fig_td,
-        title_left="TD-Dimensionen",
-        filename_left="reifegrad_radar_td",
+        title_left=td_dimensions,
+        filename_left="maturity_radar_td" if en else "reifegrad_radar_td",
         fig_right=fig_og,
-        title_right="OG-Dimensionen",
-        filename_right="reifegrad_radar_og",
+        title_right=og_dimensions,
+        filename_right="maturity_radar_og" if en else "reifegrad_radar_og",
     )
 
     _scale_legend_centered()
 
     # 3) Maßnahmen
     st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
-    st.markdown('<div class="rgm-section-title">Geplante Maßnahmen</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="rgm-section-title">{t("overview.measures")}</div>', unsafe_allow_html=True)
 
     df_export = df_results_for_export(df_report)
     m = df_export.copy()
@@ -2261,13 +2284,14 @@ def main() -> None:
     # Filter (Card)
     st.markdown('<div id="rgm_overview_filters"></div>', unsafe_allow_html=True)
     with st.container():
-        st.markdown('<div class="rgm-card-title">Filter</div>', unsafe_allow_html=True)
-        show_all = st.checkbox("Alle anzeigen (inkl. ohne Handlungsbedarf)", value=False)
+        st.markdown(f'<div class="rgm-card-title">{t("overview.filter")}</div>', unsafe_allow_html=True)
+        show_all = st.checkbox(t("overview.show_all"), value=False)
         prio_filter = st.multiselect(
-                "Priorität filtern",
+                t("overview.priority_filter"),
                 ["A (hoch)", "B (mittel)", "C (niedrig)"],
                 default=[],
-                placeholder="Prioritäten auswählen …",
+                placeholder=t("overview.priority_placeholder"),
+                format_func=priority_value_label,
             )
 
     view_for_pdf = pd.DataFrame()
@@ -2276,7 +2300,7 @@ def main() -> None:
         filtered = filtered[filtered["Priorität"].isin(prio_filter)].copy()
 
     if filtered.empty:
-        st.info("Keine Einträge passend zur aktuellen Auswahl.")
+        st.info(t("common.no_entries_filter"))
     else:
         # -----------------------------
         # Sortierung: Dimension (TD->OG) dann Priorität (A->B->C->leer) dann Gap
@@ -2349,8 +2373,23 @@ def main() -> None:
                 )
 
         view_for_pdf = view.copy()
+        view_display = view.copy()
+        if "Priorität" in view_display.columns:
+            view_display["Priorität"] = view_display["Priorität"].apply(priority_value_label)
+        view_display = view_display.rename(
+            columns={
+                "Priorität": t("column.priority"),
+                "Kürzel": t("column.code"),
+                "Themenbereich": t("column.topic"),
+                "Ist-Reifegrad": t("column.current_level"),
+                "Soll-Reifegrad": t("column.target_level"),
+                "Maßnahme": t("column.measure"),
+                "Verantwortlich": t("column.responsible"),
+                "Zeitraum": t("column.timeframe"),
+            }
+        )
 
-        _render_measures_block(view, csv_filename="geplante_massnahmen.csv")
+        _render_measures_block(view_display, csv_filename="planned_measures.csv" if en else "geplante_massnahmen.csv")
 
     # 4) Export
     st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)
@@ -2386,15 +2425,15 @@ def main() -> None:
 
     st.markdown('<div id="rgm_overview_export"></div>', unsafe_allow_html=True)
     with st.container():
-        st.markdown('<div class="rgm-card-title">Export</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="rgm-card-title">{t("overview.export")}</div>', unsafe_allow_html=True)
 
         meta = st.session_state.get("meta", {}) or {}
-        org_part = _safe_filename(meta.get("org", ""), default="unbekannte_org")
+        org_part = _safe_filename(meta.get("org", ""), default=t("overview.unknown_org"))
         date_part = _safe_filename(meta.get("date_str", ""), default="")
         if not date_part:
             date_part = datetime.now().strftime("%Y-%m-%d")
 
-        pdf_fn = f"rgm_gesamtuebersicht_{org_part}_{date_part}.pdf"
+        pdf_fn = f"rgm_overview_{org_part}_{date_part}.pdf" if en else f"rgm_gesamtuebersicht_{org_part}_{date_part}.pdf"
         json_fn = f"rgm_save_{org_part}_{date_part}.json"
 
         col_pdf, col_json = st.columns(2, gap="small")
@@ -2403,19 +2442,19 @@ def main() -> None:
             st.markdown('<div id="rgm_overview_export_btn_pdf"></div>', unsafe_allow_html=True)
             if pdf_bytes is not None:
                 st.download_button(
-                    "PDF-Bericht herunterladen",
+                    t("overview.pdf_download"),
                     data=pdf_bytes,
                     file_name=pdf_fn,
                     mime="application/pdf",
                     use_container_width=True,
                 )
             else:
-                st.error(f"PDF-Export nicht verfügbar: {pdf_error}")
+                st.error(t("overview.pdf_unavailable").format(error=pdf_error))
 
         with col_json:
             st.markdown('<div id="rgm_overview_export_btn_json"></div>', unsafe_allow_html=True)
             st.download_button(
-                "Sitzung speichern (JSON)",
+                t("overview.save_json"),
                 data=json_bytes,
                 file_name=json_fn,
                 mime="application/json",

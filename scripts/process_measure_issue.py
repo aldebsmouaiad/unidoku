@@ -26,16 +26,28 @@ def parse_section(body: str, heading: str, next_heading: str | None = None) -> s
     return normalize_measure_text(match.group(1))
 
 
-def parse_issue_body(body: str) -> tuple[str, str]:
+def normalize_measure_language(language: str | None = None) -> str:
+    value = normalize_measure_text(str(language or "")).lower()
+    if value in ("en", "eng", "english"):
+        return "en"
+    return "de"
+
+
+def parse_issue_body(body: str) -> tuple[str, str, str]:
     body = body or ""
 
     measure_text = parse_section(body, "### measure_text", "### dimension_code")
-    dimension_code = parse_section(body, "### dimension_code", None)
+    if re.search(r"###\s*language", body, flags=re.IGNORECASE):
+        dimension_code = parse_section(body, "### dimension_code", "### language")
+        language = parse_section(body, "### language", None)
+    else:
+        dimension_code = parse_section(body, "### dimension_code", None)
+        language = "de"
 
     validate_measure_text(measure_text)
     validate_dimension_code(dimension_code)
 
-    return measure_text, dimension_code
+    return measure_text, dimension_code, normalize_measure_language(language)
 
 
 def validate_measure_text(text: str) -> None:
@@ -56,6 +68,21 @@ def validate_dimension_code(code: str) -> None:
         raise ValueError(f"Ungültiger dimension_code: {code}")
 
 
+def _unique_measure_list(values: object) -> list[str]:
+    if not isinstance(values, list):
+        return []
+
+    seen: set[str] = set()
+    out: list[str] = []
+    for value in values:
+        text = normalize_measure_text(str(value))
+        key = text.lower()
+        if text and key not in seen:
+            seen.add(key)
+            out.append(text)
+    return out
+
+
 def load_measures() -> dict:
     if not MEASURES_FILE.exists():
         return {}
@@ -68,16 +95,24 @@ def load_measures() -> dict:
     if not isinstance(data, dict):
         raise ValueError(f"{MEASURES_FILE} muss ein JSON-Objekt sein.")
 
-    cleaned: dict[str, list[str]] = {}
+    cleaned: dict[str, dict[str, list[str]]] = {}
     for key, value in data.items():
         key_str = str(key).strip()
         if not key_str:
             continue
 
-        if isinstance(value, list):
-            cleaned[key_str] = [normalize_measure_text(str(v)) for v in value if str(v).strip()]
+        if isinstance(value, dict):
+            cleaned[key_str] = {
+                "de": _unique_measure_list(value.get("de")),
+                "en": _unique_measure_list(value.get("en")),
+            }
+        elif isinstance(value, list):
+            cleaned[key_str] = {
+                "de": _unique_measure_list(value),
+                "en": [],
+            }
         else:
-            cleaned[key_str] = []
+            cleaned[key_str] = {"de": [], "en": []}
 
     return cleaned
 
@@ -90,10 +125,13 @@ def save_measures(data: dict) -> None:
     )
 
 
-def add_measure_if_new(data: dict, dimension_code: str, measure_text: str) -> bool:
-    existing = data.get(dimension_code, [])
-    if not isinstance(existing, list):
-        existing = []
+def add_measure_if_new(data: dict, dimension_code: str, measure_text: str, language: str = "de") -> bool:
+    lang = normalize_measure_language(language)
+    existing_by_lang = data.get(dimension_code, {})
+    if not isinstance(existing_by_lang, dict):
+        existing_by_lang = {"de": [], "en": []}
+
+    existing = _unique_measure_list(existing_by_lang.get(lang))
 
     existing_norm = {
         normalize_measure_text(str(item)).lower()
@@ -103,11 +141,17 @@ def add_measure_if_new(data: dict, dimension_code: str, measure_text: str) -> bo
 
     normalized_candidate = normalize_measure_text(measure_text)
     if normalized_candidate.lower() in existing_norm:
-        data[dimension_code] = existing
+        existing_by_lang[lang] = existing
+        existing_by_lang.setdefault("de", [])
+        existing_by_lang.setdefault("en", [])
+        data[dimension_code] = existing_by_lang
         return False
 
     existing.append(normalized_candidate)
-    data[dimension_code] = existing
+    existing_by_lang[lang] = existing
+    existing_by_lang.setdefault("de", [])
+    existing_by_lang.setdefault("en", [])
+    data[dimension_code] = existing_by_lang
     return True
 
 
@@ -118,14 +162,15 @@ def main() -> int:
         return 1
 
     try:
-        measure_text, dimension_code = parse_issue_body(issue_body)
+        measure_text, dimension_code, language = parse_issue_body(issue_body)
         measures = load_measures()
-        added = add_measure_if_new(measures, dimension_code, measure_text)
+        added = add_measure_if_new(measures, dimension_code, measure_text, language)
 
         if added:
             save_measures(measures)
 
         print(f"Dimension: {dimension_code}")
+        print(f"Language: {language}")
         print(f"Measure: {measure_text}")
         print(f"Added: {'1' if added else '0'}")
         return 0

@@ -10,6 +10,7 @@ import streamlit as st
 from core.state import init_session_state
 from core.model_loader import load_model_config
 from core import persist
+from core.i18n import t
 
 
 TU_GREEN = "#639A00"
@@ -327,13 +328,11 @@ def main() -> None:
     st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
 
     st.markdown(
-        """
+        f"""
 <div class="rgm-hero">
-  <div class="rgm-h1">Glossar</div>
+  <div class="rgm-h1">{t("glossary.title")}</div>
   <div class="rgm-accent-line"></div>
-  <p class="rgm-lead">
-    Hier finden Sie Definitionen zu zentralen Begriffen und Abkürzungen. Nutzen Sie die Suche oder klappen Sie Einträge auf.
-  </p>
+  <p class="rgm-lead">{t("glossary.lead")}</p>
 </div>
         """,
         unsafe_allow_html=True,
@@ -341,16 +340,16 @@ def main() -> None:
 
     st.markdown('<div id="rgm_glossary_tools"></div>', unsafe_allow_html=True)
     with st.container():
-        st.markdown('<div class="rgm-card-title">Suche</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="rgm-card-title">{t("glossary.search")}</div>', unsafe_allow_html=True)
 
         focus_raw = (st.session_state.get("glossary_focus_term") or "").strip()
         focus_key = _resolve_focus_term(focus_raw, glossary)
 
         search_default = unquote_plus(focus_raw).strip() if focus_raw else ""
         search = st.text_input(
-            "Suche",
+            t("glossary.search"),
             value=search_default,
-            placeholder="Begriff eingeben…",
+            placeholder=t("glossary.placeholder"),
             label_visibility="collapsed",
         ).strip()
 
@@ -378,7 +377,7 @@ def main() -> None:
             st.markdown("<div style='height:6px'></div>", unsafe_allow_html=True)
 
         if not shown_focus and not terms:
-            st.info("Keine Einträge passend zur aktuellen Auswahl.")
+            st.info(t("common.no_entries_filter"))
         else:
             for term in terms:
                 with st.expander(term, expanded=False):
@@ -388,7 +387,7 @@ def main() -> None:
         st.markdown("---")
         c1, c2 = st.columns([1, 1])
         with c1:
-            if st.button("Zurück", key="glossar_back_btn_bottom", use_container_width=True):
+            if st.button(t("common.back"), key="glossar_back_btn_bottom", use_container_width=True):
                 _do_return(aid=aid, ret=ret, payload=payload)
         with c2:
             st.empty()

@@ -7,6 +7,8 @@ from typing import Optional
 import pandas as pd
 import plotly.graph_objects as go
 
+from core.i18n import t
+
 
 def _natural_code_key(code: str):
     """
@@ -29,6 +31,33 @@ def after_dash(text: str) -> str:
     """
     s = "" if text is None else str(text)
     return s.split("-", 1)[1].strip() if "-" in s else s.strip()
+
+
+def _wrap_axis_label(text: str, *, max_chars: int = 22, max_lines: int = 3) -> str:
+    words = str(text or "").split()
+    if not words:
+        return ""
+
+    lines: list[str] = []
+    current = ""
+    for word in words:
+        candidate = f"{current} {word}".strip()
+        if current and len(candidate) > max_chars:
+            lines.append(current)
+            current = word
+        else:
+            current = candidate
+
+    if current:
+        lines.append(current)
+
+    if len(lines) > max_lines:
+        kept = lines[:max_lines]
+        remainder = " ".join(lines[max_lines:])
+        kept[-1] = f"{kept[-1]} {remainder}".strip()
+        lines = kept
+
+    return "<br>".join(lines)
 
 
 def radar_ist_soll(
@@ -65,7 +94,7 @@ def radar_ist_soll(
     d = d.sort_values("code", key=lambda s: s.map(_natural_code_key))
 
     # Achsenbeschriftungen (wie Excel: Kürzel + Themenbereich)
-    short_names = [after_dash(n) for n in d["name"]]
+    short_names = [_wrap_axis_label(after_dash(n)) for n in d["name"]]
     theta = [f"{c}<br>{n}" for c, n in zip(d["code"], short_names)]
 
     ist = d["ist_level"].astype(float).tolist()
@@ -108,6 +137,11 @@ def radar_ist_soll(
         legend_font_color = "rgba(0,0,0,0.85)"
         polar_bg = "rgba(0,0,0,0)"
 
+    current_label = t("chart.current_level")
+    target_label = t("chart.target_level")
+    current_short = t("chart.current_short")
+    target_short = t("chart.target_short")
+
     fig = go.Figure()
 
     fig.add_trace(
@@ -115,9 +149,9 @@ def radar_ist_soll(
             r=ist_closed,
             theta=theta_closed,
             mode="lines",
-            name="Ist-Reifegrad",
+            name=current_label,
             line=dict(color=ist_color, width=2),
-            hovertemplate="%{theta}<br>Ist: %{r:.2f}<extra></extra>",
+            hovertemplate=f"%{{theta}}<br>{current_short}: %{{r:.2f}}<extra></extra>",
         )
     )
 
@@ -126,9 +160,9 @@ def radar_ist_soll(
             r=soll_closed,
             theta=theta_closed,
             mode="lines",
-            name="Soll-Reifegrad",
+            name=target_label,
             line=dict(color=soll_color, width=2),
-            hovertemplate="%{theta}<br>Soll: %{r:.2f}<extra></extra>",
+            hovertemplate=f"%{{theta}}<br>{target_short}: %{{r:.2f}}<extra></extra>",
         )
     )
 

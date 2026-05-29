@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import streamlit as st
 from core.state import init_session_state
+from core.i18n import get_language, t
 
 TU_GREEN = "#639A00"
 TU_ORANGE = "#CA7406"
@@ -12,6 +13,7 @@ OG_ORANGE = "#F28C28"
 
 def main() -> None:
     init_session_state()
+    en = get_language() == "en"
 
     # Darkmode robust (wie in 00_Einfuehrung.py)
     dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
@@ -255,9 +257,24 @@ def main() -> None:
 
     st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
 
-    # HERO + Schnellnavigation
-    st.markdown(
-        """
+    hero_html = """
+<div class="rgm-hero">
+  <div class="rgm-h1">Instructions for Using the Maturity Model</div>
+  <div class="rgm-accent-line"></div>
+
+  <p class="rgm-lead">
+    The maturity model enables a quick and consistent assessment of maturity levels in technical documentation.
+    For this purpose, specific questions are answered for each subdimension. The maturity model is aligned with the
+    maturity levels of Capability Maturity Model Integration (CMMI).
+  </p>
+
+  <div class="rgm-chips">
+    <a class="rgm-chip" href="#rgm_reifegrad">Maturity levels</a>
+    <a class="rgm-chip" href="#rgm_keywords">Keywords</a>
+    <a class="rgm-chip" href="#rgm_answers">Answer options</a>
+  </div>
+</div>
+        """ if en else """
 <div class="rgm-hero">
   <div class="rgm-h1">Ausfüllhinweise zum Reifegradmodell</div>
   <div class="rgm-accent-line"></div>
@@ -274,14 +291,53 @@ def main() -> None:
     <a class="rgm-chip" href="#rgm_answers">Antwortmöglichkeiten</a>
   </div>
 </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """
+    st.markdown(hero_html, unsafe_allow_html=True)
 
     # Anchor: Reifegradstufen
     st.markdown('<div id="rgm_reifegrad"></div>', unsafe_allow_html=True)
-    st.markdown(
-        """
+    maturity_html = """
+<div class="rgm-card">
+  <div class="rgm-card-title">Description of Maturity Levels</div>
+
+  <div class="rgm-table-wrap">
+    <table class="rgm-table">
+      <thead>
+        <tr>
+          <th style="width: 180px;">Maturity level</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rgm-strong">1 - initial</td>
+          <td>Processes are unpredictable and reactive. Success at this level depends mainly on individual effort rather than established organizational processes.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">2 - managed</td>
+          <td>Organizations at this level establish basic project management practices. Projects follow basic planning and control mechanisms, resulting in more predictable outcomes.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">3 - defined</td>
+          <td>This level marks a clear shift toward organization-wide process standardization. Units and projects follow consistent approaches, reducing variability in execution.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">4 - quantitatively managed</td>
+          <td>Organizations achieve precise process control. Processes are managed measurably, for example using indicators for process and product quality.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">5 - optimized</td>
+          <td>Organizations systematically and continuously improve their processes, especially through incremental and innovative changes.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rgm-muted rgm-text">
+    Keywords are used to distinguish the content of the maturity levels. They are explained below.
+  </div>
+</div>
+        """ if en else """
 <div class="rgm-card">
   <div class="rgm-card-title">Beschreibung der Reifegradstufen</div>
 
@@ -323,14 +379,55 @@ def main() -> None:
     Diese werden nachfolgend erläutert.
   </div>
 </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """
+    st.markdown(maturity_html, unsafe_allow_html=True)
 
     # Anchor: Schlüsselwörter
     st.markdown('<div id="rgm_keywords"></div>', unsafe_allow_html=True)
-    st.markdown(
-        """
+    keywords_html = """
+<div class="rgm-card">
+  <div class="rgm-card-title">Description of Keywords</div>
+
+  <div class="rgm-table-wrap">
+    <table class="rgm-table">
+      <thead>
+        <tr>
+          <th style="width: 220px;">Keyword</th>
+          <th>Interpretation / meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rgm-strong">Situational / ad hoc</td>
+          <td>The process is carried out as needed, for example when triggered externally.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Occasionally</td>
+          <td>The process is repeated, but without a fixed interval.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Regularly</td>
+          <td>The process is carried out at a fixed interval.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Regularly reviewed</td>
+          <td>Compliance with the fixed intervals is controlled using key figures.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Continuously improved</td>
+          <td>The process is continuously improved by the employees carrying it out.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rgm-muted rgm-text">
+    Specific questions are defined to identify maturity levels. The answer options reflect the degree of implementation
+    of the respective assessment criterion. Based on the consolidation of the answers, the maturity level of the process
+    area under review is identified. The methodological basis for identifying maturity levels is the ISO/IEC 330xx series.
+  </div>
+</div>
+        """ if en else """
 <div class="rgm-card">
   <div class="rgm-card-title">Beschreibung der Schlüsselwörter</div>
 
@@ -372,14 +469,68 @@ def main() -> None:
     Basierend auf der Konsolidierung der Antworten wird der Reifegrad des betrachteten Prozessbereichs identifiziert. Das methodische Basismodell zur Identifikation der Reifegrade ist die Normreihe ISO/IEC 330xx.
   </div>
 </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """
+    st.markdown(keywords_html, unsafe_allow_html=True)
 
     # Anchor: Antwortmöglichkeiten
     st.markdown('<div id="rgm_answers"></div>', unsafe_allow_html=True)
-    st.markdown(
-        """
+    answers_html = """
+<div class="rgm-card">
+  <div class="rgm-card-title">Description of Answer Options</div>
+
+  <div class="rgm-table-wrap">
+    <table class="rgm-table">
+      <thead>
+        <tr>
+          <th style="width: 170px;">Answer</th>
+          <th style="width: 140px;">Degree of implementation</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="rgm-strong">Not applicable</td>
+          <td>-</td>
+          <td>The assessment criterion does not apply to the organization. If all questions in a level are not applicable, the maturity level remains at the level below or at “NA”.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Not at all</td>
+          <td>0% – 15%</td>
+          <td>There is no evidence that the assessment criterion has been met.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">In a few cases</td>
+          <td>&gt;15% – 50%</td>
+          <td>There is partial evidence that the assessment criterion has been met.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">In most cases</td>
+          <td>&gt;50% – 85%</td>
+          <td>There is significant evidence that the assessment criterion has been met.</td>
+        </tr>
+        <tr>
+          <td class="rgm-strong">Fully</td>
+          <td>&gt;85% – 100%</td>
+          <td>There is complete evidence that the assessment criterion has been met.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rgm-warning">
+    <div class="rgm-warning-title">IMPORTANT! Please note:</div>
+    <ul>
+      <li>
+        The questions in the maturity model are formulated so that each maturity level builds on the previous levels.
+        If your organization has already reached a higher level and the described state of a lower level has therefore
+        been superseded, the question should still be answered with “Fully”. “Fully” means that the state described for
+        this level has been fully achieved or exceeded. Answers such as “Not at all”, “In a few cases”, or “In most cases”
+        would incorrectly indicate that this level has not yet been fulfilled.
+      </li>
+    </ul>
+  </div>
+</div>
+        """ if en else """
 <div class="rgm-card">
   <div class="rgm-card-title">Beschreibung der Antwortmöglichkeiten</div>
 
@@ -435,9 +586,8 @@ def main() -> None:
     </ul>
   </div>
 </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        """
+    st.markdown(answers_html, unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -445,11 +595,11 @@ def main() -> None:
     st.markdown('<div class="rgm-nav">', unsafe_allow_html=True)
     c1, c2 = st.columns([1, 1])
     with c1:
-        if st.button("Zurück", use_container_width=True):
+        if st.button(t("common.back"), use_container_width=True):
             st.session_state["nav_request"] = "Einführung"
             st.rerun()
     with c2:
-        if st.button("Weiter zur Erhebung", type="primary", use_container_width=True):
+        if st.button("Continue to assessment" if en else "Weiter zur Erhebung", type="primary", use_container_width=True):
             st.session_state["nav_request"] = "Erhebung"
             st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)

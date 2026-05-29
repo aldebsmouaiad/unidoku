@@ -9,6 +9,7 @@ import streamlit as st
 
 from core.state import init_session_state
 from core.model_loader import load_tool_meta
+from core.i18n import get_language, t
 
 TU_GREEN = "#639A00"
 TU_ORANGE = "#CA7406"
@@ -494,6 +495,7 @@ def _feature_card(title: str, text: str, icon_svg: str) -> str:
 
 def main() -> None:
     init_session_state()
+    en = get_language() == "en"
     dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
     _inject_start_css(dark)
 
@@ -501,7 +503,7 @@ def main() -> None:
     try:
         meta = load_tool_meta()
     except Exception as e:
-        st.error("Metadaten konnten nicht geladen werden.")
+        st.error("Metadata could not be loaded." if get_language() == "en" else "Metadaten konnten nicht geladen werden.")
         st.exception(e)
         meta = {}
 
@@ -512,7 +514,7 @@ def main() -> None:
     created_by_email = meta.get("created_by_email", "christian4.koch@tu-dortmund.de")
     version = meta.get("version", "2.0")
     last_change = meta.get("last_change", "03.02.2026")
-    time_required = meta.get("time_required", "ca. 60 Minuten")
+    time_required = meta.get("time_required", "approx. 60 minutes" if en else "ca. 60 Minuten")
     credit = meta.get("credit", "Victor Wolf")
     credit_email = meta.get("credit_email")  # optional
 
@@ -547,7 +549,7 @@ def main() -> None:
         validated_with_html = (
             f'<div class="rgm-meta-right">'
             f'  <div class="rgm-meta-row rgm-validated-row">'
-            f'    <div class="rgm-k">Validiert durch</div>'
+            f'    <div class="rgm-k">{_html.escape(t("start.meta.validated_by"))}</div>'
             f'    <div class="rgm-v">Netzwerk Industrie RuhrOst</div>'
             f'  </div>'
             f'  <div class="rgm-validated-logo">{img_tag(logo_niro, "NIRO")}</div>'
@@ -557,7 +559,7 @@ def main() -> None:
         validated_with_html = (
             f'<div class="rgm-meta-right">'
             f'  <div class="rgm-meta-row rgm-validated-row">'
-            f'    <div class="rgm-k">Validiert mit</div>'
+            f'    <div class="rgm-k">{_html.escape(t("start.meta.validated_with"))}</div>'
             f'    <div class="rgm-v">Netzwerk Industrie RuhrOst</div>'
             f'  </div>'
             f'</div>'
@@ -610,16 +612,13 @@ def main() -> None:
     <div class="rgm-hero">
       <div class="rgm-hero-top">
         <div>
-          <div class="rgm-h1">Reifegradmodell für die Technische Dokumentation</div>
+          <div class="rgm-h1">{_html.escape(t("start.title"))}</div>
           <div class="rgm-accent-line"></div>
-          <p class="rgm-lead">
-            Fragebasiertes Tool zur Bewertung und Weiterentwicklung der technischen Dokumentation – mit Auswertung,
-            Priorisierung und Export (PDF/CSV/PNG/JSON).
-          </p>
+          <p class="rgm-lead">{_html.escape(t("start.lead"))}</p>
         </div>
         <div class="rgm-pill-group">
-          <div class="rgm-pill"><span class="rgm-dot"></span>Version {_html.escape(str(version))} &middot; Stand {_html.escape(str(last_change))}</div>
-          <div class="rgm-pill rgm-time-pill"><span aria-hidden="true">&#9201;</span>Zeitbedarf: {_html.escape(str(time_required))}</div>
+          <div class="rgm-pill"><span class="rgm-dot"></span>{_html.escape(t("start.version"))} {_html.escape(str(version))} &middot; {_html.escape(t("start.status"))} {_html.escape(str(last_change))}</div>
+          <div class="rgm-pill rgm-time-pill"><span aria-hidden="true">&#9201;</span>{_html.escape(t("start.time_required"))}: {_html.escape(str(time_required))}</div>
         </div>
       </div>
     </div>
@@ -629,26 +628,26 @@ def main() -> None:
 
     # Reihenfolge: Erhebung → Ergebnis → Priorisierung → Export
     CARD1 = _feature_card(
-        "Erhebung",
-        "Beantworten Sie die Fragen je Subdimension und ermitteln Sie den Reifegrad stufenweise. Optional können Sie ein Zielniveau festlegen.",
+        t("start.card.assessment.title"),
+        t("start.card.assessment.text"),
         ICON_LIST,
     )
 
     CARD2 = _feature_card(
-        "Ergebnis",
-        "Transparente Auswertung und Visualisierung des Reifegrads mit zentralen Kennzahlen und strukturierter Maßnahmenübersicht.",
+        t("start.card.results.title"),
+        t("start.card.results.text"),
         ICON_CHART,
     )
 
     CARD3 = _feature_card(
-        "Priorisierung",
-        "Planen und bewerten Sie Maßnahmen nach Wirkung und Umsetzbarkeit – Fokus auf die wichtigsten Hebel.",
+        t("start.card.prioritization.title"),
+        t("start.card.prioritization.text"),
         ICON_TARGET,
     )
 
     CARD4 = _feature_card(
-        "Export",
-        "Exportieren Sie Ergebnisse als PDF-Bericht, CSV, PNG oder als wiederverwendbare JSON-Datei zum späteren Laden und Bearbeiten.",
+        t("start.card.export.title"),
+        t("start.card.export.text"),
         ICON_FILE,
     )
 
@@ -668,9 +667,9 @@ def main() -> None:
 <div class="rgm-meta">
 <div class="rgm-meta-grid">
 <div class="rgm-meta-left">
-<div class="rgm-meta-row"><div class="rgm-k">Erstellt durch</div><div class="rgm-v">{_name_with_mail(created_by, created_by_email)}</div></div>
-<div class="rgm-meta-row"><div class="rgm-k">Credit</div><div class="rgm-v">{_name_with_mail(credit, credit_email)}</div></div>
-<div class="rgm-meta-row"><div class="rgm-k">Technischer Support</div><div class="rgm-v">{_name_with_mail(support_name, support_email)}</div></div>
+<div class="rgm-meta-row"><div class="rgm-k">{_html.escape(t("start.meta.created_by"))}</div><div class="rgm-v">{_name_with_mail(created_by, created_by_email)}</div></div>
+<div class="rgm-meta-row"><div class="rgm-k">{_html.escape(t("start.meta.credit"))}</div><div class="rgm-v">{_name_with_mail(credit, credit_email)}</div></div>
+<div class="rgm-meta-row"><div class="rgm-k">{_html.escape(t("start.meta.technical_support"))}</div><div class="rgm-v">{_name_with_mail(support_name, support_email)}</div></div>
 </div>
 {validated_with_html}
 </div>
@@ -681,7 +680,7 @@ def main() -> None:
 
     st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
 
-    if st.button("Weiter zu Einführung", type="primary", use_container_width=True):
+    if st.button(t("start.next_intro"), type="primary", use_container_width=True):
         st.session_state["nav_request"] = "Einführung"
         st.rerun()
 

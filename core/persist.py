@@ -150,6 +150,7 @@ def clear_query_params_keep_aid(aid: str | None = None) -> None:
         "ret_idx",
         "ret_code",
         "ret_q",
+        "lang",
     ]
 
     for k in drop_keys:
@@ -217,6 +218,8 @@ def save(aid: str | None = None) -> None:
         "meta": dict(meta),
         "dimension_targets": dict(st.session_state.get("dimension_targets", {}) or {}),
         "priorities": dict(st.session_state.get("priorities", {}) or {}),
+        "language": st.session_state.get("language", "de"),
+        "_rgm_privacy_ack": bool(st.session_state.get("_rgm_privacy_ack", False)),
         "global_target_level": float(st.session_state.get("global_target_level", 3.0) or 3.0),
         "erhebung_step": int(st.session_state.get("erhebung_step", 0) or 0),
         "erhebung_dim_idx": int(st.session_state.get("erhebung_dim_idx", 0) or 0),
@@ -230,7 +233,16 @@ def save(aid: str | None = None) -> None:
 
     try:
         tmp.write_text(json.dumps(snap, ensure_ascii=False, indent=2), encoding="utf-8")
-        tmp.replace(path)  # atomar auf den meisten OS
+        try:
+            tmp.replace(path)  # atomar auf den meisten OS
+        except PermissionError:
+            # Windows/sandboxed environments can block replace(). The snapshot
+            # is small, so a direct write is the safest fallback.
+            path.write_text(tmp.read_text(encoding="utf-8"), encoding="utf-8")
+            try:
+                tmp.unlink(missing_ok=True)
+            except Exception:
+                pass
     except Exception:
         try:
             if tmp.exists():
@@ -285,6 +297,13 @@ def restore(aid: str | None = None) -> None:
         if isinstance(saved, dict) and (not isinstance(cur, dict) or len(cur) == 0):
             st.session_state[key] = dict(saved)
 
+    # Sprache und Privacy-Ack gehören zur aktuellen AID-Session. Diese Werte
+    # dürfen beim ersten Restore den Default aus init_session_state ersetzen.
+    if "language" in snap:
+        st.session_state["language"] = snap.get("language") or "de"
+    if "_rgm_privacy_ack" in snap:
+        st.session_state["_rgm_privacy_ack"] = bool(snap.get("_rgm_privacy_ack"))
+
     # scalar defaults (nur wenn nicht vorhanden)
     for key in [
         "global_target_level",
@@ -320,6 +339,7 @@ def export_snapshot_bytes(aid: str | None = None, *, pretty: bool = True) -> byt
         "meta": dict(meta),
         "dimension_targets": dict(st.session_state.get("dimension_targets", {}) or {}),
         "priorities": dict(st.session_state.get("priorities", {}) or {}),
+        "language": st.session_state.get("language", "de"),
         "global_target_level": float(st.session_state.get("global_target_level", 3.0) or 3.0),
         "erhebung_step": int(st.session_state.get("erhebung_step", 0) or 0),
         "erhebung_dim_idx": int(st.session_state.get("erhebung_dim_idx", 0) or 0),
@@ -434,6 +454,9 @@ def apply_snapshot_dict(
             st.session_state["global_target_level"] = float(snap.get("global_target_level"))
         except Exception:
             pass
+
+    if mode == "overwrite" and "language" in snap:
+        st.session_state["language"] = snap.get("language") or "de"
 
 def rerun_with_save(aid: str | None = None) -> None:
     """

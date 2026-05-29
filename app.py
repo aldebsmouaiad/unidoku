@@ -11,6 +11,16 @@ import streamlit as st
 
 from core.state import init_session_state
 from core import persist
+from core.i18n import (
+    LANGUAGE_OPTIONS,
+    get_language,
+    init_language_state,
+    language_option_label,
+    normalize_language,
+    page_label,
+    set_language,
+    t,
+)
 
 TU_GREEN = "#639A00"
 TU_ORANGE = "#CA7406"
@@ -25,23 +35,81 @@ IMAGES_DIR = BASE_DIR / "images"
 
 # Interner Widget-Key (Pages sollen KEIN Widget mit diesem Key erzeugen)
 _DARK_TOGGLE_KEY = "_rgm_dark_toggle"
+_LANGUAGE_SIDEBAR_KEY = "_rgm_language_sidebar"
+_LANGUAGE_DIALOG_KEY = "_rgm_language_dialog"
+_LANGUAGE_WIDGET_KEYS = (_LANGUAGE_SIDEBAR_KEY, _LANGUAGE_DIALOG_KEY)
+_LANGUAGE_LAST_KEY = "_rgm_language_last"
+_LANGUAGE_QUERY_APPLIED_KEY = "_rgm_language_query_applied"
+_LANGUAGE_APP_RERUN_KEY = "_rgm_language_app_rerun_requested"
 
 # Datenschutz-Hinweis (1x pro Session)
 _PRIVACY_ACK_KEY = "_rgm_privacy_ack"
+
+
+def _set_language_and_widgets(language: str) -> None:
+    language = normalize_language(language)
+    set_language(language)
+    for widget_key in _LANGUAGE_WIDGET_KEYS:
+        st.session_state[widget_key] = language
+    st.session_state[_LANGUAGE_LAST_KEY] = language
+
+
+def _sync_language_selectors_before_render() -> None:
+    current = get_language()
+    last = st.session_state.get(_LANGUAGE_LAST_KEY)
+
+    if last != current:
+        _set_language_and_widgets(current)
+        return
+
+    for widget_key in _LANGUAGE_WIDGET_KEYS:
+        widget_language = st.session_state.get(widget_key)
+        if widget_language in LANGUAGE_OPTIONS and widget_language != current:
+            _set_language_and_widgets(str(widget_language))
+            return
+
+    _set_language_and_widgets(current)
+
+
+def _on_language_selector_change(key: str) -> None:
+    _set_language_and_widgets(str(st.session_state.get(key, get_language())))
+    st.session_state[_LANGUAGE_APP_RERUN_KEY] = True
+
+
+def _rerun_app() -> None:
+    try:
+        st.rerun(scope="app")
+    except TypeError:
+        st.rerun()
+
+
+def _render_language_selector(container, key: str, *, label_visibility: str = "visible") -> None:
+    current = get_language()
+
+    selected = container.radio(
+        t("language.label"),
+        list(LANGUAGE_OPTIONS),
+        key=key,
+        horizontal=True,
+        format_func=language_option_label,
+        label_visibility=label_visibility,
+        on_change=_on_language_selector_change,
+        args=(key,),
+    )
+    selected = str(selected)
+    if st.session_state.pop(_LANGUAGE_APP_RERUN_KEY, False):
+        _rerun_app()
+    if selected != current:
+        _set_language_and_widgets(selected)
+        _rerun_app()
+
 
 def show_privacy_notice_modal() -> None:
     if st.session_state.get(_PRIVACY_ACK_KEY, False):
         return
 
-    # ✅ Nur die zwei gewünschten Absätze
-    text = """
-**Keine Speicherung:** Alle Eingaben bleiben nur während dieser Sitzung erhalten und werden nicht dauerhaft gespeichert.
-
-Für eine spätere Bearbeitung können Sie Ihren Zwischenspeicher als **JSON-Datei** herunterladen und später wieder hochladen.
-""".strip()
-
     if hasattr(st, "dialog"):
-      @st.dialog("Datenschutz-Hinweis", width="large")
+      @st.dialog(t("privacy.title"), width="large")
       def _dlg():
           st.markdown(
               """
@@ -99,24 +167,26 @@ Für eine spätere Bearbeitung können Sie Ihren Zwischenspeicher als **JSON-Dat
               unsafe_allow_html=True,
           )
 
-          st.markdown(text)
+          _render_language_selector(st, _LANGUAGE_DIALOG_KEY)
+          st.markdown(t("privacy.text"))
 
           # Button mittig
           c_l, c_m, c_r = st.columns([1, 2, 1])
           with c_m:
-              if st.button("Verstanden", type="primary", use_container_width=True):
+              if st.button(t("privacy.accept"), type="primary", use_container_width=True):
                   st.session_state[_PRIVACY_ACK_KEY] = True
-                  st.rerun()
+                  _rerun_app()
 
       _dlg()
       return
 
 
     # Fallback ohne st.dialog
-    st.info(text)
-    if st.button("Verstanden", type="primary"):
+    _render_language_selector(st, _LANGUAGE_DIALOG_KEY)
+    st.info(t("privacy.text"))
+    if st.button(t("privacy.accept"), type="primary"):
         st.session_state[_PRIVACY_ACK_KEY] = True
-        st.rerun()
+        _rerun_app()
 
 @st.cache_data(show_spinner=False)
 def _img_b64(path: Path) -> Optional[str]:
@@ -527,24 +597,60 @@ PAGES = {
 }
 
 
+_PAGE_ALIASES = {
+    "start": "Start",
+    "einführung": "Einführung",
+    "einfuehrung": "Einführung",
+    "introduction": "Einführung",
+    "ausfüllhinweise": "Ausfüllhinweise",
+    "ausfuellhinweise": "Ausfüllhinweise",
+    "instructions": "Ausfüllhinweise",
+    "erhebung": "Erhebung",
+    "assessment": "Erhebung",
+    "dashboard": "Dashboard",
+    "priorisierung": "Priorisierung",
+    "prioritization": "Priorisierung",
+    "prioritisation": "Priorisierung",
+    "gesamtübersicht": "Gesamtübersicht",
+    "gesamtuebersicht": "Gesamtübersicht",
+    "overview": "Gesamtübersicht",
+    "glossar": "Glossar",
+    "glossary": "Glossar",
+}
+
+
+def _normalize_page_key(page: object) -> str | None:
+    raw = str(page or "").strip()
+    if raw in PAGES:
+        return raw
+    return _PAGE_ALIASES.get(raw.lower())
+
+
 def _apply_query_navigation(aid: str) -> None:
     page = persist.qp_get("page")
     term = persist.qp_get("term")
     from_page = persist.qp_get("from")
+    did_apply = False
 
     g = persist.qp_get("g") or persist.qp_get("glossary")
     if g and not term:
         term = g
 
-    if term and not page:
-        page = "Glossar"
+    lang = persist.qp_get("lang")
+    if lang and st.session_state.get(_LANGUAGE_QUERY_APPLIED_KEY) != normalize_language(lang):
+        _set_language_and_widgets(lang)
+        st.session_state[_LANGUAGE_QUERY_APPLIED_KEY] = normalize_language(lang)
+        did_apply = True
+
+    page_key = _normalize_page_key(page)
+
+    if term and not page_key:
+        page_key = "Glossar"
 
     ret_step = persist.qp_get("ret_step")
     ret_idx = persist.qp_get("ret_idx")
     ret_code = persist.qp_get("ret_code")
     ret_q = persist.qp_get("ret_q")
-
-    did_apply = False
 
     # ui_dark=0|1: darf NUR initial wirken (sonst überschreibt URL jeden Toggle-Klick)
     ui_dark = (persist.qp_get("ui_dark") or "").strip()
@@ -555,8 +661,8 @@ def _apply_query_navigation(aid: str) -> None:
         st.session_state["_rgm_ui_dark_applied"] = True
         did_apply = True
 
-    if page and page in PAGES:
-        st.session_state["nav_request"] = page
+    if page_key:
+        st.session_state["nav_request"] = page_key
         did_apply = True
 
     if from_page:
@@ -586,6 +692,7 @@ def _apply_query_navigation(aid: str) -> None:
 
 def main() -> None:
     init_session_state()
+    init_language_state()
 
     aid = persist.get_or_create_aid()
 
@@ -609,12 +716,13 @@ def main() -> None:
 
     # Query-Nav anwenden (und danach Params säubern)
     _apply_query_navigation(aid)
+    _sync_language_selectors_before_render()
 
     # Wichtig: Nach Query-Nav nochmal Aliases aus Toggle synchronisieren
     # (damit Pages, die dark_mode/ui_dark_mode lesen, konsistent sind)
     _sync_theme_aliases_from_toggle()
 
-    # ---- Sidebar: IPS Logo + Darkmode Toggle ----
+    # ---- Sidebar: IPS Logo + Sprache + Darkmode Toggle ----
     IPS_URL = "https://ips.mb.tu-dortmund.de/"
     ips_path = IMAGES_DIR / "IPS-Logo-RGB.png"
     ips_b64 = _img_b64(ips_path)
@@ -635,10 +743,12 @@ def main() -> None:
         _sync_theme_aliases_from_toggle()
         #_clear_query_params_keep_aid(aid)
 
+    _render_language_selector(st.sidebar, _LANGUAGE_SIDEBAR_KEY)
+
     if hasattr(st, "toggle"):
-        st.sidebar.toggle("Darkmodus", key=_DARK_TOGGLE_KEY, on_change=_on_dark_toggle)
+        st.sidebar.toggle(t("sidebar.dark_mode"), key=_DARK_TOGGLE_KEY, on_change=_on_dark_toggle)
     else:
-        st.sidebar.checkbox("Darkmodus", key=_DARK_TOGGLE_KEY, on_change=_on_dark_toggle)
+        st.sidebar.checkbox(t("sidebar.dark_mode"), key=_DARK_TOGGLE_KEY, on_change=_on_dark_toggle)
 
     st.sidebar.markdown("---")
 
@@ -658,11 +768,12 @@ def main() -> None:
         st.session_state["nav_request"] = None
 
     # ---- Navigation ----
-    st.sidebar.title("Navigation")
+    st.sidebar.title(t("sidebar.navigation"))
     selected = st.sidebar.radio(
-        "Seite wählen",
+        t("sidebar.page_select"),
         list(PAGES.keys()),
         key="nav_page_ui",
+        format_func=page_label,
     )
 
     if selected != st.session_state["nav_page"]:

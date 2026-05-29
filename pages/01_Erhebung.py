@@ -16,6 +16,7 @@ import streamlit.components.v1 as components
 from core.state import init_session_state
 from core.model_loader import load_model_config
 import core.persist as persist
+from core.i18n import answer_option_label, get_language, target_option_label, t
 
 TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
@@ -432,13 +433,10 @@ def _render_hero(title: str, lead: str = "", body: str = "", extra_html: str = "
 
 def _render_time_notice() -> None:
     st.markdown(
-        """
+        f"""
 <div class="rgm-time-notice" role="note">
   <div class="rgm-time-notice-icon" aria-hidden="true">&#9201;</div>
-  <div class="rgm-time-notice-text">
-    <b>Hinweis:</b> F&uuml;r die vollst&auml;ndige Erhebung sollten Sie ca. 60 Minuten einplanen.<br>
-    Der tats&auml;chliche Aufwand kann je nach Organisation und vorhandenen Informationen variieren.
-  </div>
+  <div class="rgm-time-notice-text">{t("assessment.time_notice")}</div>
 </div>
         """.strip(),
         unsafe_allow_html=True,
@@ -810,6 +808,7 @@ def _glossary_linkify(text: str, glossary: dict, return_page: str, return_payloa
             "page=Glossar",
             f"g={quote_plus(canonical_term)}",
             f"from={quote_plus(return_page or '')}",
+            f"lang={quote_plus(get_language())}",
         ]
     
         # Darkmode an Glossar übergeben (verhindert "heller Sprung")
@@ -894,10 +893,9 @@ def _render_save_resume_panel(aid: str) -> None:
     # Expander nach Import einmalig offen anzeigen
     expanded_once = bool(st.session_state.pop("_rgm_open_save_resume_expander", False))
 
-    with st.expander("Speichern & Fortsetzen", expanded=expanded_once):
+    with st.expander(t("assessment.save_resume"), expanded=expanded_once):
         st.caption(
-            "Speichern Sie Ihre Eingaben als JSON und laden Sie sie später wieder – "
-            "zum **Fortsetzen** oder zum **Wiederverwenden** (z. B. Vorjahr laden und anpassen)."
+            t("assessment.save_resume_caption")
         )
 
         # --- Download ---
@@ -909,19 +907,19 @@ def _render_save_resume_panel(aid: str) -> None:
         data = persist.export_snapshot_bytes(aid, pretty=True)
 
         st.download_button(
-            "Zwischenspeicher herunterladen (JSON)",
+            t("assessment.download_state"),
             data=data,
             file_name=fn,
             mime="application/json",
             use_container_width=True,
         )
-        st.info("Speichert den aktuellen Stand als JSON-Datei auf Ihrem Gerät.")
+        st.info(t("assessment.save_json_info"))
 
         st.markdown("---")
 
         # --- Upload / Import (immer overwrite) ---
         up = st.file_uploader(
-            "Zwischenspeicher laden (JSON)",
+            t("assessment.upload_state"),
             type=["json"],
             key="rgm_snapshot_upload",
         )
@@ -930,12 +928,12 @@ def _render_save_resume_panel(aid: str) -> None:
         mode = "overwrite"
 
         clicked = st.button(
-            "Zwischenspeicher laden",
+            t("assessment.load"),
             use_container_width=True,
             disabled=(up is None),
             key="rgm_snapshot_load_btn",
         )
-        st.info("Beim Laden wird der aktuelle Stand durch die Datei ersetzt.")
+        st.info(t("assessment.load_overwrite_info"))
 
         # ✅ Hinweis NACH dem Button (wird nach rerun hier angezeigt)
         msg = st.session_state.pop("_rgm_snapshot_msg", None)
@@ -980,7 +978,7 @@ def _render_save_resume_panel(aid: str) -> None:
                 # ✅ Success-Hinweis setzen (knackig)
                 st.session_state["_rgm_snapshot_msg"] = (
                     "success",
-                    "Import erfolgreich: Antworten übernommen.",
+                    t("assessment.import_success"),
                 )
 
                 # speichern
@@ -1000,10 +998,10 @@ def _render_process_profile(profile: dict, glossary: dict, return_page: str, ret
         profile = {}
 
     rows = [
-        ("Zweck", profile.get("purpose", "")),
-        ("Ergebnisse", profile.get("results", "")),
-        ("Basispraktiken", profile.get("basic_practices", "")),
-        ("Arbeitsprodukte", profile.get("work_products", "")),
+        (t("assessment.profile.purpose"), profile.get("purpose", "")),
+        (t("assessment.profile.results"), profile.get("results", "")),
+        (t("assessment.profile.basic_practices"), profile.get("basic_practices", "")),
+        (t("assessment.profile.work_products"), profile.get("work_products", "")),
     ]
 
     parts = ['<div class="rgm-kv-wrap">']
@@ -1045,12 +1043,12 @@ def _render_level_info_expander(lvl: dict, glossary: dict, return_page: str, ret
     if not acceptance and not benefit:
         return
 
-    with st.expander("Abnahmekriterien & Nutzen bei Erreichen der Stufe", expanded=False):
+    with st.expander(t("assessment.acceptance_benefit"), expanded=False):
         if acceptance:
-            _render_excel_text_box("Abnahmekriterien", acceptance, glossary, return_page, return_payload)
+            _render_excel_text_box(t("assessment.acceptance_criteria"), acceptance, glossary, return_page, return_payload)
             st.markdown("")
         if benefit:
-            _render_excel_text_box("Nutzen bei Erreichen der Stufe", benefit, glossary, return_page, return_payload)
+            _render_excel_text_box(t("assessment.benefit"), benefit, glossary, return_page, return_payload)
 
 
 # -----------------------------
@@ -1086,7 +1084,7 @@ def _parse_own_targets_upload(file_name: str, raw: bytes) -> dict[str, int]:
         elif isinstance(obj, dict):
             data = obj
         else:
-            raise ValueError("Ungültiges JSON-Format.")
+            raise ValueError("Invalid JSON format." if get_language() == "en" else "Ungültiges JSON-Format.")
 
         out: dict[str, int] = {}
         for k, v in data.items():
@@ -1096,7 +1094,8 @@ def _parse_own_targets_upload(file_name: str, raw: bytes) -> dict[str, int]:
             try:
                 iv = int(round(float(v)))
             except Exception:
-                raise ValueError(f"Ungültiger Zielwert für {code}: {v!r}")
+                msg = "Invalid target value for" if get_language() == "en" else "Ungültiger Zielwert für"
+                raise ValueError(f"{msg} {code}: {v!r}")
             out[code] = iv
         return out
 
@@ -1104,7 +1103,7 @@ def _parse_own_targets_upload(file_name: str, raw: bytes) -> dict[str, int]:
         text = raw.decode("utf-8-sig")
         reader = csv.DictReader(io.StringIO(text))
         if not reader.fieldnames:
-            raise ValueError("CSV enthält keinen Header.")
+            raise ValueError("CSV does not contain a header." if get_language() == "en" else "CSV enthält keinen Header.")
 
         f = [h.strip().lower() for h in reader.fieldnames]
 
@@ -1118,7 +1117,11 @@ def _parse_own_targets_upload(file_name: str, raw: bytes) -> dict[str, int]:
         val_col = _pick("target", "ziel", "eigenes ziel", "eigenes_ziel", "eigenesziel")
 
         if not code_col or not val_col:
-            raise ValueError("CSV Header muss Spalten für Kürzel/Code und Ziel enthalten (z.B. code,target).")
+            raise ValueError(
+                "CSV header must contain columns for code and target (e.g. code,target)."
+                if get_language() == "en"
+                else "CSV Header muss Spalten für Kürzel/Code und Ziel enthalten (z.B. code,target)."
+            )
 
         out: dict[str, int] = {}
         for row in reader:
@@ -1129,11 +1132,12 @@ def _parse_own_targets_upload(file_name: str, raw: bytes) -> dict[str, int]:
             try:
                 iv = int(round(float(str(v).strip())))
             except Exception:
-                raise ValueError(f"Ungültiger Zielwert für {code}: {v!r}")
+                msg = "Invalid target value for" if get_language() == "en" else "Ungültiger Zielwert für"
+                raise ValueError(f"{msg} {code}: {v!r}")
             out[code] = iv
         return out
 
-    raise ValueError("Bitte eine .json oder .csv Datei hochladen.")
+    raise ValueError(t("assessment.upload_json_csv"))
 
 
 def _apply_imported_targets(imported: dict[str, int], dims_sorted: list[dict]) -> tuple[int, list[str]]:
@@ -1286,8 +1290,8 @@ def _footer_navigation(model: dict, aid: str) -> None:
 
     footer = st.container()
     with footer:
-        st.markdown('<div class="rgm-footer-title">Navigation</div>', unsafe_allow_html=True)
-        st.caption("Zu Dimension springen")
+        st.markdown(f'<div class="rgm-footer-title">{html.escape(t("assessment.navigation"))}</div>', unsafe_allow_html=True)
+        st.caption(t("assessment.jump_dimension"))
 
         st.selectbox(
             "",
@@ -1302,7 +1306,7 @@ def _footer_navigation(model: dict, aid: str) -> None:
         b1, b2 = st.columns(2, gap="medium")
 
         with b1:
-            if st.button("◀ Zurück", use_container_width=True, disabled=(idx == 0), key="erh_prev_btn"):
+            if st.button(t("assessment.back"), use_container_width=True, disabled=(idx == 0), key="erh_prev_btn"):
                 st.session_state["erhebung_dim_idx"] = max(0, idx - 1)
                 _request_scroll_to_top()
                 persist.save(aid)
@@ -1311,7 +1315,7 @@ def _footer_navigation(model: dict, aid: str) -> None:
         with b2:
             is_last = (idx == n - 1)
             if st.button(
-                "Zum Dashboard ▶" if is_last else "Weiter ▶",
+                t("assessment.to_dashboard") if is_last else t("assessment.next"),
                 use_container_width=True,
                 key="erh_next_btn",
                 type="primary",
@@ -1350,7 +1354,7 @@ def _footer_navigation(model: dict, aid: str) -> None:
         pipe.append('<div class="rgm-progress-wrap">')
         pipe.append(
             f'<div class="rgm-progress-top">'
-            f'  <div class="rgm-progress-label">Fortschritt</div>'
+            f'  <div class="rgm-progress-label">{html.escape(t("assessment.progress"))}</div>'
             f"</div>"
         )
         pipe.append('<div class="rgm-pipe">')
@@ -1365,7 +1369,7 @@ def _footer_navigation(model: dict, aid: str) -> None:
 # Step 0: Eingabemaske
 # -----------------------------
 def _meta_form_step(aid: str) -> None:
-    _render_hero("Erhebung", "Angaben zur Erhebung")
+    _render_hero(t("assessment.title"), t("assessment.meta_title"))
     _render_time_notice()
     _render_save_resume_panel(aid)
     st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
@@ -1412,39 +1416,40 @@ def _meta_form_step(aid: str) -> None:
 
         with c1:
             org = st.text_input(
-                "Name der Organisation:",
+                t("assessment.field.org"),
                 key="rgm_meta_org",
-                placeholder="Beispiel GmbH",
+                placeholder=t("assessment.placeholder.org"),
             )
             area = st.text_input(
-                "Bereich:",
+                t("assessment.field.area"),
                 key="rgm_meta_area",
-                placeholder="Bereich A",
+                placeholder=t("assessment.placeholder.area"),
             )
             assessor = st.text_input(
-                "Erhebung durchgeführt von:",
+                t("assessment.field.assessor"),
                 key="rgm_meta_assessor",
-                placeholder="Herr/Frau Beispiel",
+                placeholder=t("assessment.placeholder.assessor"),
             )
 
         with c2:
             date_str = st.text_input(
-                "Datum der Durchführung:",
+                t("assessment.field.date"),
                 key="rgm_meta_date_str",
                 placeholder="TT.MM.JJJJ",
             )
 
             # ✅ Wichtig: Selectbox NICHT im Form -> reagiert sofort
             target_label = st.selectbox(
-                "Angestrebtes Ziel:",
+                t("assessment.field.target"),
                 TARGET_OPTIONS,
                 key="rgm_meta_target_label",
+                format_func=target_option_label,
             )
 
             assessor_contact = st.text_input(
-                "Kontakt:",
+                t("assessment.field.contact"),
                 key="rgm_meta_assessor_contact",
-                placeholder="name@organisation.de oder +49 ...",
+                placeholder=t("assessment.placeholder.contact"),
             )
 
         # Button-Logik (sofort sichtbar je nach Auswahl)
@@ -1457,14 +1462,14 @@ def _meta_form_step(aid: str) -> None:
         if target_label == "Eigenes Ziel":
             if not own_defined:
                 open_own_target_clicked = st.button(
-                    "Eigenes Ziel definieren",
+                    t("assessment.define_custom_target"),
                     type="primary",
                     use_container_width=True,
                     key="meta_open_own_target_btn",
                 )
             else:
                 start_clicked = st.button(
-                    "Erhebung starten",
+                    t("assessment.start"),
                     type="primary",
                     use_container_width=True,
                     disabled=dirty_own,
@@ -1472,7 +1477,7 @@ def _meta_form_step(aid: str) -> None:
                 )
         else:
             start_clicked = st.button(
-                "Erhebung starten",
+                t("assessment.start"),
                 type="primary",
                 use_container_width=True,
                 key="meta_start_btn",
@@ -1484,14 +1489,14 @@ def _meta_form_step(aid: str) -> None:
     if st.session_state.get("rgm_meta_target_label") == "Eigenes Ziel" and st.session_state.get("erhebung_own_target_defined", False):
         left, right = st.columns([1, 3])
         with left:
-            if st.button("Eigenes Ziel ändern", use_container_width=True, key="own_target_change_btn"):
+            if st.button(t("assessment.edit_custom_target"), use_container_width=True, key="own_target_change_btn"):
                 st.session_state.erhebung_step = 1
                 persist.rerun_with_save(aid)
         with right:
-            st.success("Eigenes Ziel ist definiert.")
+            st.success(t("assessment.custom_target_defined"))
     
     if target_label == "Eigenes Ziel" and st.session_state.get("erhebung_own_target_defined", False) and dirty_own:
-        st.warning("Es gibt ungespeicherte Änderungen im Eigenen Ziel. Bitte erst speichern.")
+        st.warning(t("assessment.unsaved_custom_target"))
 
     if not open_own_target_clicked and not start_clicked:
         return
@@ -1501,11 +1506,11 @@ def _meta_form_step(aid: str) -> None:
     # ---------------------------------------------------------
     errors = []
     if not (org or "").strip():
-        errors.append("Bitte den Namen der Organisation angeben.")
+        errors.append(t("assessment.error_org_required"))
     if not (assessor or "").strip():
-        errors.append("Bitte angeben, wer die Erhebung durchgeführt hat.")
+        errors.append(t("assessment.error_assessor_required"))
     if (date_str or "").strip() and not re.match(r"^\d{2}\.\d{2}\.\d{4}$", (date_str or "").strip()):
-        errors.append("Datum bitte im Format TT.MM.JJJJ eingeben (z. B. 03.12.2025).")
+        errors.append(t("assessment.error_date_format"))
 
     if errors:
         for e in errors:
@@ -1541,7 +1546,7 @@ def _meta_form_step(aid: str) -> None:
             persist.rerun_with_save(aid)
 
         if start_clicked and not st.session_state.get("erhebung_own_target_defined", False):
-            st.error("Bitte zuerst „Eigenes Ziel definieren“.")
+            st.error(t("assessment.error_define_custom_target"))
             return
 
         if start_clicked:
@@ -1589,10 +1594,9 @@ def _meta_form_step(aid: str) -> None:
 # -----------------------------
 def _own_target_step(aid: str) -> None:
     _render_hero(
-        "Eigenes Ziel definieren",
-        "Zielniveau je Subdimension",
-        "Bitte wählen Sie für jede Subdimension den angestrebten Reifegrad zwischen 1 und 5. "
-        "Optional können Sie vorhandene Zielwerte importieren oder exportieren.",
+        t("assessment.custom_target_title"),
+        t("assessment.custom_target_lead"),
+        t("assessment.custom_target_body"),
     )
     _render_save_resume_panel(aid)
     st.markdown("")
@@ -1601,23 +1605,23 @@ def _own_target_step(aid: str) -> None:
     model = load_model_config()
     dims_sorted = _dims_sorted_from_model(model)
     if not dims_sorted:
-        st.error("Keine Subdimensionen gefunden (Model-Konfiguration leer).")
+        st.error(t("assessment.no_dimensions"))
         return
 
 
     col_imp, col_exp = st.columns([1.3, 1.0], gap="large", vertical_alignment="top")
 
     with col_imp:
-        st.markdown('<div class="rgm-split-title">Import</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="rgm-split-title">{html.escape(t("assessment.import"))}</div>', unsafe_allow_html=True)
 
         up = st.file_uploader(
-            "Eigenes Ziel hochladen (JSON oder CSV):",
+            t("assessment.upload_custom_target"),
             type=["json", "csv"],
             key="own_target_upload_file",
         )
 
         if st.button(
-            "Importieren",
+            t("assessment.import_button"),
             use_container_width=True,
             key="own_target_import_btn",
             disabled=(up is None),
@@ -1629,7 +1633,7 @@ def _own_target_step(aid: str) -> None:
 
                 st.session_state["own_target_saved_msg_bottom"] = True
 
-                msg = f"Import erfolgreich: {used} Werte übernommen."
+                msg = f"Import successful: {used} values applied." if get_language() == "en" else f"Import erfolgreich: {used} Werte übernommen."
                 if missing:
                     msg += (
                         " Fehlende Subdimensionen wurden mit dem Standardwert vorbelegt "
@@ -1644,7 +1648,7 @@ def _own_target_step(aid: str) -> None:
                 persist.rerun_with_save(aid)
 
     with col_exp:
-        st.markdown('<div class="rgm-split-title">Export</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="rgm-split-title">{html.escape(t("assessment.export"))}</div>', unsafe_allow_html=True)
 
         targets_now: dict[str, float] = st.session_state.get("dimension_targets", {})
         can_export = bool(targets_now)
@@ -1654,14 +1658,14 @@ def _own_target_step(aid: str) -> None:
         data = _export_own_targets_json(targets_now, model, meta) if can_export else b""
 
         st.download_button(
-            "Eigenes Ziel herunterladen",
+            t("assessment.download_custom_target"),
             data=data,
             file_name=fn,
             mime="application/json",
             use_container_width=True,
             disabled=not can_export,
         )
-        st.caption("Download ist verfügbar, sobald Werte vorhanden sind (Import oder Speicherung).")
+        st.caption(t("assessment.download_available"))
 
 
 
@@ -1675,9 +1679,9 @@ def _own_target_step(aid: str) -> None:
     st.markdown("---")
 
     query = st.text_input(
-        "Suche (Kürzel oder Subdimension):",
+        t("assessment.search_label"),
         value="",
-        placeholder="z. B. TD3 oder Übersetzungsmanagement",
+        placeholder=t("assessment.search_placeholder"),
     )
 
     def _match(d: dict) -> bool:
@@ -1711,15 +1715,15 @@ def _own_target_step(aid: str) -> None:
             st.session_state[k_all] = dv
 
     if not filtered:
-        st.info("Keine Treffer für die aktuelle Suche.")
+        st.info(t("assessment.no_search_results"))
     else:
         h1, h2, h3 = st.columns([0.18, 0.52, 0.30], vertical_alignment="center")
         with h1:
-            st.markdown("**Kürzel**")
+            st.markdown(f"**{t('assessment.code')}**")
         with h2:
-            st.markdown("**Subdimension**")
+            st.markdown(f"**{t('assessment.subdimension')}**")
         with h3:
-            st.markdown("**Eigenes Ziel**")
+            st.markdown(f"**{t('assessment.custom_target')}**")
 
         for d in filtered:
             code = str(d.get("code", "")).strip()
@@ -1766,12 +1770,12 @@ def _own_target_step(aid: str) -> None:
     c1, c2 = st.columns([1, 1])
 
     with c1:
-        if st.button("Zurück", use_container_width=True, key="own_target_back_btn"):
+        if st.button(t("assessment.back"), use_container_width=True, key="own_target_back_btn"):
             st.session_state.erhebung_step = 0
             persist.rerun_with_save(aid)
 
     with c2:
-        save_label = "Änderungen speichern" if dirty else "Eigenes Ziel speichern"
+        save_label = t("assessment.save_changes") if dirty else t("assessment.save_custom_target")
         save_clicked = st.button(
             save_label,
             type="primary",
@@ -1796,15 +1800,14 @@ def _own_target_step(aid: str) -> None:
         persist.rerun_with_save(aid)
 
     if st.session_state.get("own_target_saved_msg_bottom", False):
-        st.success("Eigenes Ziel wurde gespeichert. Sie können jetzt die Erhebung starten.")
+        st.success(t("assessment.custom_target_saved"))
         st.session_state.pop("own_target_saved_msg_bottom", None)
         st.session_state["own_target_dirty"] = False
         dirty = False
 
     if dirty:
         st.warning(
-            "Sie haben Werte geändert, die noch nicht gespeichert wurden. "
-            "Bitte „Änderungen speichern“ klicken, damit diese Werte in der Erhebung verwendet werden."
+            t("assessment.custom_target_unsaved")
         )
         
 
@@ -1813,7 +1816,7 @@ def _own_target_step(aid: str) -> None:
     # Start nur erlauben, wenn Ziel gespeichert ist, Werte existieren und keine ungespeicherten Änderungen vorliegen
     can_start = defined and bool(targets_now) and not dirty
 
-    if st.button("Erhebung starten", type="primary", use_container_width=True, key="own_target_start_btn", disabled=not can_start):
+    if st.button(t("assessment.start"), type="primary", use_container_width=True, key="own_target_start_btn", disabled=not can_start):
         has_answers = isinstance(st.session_state.get("answers"), dict) and bool(st.session_state.get("answers"))
         if not has_answers:
             _reset_erhebung_answers()
@@ -1850,7 +1853,7 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
     process_profile = dim.get("process_profile", {}) or {}
     has_any_profile = any(str(process_profile.get(k, "") or "").strip() for k in ["purpose", "results", "basic_practices", "work_products"])
     if has_any_profile:
-        with st.expander("Prozess-Steckbrief", expanded=False):
+        with st.expander(t("assessment.process_profile"), expanded=False):
             _render_process_profile(process_profile, glossary, return_page, return_payload_base)
 
     st.markdown("---")
@@ -1860,18 +1863,18 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
 
     if meta_target == "Eigenes Ziel":
         if not st.session_state.get("erhebung_own_target_defined", False):
-            st.warning("Eigenes Ziel ist nicht definiert. Bitte zuerst „Eigenes Ziel definieren“.")
+            st.warning(t("assessment.custom_target_missing"))
         else:
             target_val = dim_targets.get(code, None)
             if target_val is None:
-                st.warning("Für diese Subdimension wurde kein Ziel gefunden. Bitte „Eigenes Ziel ändern“ nutzen.")
+                st.warning(t("assessment.custom_target_no_value"))
             else:
-                st.markdown(f"**Eigenes Sollniveau:** {float(target_val):.0f}")
-                st.caption("Änderungen am Eigenen Ziel bitte über „Eigenes Ziel ändern“ durchführen.")
+                st.markdown(f"**{t('assessment.custom_target_level')}** {float(target_val):.0f}")
+                st.caption(t("assessment.custom_target_caption"))
     else:
         target_val = float(st.session_state.get("global_target_level", 3.0))
-        st.markdown(f"**Sollniveau:** {target_val:.0f}")
-        st.caption("Vordefiniertes Ziel. Änderungen bitte über „Angaben bearbeiten“ vornehmen.")
+        st.markdown(f"**{t('assessment.target_level')}** {target_val:.0f}")
+        st.caption(t("assessment.predefined_target_caption"))
 
     st.markdown("---")
 
@@ -1948,11 +1951,11 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
         
             if not ok:
                 prev_no = int(prev_lvl.get("level_number", li) or li)
-                st.info(f"Stufe {level_no} ist noch gesperrt, weil Stufe {prev_no} noch nicht erreicht wurde.")
+                st.info(t("assessment.level_locked").format(level=level_no, prev=prev_no))
                 break  # weitere Stufen nicht rendern
 
         # --- ab hier dein bestehender Code für die Stufe ---
-        st.markdown(f"**Stufe {level_no} – {level_name}**" if level_name else f"**Stufe {level_no}**")
+        st.markdown(f"**{t('assessment.level')} {level_no} – {level_name}**" if level_name else f"**{t('assessment.level')} {level_no}**")
         _render_level_info_expander(lvl, glossary, return_page, return_payload_base)
 
         questions = lvl.get("questions", []) or []
@@ -1995,6 +1998,7 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
                 index=(None if has_state else default_index),
                 key=k_widget,
                 label_visibility="collapsed",
+                format_func=answer_option_label,
             )
 
             # --- Synchronisation: nur schreiben, wenn wirklich eine gültige Auswahl da ist ---
@@ -2030,18 +2034,18 @@ def _questions_step(aid: str) -> None:
     badges_html = textwrap.dedent(
         f"""
         <div class="rgm-badges">
-          <div class="rgm-badge"><b>Organisation:</b>&nbsp;{html.escape(meta.get('org','-') or '-')}</div>
-          <div class="rgm-badge"><b>Bereich:</b>&nbsp;{html.escape(meta.get('area','-') or '-')}</div>
-          <div class="rgm-badge"><b>Datum:</b>&nbsp;{html.escape(meta.get('date_str','-') or '-')}</div>
-          <div class="rgm-badge"><b>Ziel:</b>&nbsp;{html.escape(target_label or '-')}</div>
-          <div class="rgm-badge"><b>E-Mail:</b>&nbsp;{html.escape(meta.get('assessor_contact','-') or '-')}</div>
+          <div class="rgm-badge"><b>{html.escape(t('assessment.badge.org'))}:</b>&nbsp;{html.escape(meta.get('org','-') or '-')}</div>
+          <div class="rgm-badge"><b>{html.escape(t('assessment.badge.area'))}:</b>&nbsp;{html.escape(meta.get('area','-') or '-')}</div>
+          <div class="rgm-badge"><b>{html.escape(t('assessment.badge.date'))}:</b>&nbsp;{html.escape(meta.get('date_str','-') or '-')}</div>
+          <div class="rgm-badge"><b>{html.escape(t('assessment.badge.target'))}:</b>&nbsp;{html.escape(target_option_label(target_label) if target_label else '-')}</div>
+          <div class="rgm-badge"><b>{html.escape(t('assessment.badge.email'))}:</b>&nbsp;{html.escape(meta.get('assessor_contact','-') or '-')}</div>
         </div>
         """
     ).strip()
 
     _render_hero(
-        "Erhebung",
-        "Bitte beantworten Sie die Fragen je Subdimension so objektiv wie möglich.",
+        t("assessment.title"),
+        t("assessment.questions_lead"),
         extra_html=badges_html,
     )
     _render_time_notice()
@@ -2052,20 +2056,20 @@ def _questions_step(aid: str) -> None:
 
     c1, c2, c3, c4 = st.columns([1, 1, 1, 1.2], gap="small")
     with c1:
-        if st.button("Angaben bearbeiten", use_container_width=True, key="edit_meta_btn"):
+        if st.button(t("assessment.edit_meta"), use_container_width=True, key="edit_meta_btn"):
             st.session_state.erhebung_step = 0
             _request_scroll_to_top()
             persist.rerun_with_save(aid)
     with c2:
         if target_label == "Eigenes Ziel":
-            if st.button("Eigenes Ziel ändern", use_container_width=True, key="edit_own_target_btn"):
+            if st.button(t("assessment.edit_custom_target"), use_container_width=True, key="edit_own_target_btn"):
                 st.session_state.erhebung_step = 1
                 _request_scroll_to_top()
                 persist.rerun_with_save(aid)
         else:
-            st.button("Eigenes Ziel ändern", disabled=True, use_container_width=True, key="noop_edit_own_target")
+            st.button(t("assessment.edit_custom_target"), disabled=True, use_container_width=True, key="noop_edit_own_target")
     with c3:
-        if st.button("Ausfüllhinweise", use_container_width=True, key="open_hints_btn"):
+        if st.button(t("assessment.instructions"), use_container_width=True, key="open_hints_btn"):
             st.session_state["nav_request"] = "Ausfüllhinweise"
             persist.rerun_with_save(aid)
     with c4:
@@ -2074,19 +2078,19 @@ def _questions_step(aid: str) -> None:
             fn = f"eigenes_ziel_{_safe_filename(meta.get('org',''))}_{_safe_filename(meta.get('date_str',''))}.json"
             data = _export_own_targets_json(targets_now, model, meta)
             st.download_button(
-                "Eigenes Ziel herunterladen",
+                t("assessment.download_custom_target"),
                 data=data,
                 file_name=fn,
                 mime="application/json",
                 use_container_width=True,
             )
         else:
-            st.button("Eigenes Ziel herunterladen", disabled=True, use_container_width=True, key="noop_download_own_target")
+            st.button(t("assessment.download_custom_target"), disabled=True, use_container_width=True, key="noop_download_own_target")
 
     st.markdown("---")
 
     if not dims_sorted:
-        st.error("Keine Dimensionen/Subdimensionen gefunden (Model-Konfiguration leer).")
+        st.error(t("assessment.no_dimensions"))
         return
 
     idx = int(st.session_state.get("erhebung_dim_idx", 0))

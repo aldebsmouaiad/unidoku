@@ -6,6 +6,7 @@ import streamlit as st
 
 from core.state import init_session_state
 from core.model_loader import load_tool_meta
+from core.i18n import get_language, t
 
 TU_GREEN = "#639A00"
 TU_ORANGE = "#CA7406"
@@ -18,6 +19,7 @@ def main() -> None:
 
     meta = load_tool_meta()
     title = meta.get("title", "Reifegradmodell für die Technische Dokumentation")
+    en = get_language() == "en"
 
     # Darkmode robust (falls App "ui_dark_mode" nutzt)
     dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
@@ -251,86 +253,109 @@ def main() -> None:
 
     st.markdown('<div class="rgm-page">', unsafe_allow_html=True)
 
-    # Hero
+    hero_lead = (
+        "The maturity model is a questionnaire-based tool for assessing the maturity levels of technical documentation. "
+        "It was developed to help companies sustainably improve their technical documentation."
+        if en else
+        "Das Reifegradmodell ist ein fragenbasiertes Tool zur Erhebung der Reifegrade der technischen Dokumentation. "
+        "Es wurde entwickelt, um Unternehmen eine Hilfestellung bei der nachhaltigen Weiterentwicklung der technischen "
+        "Dokumentation zu geben."
+    )
+    hero_body = (
+        "The maturity model is based on findings from research into existing maturity models and the evaluation of interviews. "
+        "It consists of 33 subdimensions across 8 dimensions and should be understood as a model. This means that aspects of "
+        "the dimensions can be interpreted differently depending on the organization. Users are invited to add their own "
+        "company-specific points."
+        if en else
+        "Das Reifegradmodell basiert auf Ergebnissen einer Recherche zu bestehenden Reifegradmodellen sowie der Auswertung "
+        "von Interviews. Das RGM besteht aus 33 Subdimensionen, aufgeteilt auf 8 Dimensionen und ist modellhaft zu verstehen. "
+        "Dies bedeutet, dass die Aspekte der Dimensionen je nach Organisation unterschiedlich interpretiert werden können. "
+        "Die Nutzenden sind herzlich dazu eingeladen, eigene, unternehmensspezifische Punkte zu ergänzen."
+    )
+    hero_scope = (
+        "The tool covers the following areas. The respective objects of consideration are highlighted in color."
+        if en else
+        "Das Tool deckt die folgenden Bereiche ab. Die jeweiligen Betrachtungsobjekte sind farblich hervorgehoben."
+    )
+    welcome = "Welcome to the" if en else "Willkommen zum"
+
     st.markdown(
         f"""
 <div class="rgm-hero">
-  <div class="rgm-h1">Willkommen zum {html.escape(str(title))}</div>
+  <div class="rgm-h1">{welcome} {html.escape(str(title))}</div>
   <div class="rgm-accent-line"></div>
-
-  <p class="rgm-lead">
-    Das Reifegradmodell ist ein fragenbasiertes Tool zur Erhebung der Reifegrade der technischen Dokumentation.
-    Es wurde entwickelt, um Unternehmen eine Hilfestellung bei der nachhaltigen Weiterentwicklung der technischen
-    Dokumentation zu geben.
-  </p>
-
+  <p class="rgm-lead">{html.escape(hero_lead)}</p>
   <div style="height:10px"></div>
-
-  <p class="rgm-muted">
-    Das Reifegradmodell basiert auf Ergebnissen einer Recherche zu bestehenden Reifegradmodellen sowie der Auswertung
-    von Interviews. Das RGM besteht aus 33 Subdimensionen, aufgeteilt auf 8 Dimensionen und ist modellhaft zu verstehen.
-    Dies bedeutet, dass die Aspekte der Dimensionen je nach Organisation unterschiedlich interpretiert werden können.
-    Die Nutzenden sind herzlich dazu eingeladen, eigene, unternehmensspezifische Punkte zu ergänzen.
-  </p>
-
+  <p class="rgm-muted">{html.escape(hero_body)}</p>
   <div style="height:10px"></div>
-
-  <p class="rgm-muted" style="margin-bottom:0">
-    Das Tool deckt die folgenden Bereiche ab. Die jeweiligen Betrachtungsobjekte sind farblich hervorgehoben.
-  </p>
+  <p class="rgm-muted" style="margin-bottom:0">{html.escape(hero_scope)}</p>
 </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # TD (Flex Row)
+    td_title = "Technical Documentation (TD)" if en else "Technische Dokumentation (TD)"
+    td_desc = "Relevant topic areas of technical documentation." if en else "Relevante Themenbereiche der technischen Dokumentation."
+    td_card = "Technical Documentation" if en else "Technische Dokumentation"
+    td_items = [
+        ("TD1", "Editorial process" if en else "Redaktionsprozess"),
+        ("TD2", "Content management" if en else "Content Management"),
+        ("TD3", "Content delivery" if en else "Content Delivery"),
+        ("TD4", "Target group orientation" if en else "Zielgruppenorientierung"),
+    ]
+    td_items_html = "".join(
+        f'<li class="rgm-li"><span class="rgm-badge rgm-badge-td">{code}</span><span class="rgm-li-text">{html.escape(label)}</span></li>'
+        for code, label in td_items
+    )
+
     st.markdown(
         f"""
 <div class="rgm-row">
   <div class="rgm-left">
-    <div class="rgm-section-title rgm-td-title">Technische Dokumentation (TD)</div>
-    <div class="rgm-muted">Relevante Themenbereiche der technischen Dokumentation.</div>
+    <div class="rgm-section-title rgm-td-title">{html.escape(td_title)}</div>
+    <div class="rgm-muted">{html.escape(td_desc)}</div>
   </div>
-
   <div class="rgm-right">
     <div class="rgm-card rgm-card-td">
-      <div class="rgm-card-head">Technische Dokumentation</div>
-      <ul class="rgm-list">
-        <li class="rgm-li"><span class="rgm-badge rgm-badge-td">TD1</span><span class="rgm-li-text">Redaktionsprozess</span></li>
-        <li class="rgm-li"><span class="rgm-badge rgm-badge-td">TD2</span><span class="rgm-li-text">Content Management</span></li>
-        <li class="rgm-li"><span class="rgm-badge rgm-badge-td">TD3</span><span class="rgm-badge rgm-badge-td" style="display:none"></span><span class="rgm-li-text">Content Delivery</span></li>
-        <li class="rgm-li"><span class="rgm-badge rgm-badge-td">TD4</span><span class="rgm-li-text">Zielgruppenorientierung</span></li>
-      </ul>
+      <div class="rgm-card-head">{html.escape(td_card)}</div>
+      <ul class="rgm-list">{td_items_html}</ul>
     </div>
   </div>
 </div>
-
 <div class="rgm-divider"></div>
         """,
         unsafe_allow_html=True,
     )
 
-    # OG (Flex Row)
+    og_title = "Organization (OG)" if en else "Organisation (OG)"
+    og_desc = (
+        "Relevant topic areas of the organization that are related to or influence technical documentation."
+        if en else
+        "Relevante Themenbereiche der Organisation, die mit der technischen Dokumentation in Verbindung stehen bzw. diese beeinflussen."
+    )
+    og_card = "Organization" if en else "Organisation"
+    og_items = [
+        ("OG1", "Knowledge management" if en else "Wissensmanagement"),
+        ("OG2", "Organizational anchoring of technical documentation" if en else "Organisationale Verankerung der technischen Dokumentation"),
+        ("OG3", "Interfaces" if en else "Schnittstellen"),
+        ("OG4", "Technological infrastructure" if en else "Technologische Infrastruktur"),
+    ]
+    og_items_html = "".join(
+        f'<li class="rgm-li"><span class="rgm-badge rgm-badge-og">{code}</span><span class="rgm-li-text">{html.escape(label)}</span></li>'
+        for code, label in og_items
+    )
+
     st.markdown(
         f"""
 <div class="rgm-row">
   <div class="rgm-left">
-    <div class="rgm-section-title rgm-og-title">Organisation (OG)</div>
-    <div class="rgm-muted">
-      Relevante Themenbereiche der Organisation, die mit der technischen Dokumentation in Verbindung stehen bzw.
-      diese beeinflussen.
-    </div>
+    <div class="rgm-section-title rgm-og-title">{html.escape(og_title)}</div>
+    <div class="rgm-muted">{html.escape(og_desc)}</div>
   </div>
-
   <div class="rgm-right">
     <div class="rgm-card rgm-card-og">
-      <div class="rgm-card-head">Organisation</div>
-      <ul class="rgm-list">
-        <li class="rgm-li"><span class="rgm-badge rgm-badge-og">OG1</span><span class="rgm-li-text">Wissensmanagement</span></li>
-        <li class="rgm-li"><span class="rgm-badge rgm-badge-og">OG2</span><span class="rgm-li-text">Organisationale Verankerung der technischen Dokumentation</span></li>
-        <li class="rgm-li"><span class="rgm-badge rgm-badge-og">OG3</span><span class="rgm-li-text">Schnittstellen</span></li>
-        <li class="rgm-li"><span class="rgm-badge rgm-badge-og">OG4</span><span class="rgm-li-text">Technologische Infrastruktur</span></li>
-      </ul>
+      <div class="rgm-card-head">{html.escape(og_card)}</div>
+      <ul class="rgm-list">{og_items_html}</ul>
     </div>
   </div>
 </div>
@@ -344,12 +369,12 @@ def main() -> None:
     st.markdown('<div class="rgm-nav">', unsafe_allow_html=True)
     c1, c2 = st.columns([1, 1])
     with c1:
-        if st.button("Zurück", use_container_width=True):
+        if st.button(t("common.back"), use_container_width=True):
             st.session_state["nav_request"] = "Start"
             st.rerun()
 
     with c2:
-        if st.button("Weiter zu den Ausfüllhinweisen", type="primary", use_container_width=True):
+        if st.button("Continue to instructions" if en else "Weiter zu den Ausfüllhinweisen", type="primary", use_container_width=True):
             st.session_state["nav_request"] = "Ausfüllhinweise"
             st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
