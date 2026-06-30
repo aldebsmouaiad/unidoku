@@ -15,6 +15,7 @@ from core.charts import radar_ist_soll
 from core.state import init_session_state
 from core.exporter import make_csv_bytes
 from core.i18n import get_language, t
+from core.maturity import calculate_current_maturity_averages
 
 TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
@@ -110,6 +111,57 @@ def _inject_dashboard_css() -> None:
     font-size: 16px;
     margin: 0 0 14px 0;
     color: var(--rgm-text);
+  }}
+
+  .rgm-maturity-grid {{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+  }}
+
+  .rgm-maturity-section {{
+    margin-top: 20px;
+  }}
+
+  .rgm-maturity-card {{
+    position: relative;
+    background: var(--rgm-card-solid);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    box-shadow: var(--rgm-shadow);
+    padding: 14px 16px;
+    min-height: 78px;
+    overflow: hidden;
+  }}
+
+  .rgm-maturity-card-total::before {{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--rgm-td-blue), var(--rgm-og-orange));
+  }}
+
+  .rgm-maturity-card-td {{ border: 2px solid var(--rgm-td-blue); }}
+  .rgm-maturity-card-og {{ border: 2px solid var(--rgm-og-orange); }}
+
+  .rgm-maturity-title {{
+    font-size: 14px;
+    font-weight: 850;
+    color: var(--rgm-text);
+    margin: 0 0 8px 0;
+    line-height: 1.25;
+  }}
+
+  .rgm-maturity-value {{
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1.2;
+    color: var(--rgm-text);
+    font-variant-numeric: tabular-nums;
   }}
 
   /* =========================
@@ -426,6 +478,7 @@ def _inject_dashboard_css() -> None:
     }}
     .rgm-h1 {{ font-size: 26px; }}
     .rgm-hero {{ padding: 16px; }}
+    .rgm-maturity-grid {{ grid-template-columns: 1fr; }}
   }}
 
   /* =========================================================
@@ -523,6 +576,42 @@ def _escape(x: Any) -> str:
     if isinstance(x, float) and x != x:
         return ""
     return html.escape(str(x))
+
+
+def _format_maturity_average(value: float | None, *, en: bool) -> str:
+    if value is None:
+        return "&mdash;"
+
+    formatted = f"{float(value):.2f}".rstrip("0").rstrip(".")
+    return formatted if en else formatted.replace(".", ",")
+
+
+def _render_maturity_summary(df: pd.DataFrame) -> None:
+    en = get_language() == "en"
+    averages = calculate_current_maturity_averages(df)
+
+    def card(key: str, title: str, extra_cls: str) -> str:
+        avg = averages[key]
+        return f"""
+        <div class="rgm-maturity-card {extra_cls}">
+          <div class="rgm-maturity-title">{html.escape(title)}</div>
+          <div class="rgm-maturity-value">{_format_maturity_average(avg.value, en=en)}</div>
+        </div>
+        """.strip()
+
+    st.markdown(
+        f"""
+        <div class="rgm-maturity-section">
+          <div class="rgm-section-title">{html.escape(t("maturity.average_current"))}</div>
+          <div class="rgm-maturity-grid">
+            {card("overall", t("maturity.overall"), "rgm-maturity-card-total")}
+            {card("td", t("maturity.technical_documentation"), "rgm-maturity-card-td")}
+            {card("og", t("maturity.organization"), "rgm-maturity-card-og")}
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def _icons_svg() -> tuple[str, str, str]:
@@ -1521,6 +1610,7 @@ def main() -> None:
             filename_right="maturity_radar_og" if en else "reifegrad_radar_og",
         )
         _scale_legend_centered()
+        _render_maturity_summary(df)
 
     # ---------- Ergebnis in Tabellenform (exakt Measures-Style) ----------
     st.markdown('<div class="rgm-divider"></div>', unsafe_allow_html=True)

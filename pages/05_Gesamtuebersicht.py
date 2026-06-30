@@ -17,6 +17,7 @@ from core.overview import build_overview_table
 from core.charts import radar_ist_soll
 from core.exporter import df_results_for_export, make_csv_bytes, make_pdf_bytes
 from core.i18n import get_language, priority_value_label, t, target_option_label
+from core.maturity import calculate_current_maturity_averages
 
 TD_BLUE = "#2F3DB8"
 OG_ORANGE = "#F28C28"
@@ -552,8 +553,69 @@ def _inject_gesamtuebersicht_css() -> None:
     box-sizing: border-box;
   }}
 
+  .rgm-kpi-stack{{
+    display: grid;
+    gap: 14px;
+  }}
+
+  .rgm-kpi-overall{{
+    margin: 6px;
+  }}
+
+  .rgm-maturity-card{{
+    position: relative;
+    background: var(--rgm-card-solid);
+    border: 1px solid var(--rgm-border);
+    border-radius: 14px;
+    box-shadow: var(--rgm-shadow);
+    padding: 14px 16px;
+    overflow: hidden;
+  }}
+
+  .rgm-maturity-card-total::before{{
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--rgm-td-blue), var(--rgm-og-orange));
+  }}
+
+  .rgm-maturity-eyebrow{{
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--rgm-text);
+    opacity: 0.70;
+    margin: 0 0 3px 0;
+  }}
+
+  .rgm-maturity-row{{
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+  }}
+
+  .rgm-maturity-title{{
+    font-size: 14px;
+    font-weight: 850;
+    color: var(--rgm-text);
+    margin: 0;
+    line-height: 1.25;
+  }}
+
+  .rgm-maturity-value{{
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1.2;
+    color: var(--rgm-text);
+    font-variant-numeric: tabular-nums;
+  }}
+
   @media (max-width: 900px){{
     .rgm-kpi-grid{{ grid-template-columns: 1fr; }}
+    .rgm-maturity-row{{ align-items: flex-start; flex-direction: column; }}
   }}
   
   /* Cards wie in 00_Einfuehrung.py */
@@ -947,11 +1009,20 @@ def _clean_overview_df(df: pd.DataFrame) -> pd.DataFrame:
     return d
 
 
-def _kpi_block(df: pd.DataFrame) -> tuple[int, str]:
+def _format_maturity_average(value: float | None) -> str:
+    if value is None:
+        return "&mdash;"
+
+    formatted = f"{float(value):.2f}".rstrip("0").rstrip(".")
+    return formatted if get_language() == "en" else formatted.replace(".", ",")
+
+
+def _kpi_block(df: pd.DataFrame, average_df: pd.DataFrame | None = None) -> tuple[int, str]:
     if df is None or df.empty:
         return 0, f"<div class='rgm-muted'>{t('common.no_data')}</div>"
 
     d = df.copy()
+    averages = calculate_current_maturity_averages(average_df if average_df is not None else d)
     n_answered_global = int(d["answered"].sum()) if "answered" in d.columns else 0
 
     code_col = _pick_first_col(d, ["Kürzel", "Kuerzel", "code", "Code"])
@@ -981,10 +1052,28 @@ def _kpi_block(df: pd.DataFrame) -> tuple[int, str]:
             nn = 0
         return nt, na, nn
 
-    def mini_card(title: str, nt: int, na: int, nn: int, extra_cls: str) -> str:
+    def overall_card() -> str:
+        avg = averages["overall"]
+        return f"""
+    <div class="rgm-maturity-card rgm-maturity-card-total rgm-kpi-overall">
+      <div class="rgm-maturity-eyebrow">{html.escape(t("maturity.average_current"))}</div>
+      <div class="rgm-maturity-row">
+        <div class="rgm-maturity-title">{html.escape(t("maturity.overall"))}</div>
+        <div class="rgm-maturity-value">{_format_maturity_average(avg.value)}</div>
+      </div>
+    </div>
+    """.strip()
+
+    def mini_card(title: str, nt: int, na: int, nn: int, avg_key: str, extra_cls: str) -> str:
+        avg = averages[avg_key]
         return f"""
     <div class="rgm-card rgm-kpi-mini {extra_cls}">
       <div class="rgm-kpi-mini-title">{html.escape(title)}</div>
+
+      <div class="rgm-kpi-line">
+        <span class="k">{t("maturity.average_current")}</span>
+        <span class="v">{_format_maturity_average(avg.value)}</span>
+      </div>
 
       <div class="rgm-kpi-line">
         <span class="k">{t("overview.assessed")}</span>
@@ -1002,9 +1091,12 @@ def _kpi_block(df: pd.DataFrame) -> tuple[int, str]:
     og_nt, og_na, og_nn = counts(d_og)
 
     html_block = f"""
-    <div class="rgm-kpi-grid">
-      {mini_card("TD Dimensions" if get_language() == "en" else "TD-Dimensionen", td_nt, td_na, td_nn, "rgm-card-td")}
-      {mini_card("OG Dimensions" if get_language() == "en" else "OG-Dimensionen", og_nt, og_na, og_nn, "rgm-card-og")}
+    <div class="rgm-kpi-stack">
+      {overall_card()}
+      <div class="rgm-kpi-grid">
+        {mini_card("TD Dimensions" if get_language() == "en" else "TD-Dimensionen", td_nt, td_na, td_nn, "td", "rgm-card-td")}
+        {mini_card("OG Dimensions" if get_language() == "en" else "OG-Dimensionen", og_nt, og_na, og_nn, "og", "rgm-card-og")}
+      </div>
     </div>
     """.strip()
 
@@ -2180,7 +2272,7 @@ def main() -> None:
     # --- Kennzahlen (Card) ---
     st.markdown('<div id="rgm_overview_kpis"></div>', unsafe_allow_html=True)
 
-    n_answered, kpi_html = _kpi_block(df_report)
+    n_answered, kpi_html = _kpi_block(df_report, average_df=df_report)
 
     st.markdown(
         f"""

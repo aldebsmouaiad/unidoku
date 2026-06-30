@@ -18,6 +18,7 @@ import tempfile
 import pandas as pd
 
 from core.i18n import get_language, priority_value_label, t as i18n_t, target_option_label
+from core.maturity import calculate_current_maturity_averages
 
 # ReportLab (PDF)
 from reportlab.lib import colors
@@ -1465,16 +1466,51 @@ def make_pdf_bytes(
     story.append(Paragraph(i18n_t("overview.kpis"), H2))
 
     drep = df_report if (df_report is not None and not df_report.empty) else (df_raw.copy() if df_raw is not None else pd.DataFrame())
+    maturity_averages = calculate_current_maturity_averages(drep)
 
     td_nt, td_na, td_nn = _kpi_counts_by_prefix(drep, "TD")
     og_nt, og_na, og_nn = _kpi_counts_by_prefix(drep, "OG")
 
-    def _kpi_card(title: str, nt: int, na: int, nn: int, border_color) -> Table:
+    def _avg_value_text(key: str) -> str:
+        avg = maturity_averages[key]
+        if avg.value is None:
+            return "—"
+        return _to_float_str(avg.value, decimals=2, decimal_comma=not en)
+
+    def _overall_maturity_card() -> Table:
+        P_CARD = ParagraphStyle("P_CARD_OVERALL", parent=P, fontSize=10.2, leading=13, textColor=TEXT)
+        P_VALUE = ParagraphStyle("P_VALUE_OVERALL", parent=P, fontSize=12.0, leading=14, textColor=TEXT)
+
+        rows = [
+            [
+                Paragraph(f"<b>{_html.escape(i18n_t('maturity.overall'))}</b><br/><font size='8.8'>{_html.escape(i18n_t('maturity.average_current'))}</font>", P_CARD),
+                Paragraph(f"<b>{_html.escape(_avg_value_text('overall'))}</b>", P_VALUE),
+            ],
+        ]
+        t = Table(rows, colWidths=[doc.width * 0.72, doc.width * 0.28])
+        t.setStyle(
+            TableStyle(
+                [
+                    ("BOX", (0, 0), (-1, -1), 1.4, TU_GREEN),
+                    ("BACKGROUND", (0, 0), (-1, -1), CARD_BG),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                    ("TOPPADDING", (0, 0), (-1, -1), 7),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+                ]
+            )
+        )
+        return t
+
+    def _kpi_card(title: str, nt: int, na: int, nn: int, avg_key: str, border_color) -> Table:
         P_CARD = ParagraphStyle("P_CARD", parent=P, fontSize=10.0, leading=13, textColor=TEXT)
         P_LBL = ParagraphStyle("P_LBL", parent=P, fontSize=9.6, leading=12, textColor=TEXT)
 
         rows = [
             [Paragraph(f"<b>{_html.escape(title)}</b>", P_CARD), ""],
+            [Paragraph(i18n_t("maturity.average_current"), P_LBL), Paragraph(f"<b>{_html.escape(_avg_value_text(avg_key))}</b>", P_LBL)],
             [Paragraph(i18n_t("overview.assessed"), P_LBL), Paragraph(f"<b>{na} / {nt}</b>", P_LBL)],
             [Paragraph(i18n_t("overview.need_action").replace(">", "&gt;"), P_LBL), Paragraph(f"<b>{nn}</b>", P_LBL)],
         ]
@@ -1487,6 +1523,7 @@ def make_pdf_bytes(
                     ("BACKGROUND", (0, 0), (-1, -1), CARD_BG),
                     ("LINEABOVE", (0, 1), (-1, 1), 0.6, BORDER),
                     ("LINEABOVE", (0, 2), (-1, 2), 0.6, BORDER),
+                    ("LINEABOVE", (0, 3), (-1, 3), 0.6, BORDER),
                     ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                     ("ALIGN", (1, 1), (1, -1), "RIGHT"),
                     ("LEFTPADDING", (0, 0), (-1, -1), 10),
@@ -1501,8 +1538,11 @@ def make_pdf_bytes(
     gap_w = doc.width * 0.04
     card_w = (doc.width - gap_w) / 2
 
-    card_td = _kpi_card(td_dimensions, td_nt, td_na, td_nn, TD_BLUE)
-    card_og = _kpi_card(og_dimensions, og_nt, og_na, og_nn, OG_ORANGE)
+    story.append(_overall_maturity_card())
+    story.append(Spacer(1, 3 * mm))
+
+    card_td = _kpi_card(td_dimensions, td_nt, td_na, td_nn, "td", TD_BLUE)
+    card_og = _kpi_card(og_dimensions, og_nt, og_na, og_nn, "og", OG_ORANGE)
 
     kpi_grid = Table([[card_td, "", card_og]], colWidths=[card_w, gap_w, card_w])
     kpi_grid.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
