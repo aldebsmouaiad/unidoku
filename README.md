@@ -279,3 +279,8 @@ Vorhanden:
 - [Konfigurationsdokumentation](docs/CONFIGURATION.md)
 - [Deployment-Dokumentation](docs/DEPLOYMENT.md)
 - [Entwicklungsdokumentation](docs/DEVELOPMENT.md)
+
+## Kontakt und Projektlink
+
+- Kontakt: Mouaiad Aldebs ([mouaiad.aldebs@tu-dortmund.de](mailto:mouaiad.aldebs@tu-dortmund.de))
+- Projektlink: [https://unidoku-ips.streamlit.app/](https://unidoku-ips.streamlit.app/)
