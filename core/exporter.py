@@ -1,4 +1,6 @@
 # /core/exporter.py
+"""CSV and PDF export helpers for maturity assessment results."""
+
 from __future__ import annotations
 
 import csv as _csv
@@ -1163,6 +1165,7 @@ def make_pdf_bytes(
         return t
 
     def _intro_card(title: str, items: list[tuple[str, str]], *, border_color, card_w_pt: float) -> Table:
+        """Build one compact intro card for the PDF overview section."""
         badge_w = 16 * mm
         text_w = float(card_w_pt) - float(badge_w)
 
@@ -1275,6 +1278,7 @@ def make_pdf_bytes(
     ]
 
     def _meta_table(left_pairs: list[tuple[str, str]], right_pairs: list[tuple[str, str]]) -> Table:
+        """Build the two-column assessment metadata table for the PDF."""
         # gleiche Zeilenanzahl wie im UI (3 links / 3 rechts)
         n = max(len(left_pairs), len(right_pairs))
         rows: list[list[Any]] = []

@@ -1,4 +1,6 @@
 # pages/04_Glossar.py
+"""Glossary page with searchable terms and return navigation."""
+
 from __future__ import annotations
 
 import re
@@ -22,6 +24,7 @@ _URL_RE = re.compile(r"(https?://[^\s<>\"]+|\bwww\.[^\s<>\"]+)", re.IGNORECASE)
 
 
 def _linkify_urls(text: str) -> str:
+    """Convert plain URLs in glossary definitions into safe HTML links."""
     s = text or ""
     if not s.strip():
         return ""
@@ -148,6 +151,7 @@ def _do_return(aid: str, ret: str, payload: dict) -> None:
 
 
 def main() -> None:
+    """Render searchable glossary entries and handle return navigation."""
     init_session_state()
 
     # KEIN restore hier! (wird zentral in app.py gemacht)

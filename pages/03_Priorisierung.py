@@ -1,3 +1,5 @@
+"""Prioritization page for planning and sharing improvement measures."""
+
 from __future__ import annotations
 
 import copy
@@ -115,6 +117,7 @@ def validate_dimension_code(code: str) -> str:
     return normalized
 
 def measure_dialog(code: str, suggestions: list[str]) -> None:
+    """Render the measure suggestion dialog for a single dimension."""
     @st.dialog(t("prioritization.dialog_title"))
     def _dialog() -> None:
         st.markdown(
@@ -296,6 +299,7 @@ def collect_priorities_from_session(codes: list[str], keep_existing: dict) -> di
 
 
 def _inject_priorisierung_css() -> None:
+    """Inject prioritization-page styling for cards, dialogs, tables, and forms."""
     dark = bool(
         st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False))
     )
@@ -1083,6 +1087,7 @@ def submit_measures_from_priorities(priorities: dict) -> tuple[int, int]:
     return created, skipped
 
 def main() -> None:
+    """Render prioritization controls and optional sharing of planned measures."""
     init_session_state()
     _inject_priorisierung_css()
     en = get_language() == "en"

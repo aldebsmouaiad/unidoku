@@ -1,4 +1,6 @@
 # core/model_loader.py
+"""Cached loaders for localized model and metadata JSON files."""
+
 from __future__ import annotations
 
 import json

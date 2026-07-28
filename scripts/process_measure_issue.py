@@ -1,3 +1,5 @@
+"""Process GitHub issue bodies into entries in data/measures.json."""
+
 from __future__ import annotations
 
 import json
@@ -84,6 +86,7 @@ def _unique_measure_list(values: object) -> list[str]:
 
 
 def load_measures() -> dict:
+    """Load and normalize the measures map from disk."""
     if not MEASURES_FILE.exists():
         return {}
 
@@ -156,6 +159,7 @@ def add_measure_if_new(data: dict, dimension_code: str, measure_text: str, langu
 
 
 def main() -> int:
+    """Read ISSUE_BODY, update measures.json when needed, and return a shell code."""
     issue_body = os.environ.get("ISSUE_BODY", "")
     if not issue_body.strip():
         print("Fehler: Umgebungsvariable ISSUE_BODY fehlt oder ist leer.", file=sys.stderr)

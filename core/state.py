@@ -1,4 +1,6 @@
 # core/state.py
+"""Initial Streamlit session-state defaults for the app."""
+
 import streamlit as st
 
 

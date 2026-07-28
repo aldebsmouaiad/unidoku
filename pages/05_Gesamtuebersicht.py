@@ -1,4 +1,6 @@
 # /workspaces/unidoku/pages/05_Gesamtuebersicht.py
+"""Overall results page with KPIs, charts, measures, and exports."""
+
 from __future__ import annotations
 
 import base64
@@ -1018,6 +1020,7 @@ def _format_maturity_average(value: float | None) -> str:
 
 
 def _kpi_block(df: pd.DataFrame, average_df: pd.DataFrame | None = None) -> tuple[int, str]:
+    """Build the KPI card HTML and return the number of open improvement gaps."""
     if df is None or df.empty:
         return 0, f"<div class='rgm-muted'>{t('common.no_data')}</div>"
 
@@ -1175,6 +1178,7 @@ def _icons_svg() -> tuple[str, str, str]:
     return download_svg, fullscreen_svg, close_svg
 
 def _build_measures_table_html(df_view: pd.DataFrame, compact: bool) -> str:
+    """Build the measures table HTML for the overview page and full-screen modal."""
     cols = list(df_view.columns)
     priority_col = t("column.priority")
     code_col = t("column.code")
@@ -2184,6 +2188,7 @@ def _render_dual_plot_cards(
     components.html(html_doc, height=initial_height, scrolling=False, width=1200)
 
 def main() -> None:
+    """Render the overall result view, filters, charts, measures, and exports."""
     init_session_state()
     _inject_gesamtuebersicht_css()
     en = get_language() == "en"

@@ -1,3 +1,5 @@
+"""Translation catalog and language helpers for the Streamlit UI."""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,4 +1,6 @@
 # core/overview.py
+"""Build normalized overview tables from model data and session answers."""
+
 from __future__ import annotations
 
 from typing import Dict, Any, Optional, Tuple

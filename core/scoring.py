@@ -1,4 +1,6 @@
 # core/scoring.py
+"""Scoring logic for computing current maturity per dimension."""
+
 from __future__ import annotations
 
 import math

@@ -1,4 +1,10 @@
 # app.py
+"""Streamlit entrypoint for the maturity assessment app.
+
+This module owns global page configuration, shared theme/navigation state, and
+dispatching to the individual page modules.
+"""
+
 from __future__ import annotations
 
 import base64
@@ -105,12 +111,14 @@ def _render_language_selector(container, key: str, *, label_visibility: str = "v
 
 
 def show_privacy_notice_modal() -> None:
+    """Render the privacy acknowledgement gate until the user accepts it."""
     if st.session_state.get(_PRIVACY_ACK_KEY, False):
         return
 
     if hasattr(st, "dialog"):
       @st.dialog(t("privacy.title"), width="large")
       def _dlg():
+          """Render the modal variant for Streamlit versions with st.dialog."""
           st.markdown(
               """
               <style>
@@ -249,6 +257,7 @@ def _init_theme_state_from_snapshot() -> None:
 
 
 def apply_global_theme_css(dark: bool) -> None:
+    """Inject global app, sidebar, navigation, and theme CSS."""
     bg = "#0e1117" if dark else "#ffffff"
     text = "rgba(250,250,250,0.92)" if dark else "#111111"
     sidebar_bg = "#0b0f16" if dark else "#f6f7f9"
@@ -627,6 +636,7 @@ def _normalize_page_key(page: object) -> str | None:
 
 
 def _apply_query_navigation(aid: str) -> None:
+    """Apply supported URL query params to language, navigation, and glossary state."""
     page = persist.qp_get("page")
     term = persist.qp_get("term")
     from_page = persist.qp_get("from")
@@ -691,6 +701,7 @@ def _apply_query_navigation(aid: str) -> None:
 
 
 def main() -> None:
+    """Initialize shared state, render shell controls, and dispatch the active page."""
     init_session_state()
     init_language_state()
 

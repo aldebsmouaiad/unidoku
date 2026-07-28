@@ -1,4 +1,6 @@
 # pages/00_Einfuehrung.py
+"""Streamlit introduction page for the maturity model."""
+
 from __future__ import annotations
 
 import html
@@ -15,6 +17,7 @@ OG_ORANGE = "#F28C28"
 
 
 def main() -> None:
+    """Render the introductory content and scoped navigation to the next page."""
     init_session_state()
 
     meta = load_tool_meta()

@@ -1,4 +1,6 @@
 # core/charts.py
+"""Chart builders used by the dashboard and overview pages."""
+
 from __future__ import annotations
 
 import re

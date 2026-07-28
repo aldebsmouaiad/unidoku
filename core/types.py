@@ -1,4 +1,6 @@
 # core/types.py
+"""Dataclasses that describe the maturity model structure."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

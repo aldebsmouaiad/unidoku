@@ -1,4 +1,6 @@
 # pages/01_Erhebung.py
+"""Assessment page for metadata, target levels, answers, and resume files."""
+
 from __future__ import annotations
 
 import io
@@ -510,6 +512,7 @@ def _request_scroll_to_top() -> None:
 
 
 def _apply_scroll_request() -> None:
+    """Execute pending browser scroll requests after Streamlit rerenders."""
     mode = st.session_state.pop("_rgm_scroll_mode", None)
     qid = (st.session_state.pop("_rgm_scroll_qid", "") or "").strip()
 
@@ -663,6 +666,7 @@ def _inject_glossary_link_css() -> None:
 
 
 def _build_glossary_alias_index(glossary: dict) -> tuple[list[str], dict[str, str]]:
+    """Build lookup aliases so glossary terms can be linked inside question text."""
     aliases: list[str] = []
     alias_to_canonical: dict[str, str] = {}
 
@@ -741,6 +745,7 @@ def _build_glossary_alias_index(glossary: dict) -> tuple[list[str], dict[str, st
 
 
 def _glossary_linkify(text: str, glossary: dict, return_page: str, return_payload: dict) -> str:
+    """Return HTML text where recognized glossary terms link to the glossary page."""
     raw = (text or "")
     if not raw.strip() or not isinstance(glossary, dict) or not glossary:
         return html.escape(raw).replace("\n", "<br>")
@@ -1063,6 +1068,7 @@ def _export_own_targets_json(targets: dict[str, float], model: dict, meta: dict)
 
 
 def _parse_own_targets_upload(file_name: str, raw: bytes) -> dict[str, int]:
+    """Parse uploaded JSON or CSV target-level files into dimension targets."""
     name = (file_name or "").lower().strip()
 
     if name.endswith(".json"):
@@ -1164,6 +1170,7 @@ def _apply_imported_targets(imported: dict[str, int], dims_sorted: list[dict]) -
 # Footer (Navigation + Fortschritt Pipeline)
 # -----------------------------
 def _inject_erhebung_css_for_footer() -> None:
+    """Inject scoped CSS for the assessment footer and progress navigation."""
     dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
 
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
@@ -1357,6 +1364,7 @@ def _footer_navigation(model: dict, aid: str) -> None:
 # Step 0: Eingabemaske
 # -----------------------------
 def _meta_form_step(aid: str) -> None:
+    """Render and persist the assessment metadata form step."""
     _render_hero(t("assessment.title"), t("assessment.meta_title"))
     _render_time_notice()
     _render_save_resume_panel(aid)
@@ -1581,6 +1589,7 @@ def _meta_form_step(aid: str) -> None:
 # (unverändert – aus Platzgründen identisch zu deiner Version)
 # -----------------------------
 def _own_target_step(aid: str) -> None:
+    """Render controls for choosing, importing, and exporting target maturity levels."""
     _render_hero(
         t("assessment.custom_target_title"),
         t("assessment.custom_target_lead"),
@@ -1821,6 +1830,7 @@ def _own_target_step(aid: str) -> None:
 # Step 2: Fragen
 # -----------------------------
 def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None:
+    """Render one maturity dimension with profile, level gates, and answer widgets."""
     code = str(dim.get("code", "")).strip()
     name = str(dim.get("name", "")).strip()
 
@@ -2006,6 +2016,7 @@ def _render_dimension(dim: dict, glossary: dict, dim_idx: int, aid: str) -> None
         persist.save(aid)
 
 def _questions_step(aid: str) -> None:
+    """Render the active question dimension and the assessment footer navigation."""
     model = load_model_config()
     glossary = model.get("glossary", {}) or {}
 
@@ -2095,6 +2106,7 @@ def _questions_step(aid: str) -> None:
 # Main Entry
 # -----------------------------
 def main():
+    """Render the assessment workflow according to the current step in session state."""
     init_session_state()
     _inject_erhebung_page_css()
     st.markdown('<div id="rgm-erhebung-page-marker"></div>', unsafe_allow_html=True)

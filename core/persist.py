@@ -1,3 +1,5 @@
+"""Session persistence, query parameter helpers, and JSON snapshot import/export."""
+
 # core/persist.py
 from __future__ import annotations
 

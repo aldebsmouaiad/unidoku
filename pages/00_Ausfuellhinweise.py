@@ -1,4 +1,6 @@
 # pages/00_Ausfuellhinweise.py
+"""Streamlit page with guidance for completing the maturity assessment."""
+
 from __future__ import annotations
 
 import streamlit as st
@@ -12,6 +14,7 @@ OG_ORANGE = "#F28C28"
 
 
 def main() -> None:
+    """Render guidance sections for completing and interpreting the assessment."""
     init_session_state()
     en = get_language() == "en"
 

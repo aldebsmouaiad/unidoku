@@ -1,4 +1,6 @@
 # pages/02_Dashboard.py
+"""Dashboard page for current result charts and the result table."""
+
 from __future__ import annotations
 
 import base64
@@ -647,6 +649,7 @@ def _icons_svg() -> tuple[str, str, str]:
 # Result table (Dashboard) im exakten Measures-Look inkl. Toolbar + Modal
 # ---------------------------------------------------------------------
 def _build_dashboard_result_table_html(df_view: pd.DataFrame, compact: bool) -> str:
+    """Build the dashboard result table HTML for inline and modal display."""
     cols = list(df_view.columns)
     code_col = t("column.code")
     topic_col = t("column.topic")
@@ -1513,6 +1516,7 @@ def _render_dual_plot_cards(
 # Main
 # ---------------------------------------------------------------------
 def main() -> None:
+    """Render the dashboard with maturity summaries, radar charts, and result table."""
     init_session_state()
     _inject_dashboard_css()
     en = get_language() == "en"

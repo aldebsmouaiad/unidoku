@@ -1,3 +1,5 @@
+"""Helpers for calculating aggregate maturity averages."""
+
 from __future__ import annotations
 
 import math

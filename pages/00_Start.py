@@ -1,4 +1,6 @@
 # pages/00_Start.py
+"""Start page with tool metadata, feature cards, and partner information."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -51,6 +53,7 @@ def _name_with_mail(name: str | None, email: str | None) -> str:
 
 
 def _inject_start_css(dark: bool) -> None:
+    """Inject start-page layout, card, logo, and footer styling."""
     # Farben robust je nach Darkmode
     border = "rgba(255,255,255,0.12)" if dark else "rgba(0,0,0,0.10)"
     soft_bg = "rgba(255,255,255,0.06)" if dark else "rgba(0,0,0,0.03)"
@@ -494,6 +497,7 @@ def _feature_card(title: str, text: str, icon_svg: str) -> str:
 """.strip()
 
 def main() -> None:
+    """Render the start page with tool metadata, feature cards, and partner logos."""
     init_session_state()
     en = get_language() == "en"
     dark = bool(st.session_state.get("ui_dark_mode", st.session_state.get("dark_mode", False)))
