@@ -121,27 +121,6 @@ def _valid_current_levels_for_prefix(df: pd.DataFrame, prefix: str) -> pd.Series
     return _assessed_current_levels(df[_prefix_mask(df, prefix)].copy())
 
 
-def calculate_current_maturity_average(df: pd.DataFrame, prefix: Optional[str] = None) -> MaturityAverage:
-    """
-    Berechnet Durchschnittswerte nur aus bewerteten Ist-Reifegrad-Werten.
-
-    Wenn eine Bewertet-/answered-Spalte vorhanden ist, steuert sie die Auswahl.
-    Andernfalls gilt wie in der Gesamtübersicht: Ist-Reifegrad > 0 ist bewertet;
-    0, None, NaN, leerer String, fehlende Werte und "undefined" gehen nicht ein.
-    Ohne Prefix wird der Gesamtdurchschnitt ausschließlich aus TD und OG gebildet.
-    """
-    if df is None or df.empty:
-        return MaturityAverage(value=None, count=0)
-
-    d = df.copy()
-    if prefix:
-        return _average_from_levels(_valid_current_levels_for_prefix(d, prefix))
-
-    td_levels = _valid_current_levels_for_prefix(d, "TD")
-    og_levels = _valid_current_levels_for_prefix(d, "OG")
-    return _average_from_levels(pd.concat([td_levels, og_levels], ignore_index=True))
-
-
 def calculate_current_maturity_averages(df: pd.DataFrame) -> dict[str, MaturityAverage]:
     td_levels = _valid_current_levels_for_prefix(df, "TD")
     og_levels = _valid_current_levels_for_prefix(df, "OG")

@@ -118,19 +118,6 @@ def qp_del(name: str) -> None:
         pass
 
 
-def qp_keys() -> list[str]:
-    mode = _qp_mode()
-    if mode == "prod":
-        try:
-            return list(st.query_params.keys())
-        except Exception:
-            return []
-    try:
-        return list(st.experimental_get_query_params().keys())
-    except Exception:
-        return []
-
-
 def clear_query_params_keep_aid(aid: str | None = None) -> None:
     """
     Entfernt nur unsere App-Keys, lässt Streamlit-interne Keys in Ruhe.

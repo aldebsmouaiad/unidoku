@@ -509,18 +509,6 @@ def _request_scroll_to_top() -> None:
     st.session_state.pop("_rgm_scroll_qid", None)
 
 
-def _request_scroll_to_qid(qid: str) -> None:
-    q = (qid or "").strip()
-    st.session_state["_rgm_scroll_mode"] = "qid"
-    st.session_state["_rgm_scroll_qid"] = q
-
-    try:
-        persist.qp_set(_SCROLL_QP_MODE, "qid")
-        persist.qp_set(_SCROLL_QP_QID, q)
-    except Exception:
-        pass
-
-
 def _apply_scroll_request() -> None:
     mode = st.session_state.pop("_rgm_scroll_mode", None)
     qid = (st.session_state.pop("_rgm_scroll_qid", "") or "").strip()

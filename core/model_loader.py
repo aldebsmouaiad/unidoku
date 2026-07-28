@@ -65,27 +65,3 @@ def load_tool_meta(language: str | None = None) -> dict:
     if not path.exists():
         return {}
     return _load_json_file_uncached(path)
-
-
-@st.cache_data
-def load_glossary():
-    path = BASE_DIR / "data" / "glossary.json"
-    if not path.exists():
-        return {}
-
-    with path.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    # Falls Liste von Eintraegen: in Dict umwandeln
-    if isinstance(data, list):
-        return {
-            (item.get("term") or item.get("name") or item.get("Begriff") or ""):
-            (item.get("definition") or item.get("text") or item.get("Beschreibung") or "")
-            for item in data
-            if (item.get("term") or item.get("name") or item.get("Begriff"))
-        }
-
-    if isinstance(data, dict):
-        return data
-
-    return {}
