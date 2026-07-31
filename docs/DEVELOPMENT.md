@@ -336,29 +336,6 @@ Vorgehen:
 
 Die Übersetzungen sollten dieselbe Key-Menge in Deutsch und Englisch behalten.
 
-## Lokale Qualitätsprüfungen
-
-Aktuell gibt es keine automatisierten Tests, keine Linter-Konfiguration und keinen allgemeinen CI-Workflow.
-
-Sinnvolle lokale Mindestprüfungen:
-
-```bash
-python -m compileall -q app.py core pages scripts
-python -c "import json, pathlib; [json.loads(p.read_text(encoding='utf-8')) for p in pathlib.Path('data').rglob('*.json')]; print('JSON OK')"
-python -m streamlit run app.py
-```
-
-Vor einem Push sollten mindestens die geänderten Workflows in der App manuell geprüft werden.
-
-## Bekannte technische Einschränkungen
-
-- Es gibt derzeit keine automatisierten Tests.
-- Es gibt keinen allgemeinen CI-Workflow für Syntaxcheck, Tests oder Linting.
-- Die Streamlit-Seiten enthalten größere CSS- und HTML-Blöcke direkt in Python.
-- Die Modell-Dateinamen sind in `core/model_loader.py` fest verdrahtet.
-- Serverseitige Snapshots liegen standardmäßig im temporären Dateisystem.
-- `.streamlit/secrets.toml` muss lokal oder in der Hosting-Umgebung gepflegt werden und darf nicht committed werden.
-
 ## Entwicklungsregeln
 
 - Keine Secrets committen.
