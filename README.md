@@ -8,7 +8,7 @@ von Maßnahmen und bietet Exporte für die Weiterverarbeitung.
 
 Das Repository enthält eine lauffähige Streamlit-App mit deutschem und englischem Datenmodell.
 Die wichtigsten Projekt-, Installations-, Konfigurations-, Deployment- und Entwicklungsinformationen sind dokumentiert.
-Automatisierte Tests und eine Lizenzdatei sind derzeit noch nicht vorhanden.
+Automatisierte Tests sind derzeit noch nicht vorhanden. Das Projekt steht unter der MIT-Lizenz.
 
 ## Ziel und Einsatzgebiet
 
@@ -214,6 +214,7 @@ Die folgende Struktur entspricht den Projektdateien im Repository ohne `.git/`, 
 +-- scripts/
 |   +-- process_measure_issue.py
 +-- .gitignore
++-- LICENSE
 +-- README.md
 +-- app.py
 +-- packages.txt
@@ -280,7 +281,19 @@ Vorhanden:
 - [Deployment-Dokumentation](docs/DEPLOYMENT.md)
 - [Entwicklungsdokumentation](docs/DEVELOPMENT.md)
 
+## Förderhinweis / Acknowledgement
+
+Das Projekt „UniDoku“ wird im Rahmen des Programms „Industrielle Gemeinschaftsforschung“ durch das Bundesministerium für Wirtschaft und Energie aufgrund eines Beschlusses des Deutschen Bundestages gefördert. Dieses IGF-Vorhaben 01IF23157N der Forschungsvereinigung BVL e.V., Bremen, wird am Institut für Produktionssysteme der Technischen Universität Dortmund durchgeführt.
+
+The research project "UniDoku" is funded by the Federal Ministry of Economic Affairs and Energy as part of the "Industrial Collective Research" programme on the basis of a resolution of the German Bundestag. This IGF project 01IF23157N of the Research Association BVL e.V., Bremen, is carried out at the Institute of Production Systems at TU Dortmund University.
+
+## Lizenz
+
+Dieses Projekt steht unter der MIT-Lizenz. Details stehen in [LICENSE](LICENSE).
+
 ## Kontakt und Projektlink
 
-- Kontakt: Mouaiad Aldebs ([mouaiad.aldebs@tu-dortmund.de](mailto:mouaiad.aldebs@tu-dortmund.de))
+- Kontakt:
+    Christian Koch ([christian4.koch@tu-dortmund.de](mailto:christian4.koch@tu-dortmund.de))
+    Mouaiad Aldebs ([mouaiad.aldebs@tu-dortmund.de](mailto:mouaiad.aldebs@tu-dortmund.de))
 - Projektlink: [https://unidoku-ips.streamlit.app/](https://unidoku-ips.streamlit.app/)
